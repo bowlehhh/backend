@@ -1,0 +1,580 @@
+<?php
+
+namespace App\Filament\Pages;
+
+use App\Models\Product;
+use BackedEnum;
+use Filament\Pages\Page;
+use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+
+class AdminDashboard extends Page
+{
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-squares-2x2';
+
+    protected static bool $shouldRegisterNavigation = false;
+
+    protected static ?string $navigationLabel = 'Dashboard';
+
+    protected static ?string $title = 'Ringkasan Dashboard';
+
+    protected static ?int $navigationSort = 1;
+
+    protected string $view = 'filament.pages.admin-dashboard';
+
+    public $search = '';
+    public $categoryFilter = '';
+    public $brandFilter = '';
+    public $perPage = 30;
+    public $currentPage = 1;
+
+    public function mount(): void
+    {
+        $this->search = request()->query('search', '');
+        $this->categoryFilter = '';
+        $this->brandFilter = '';
+    }
+
+    public function getViewData(): array
+    {
+        $productsData = $this->getProducts();
+
+        return [
+            'stats' => $this->getStats(),
+            'recentSales' => $this->getRecentSales(),
+            'lowStockProducts' => $this->getLowStockProducts(),
+            'products' => $productsData['items'] ?? [],
+            'pagination' => $productsData['pagination'] ?? [],
+            'categories' => $this->getCategories(),
+            'brands' => $this->getBrands(),
+            'categoryOptions' => $this->getCategoryOptions(),
+            'brandOptions' => $this->getBrandOptions(),
+            'supplierOptions' => $this->getSupplierOptions(),
+            'search' => $this->search,
+            'categoryFilter' => $this->categoryFilter,
+            'brandFilter' => $this->brandFilter,
+        ];
+    }
+
+    private function getRecentSales(): array
+    {
+        if (! Schema::hasTable('sales')) {
+            return [];
+        }
+
+        $query = DB::table('sales')
+            ->leftJoin('users', 'users.id', '=', 'sales.user_id')
+            ->when(Schema::hasColumn('sales', 'deleted_at'), fn ($q) => $q->whereNull('sales.deleted_at'))
+            ->orderByDesc('sales.id');
+
+        $rows = $query->limit(15)->get([
+            'sales.id',
+            'sales.invoice_number',
+            'sales.customer_name',
+            'sales.total',
+            'sales.created_at',
+            'users.name as cashier_name',
+        ]);
+
+        return $rows->map(fn ($row) => [
+            'invoice_number' => $row->invoice_number ?: '-',
+            'customer_name' => $row->customer_name ?: 'Pembeli Umum',
+            'cashier_name' => $row->cashier_name ?: '-',
+            'total' => 'Rp ' . number_format((float) ($row->total ?? 0), 0, ',', '.'),
+            'created_at' => $row->created_at
+                ? \Illuminate\Support\Carbon::parse($row->created_at)->format('d M Y H:i')
+                : '-',
+            'detail_url' => route('admin.sales.receipt', ['sale' => $row->id]),
+        ])->toArray();
+    }
+
+    private function getStats(): array
+    {
+        $totalProducts = 0;
+        $lowStock = 0;
+        $stockValue = 0;
+
+        if (Schema::hasTable('products')) {
+            $totalProducts = DB::table('products')
+                ->when(Schema::hasColumn('products', 'deleted_at'), fn ($query) => $query->whereNull('deleted_at'))
+                ->count();
+        }
+
+        if (Schema::hasTable('product_batches')) {
+            $stockColumn = Schema::hasColumn('product_batches', 'stock') ? 'stock' : null;
+            $purchaseColumn = Schema::hasColumn('product_batches', 'purchase_price') ? 'purchase_price' : null;
+
+            if ($stockColumn) {
+                $lowStock = DB::table('product_batches')
+                    ->when(Schema::hasColumn('product_batches', 'deleted_at'), fn ($query) => $query->whereNull('deleted_at'))
+                    ->where($stockColumn, '<=', 10)
+                    ->count();
+            }
+
+            if ($stockColumn && $purchaseColumn) {
+                $stockValue = DB::table('product_batches')
+                    ->when(Schema::hasColumn('product_batches', 'deleted_at'), fn ($query) => $query->whereNull('deleted_at'))
+                    ->selectRaw("SUM({$stockColumn} * {$purchaseColumn}) as total")
+                    ->value('total') ?? 0;
+            }
+        }
+
+        return [
+            [
+                'label' => 'Total SKU',
+                'value' => number_format($totalProducts, 0, ',', '.'),
+                'description' => 'Data master aktif inventory',
+                'icon' => 'inventory_2',
+                'variant' => 'primary',
+            ],
+            [
+                'label' => 'Stok Menipis',
+                'value' => number_format($lowStock, 0, ',', '.'),
+                'description' => 'Perlu restock segera',
+                'icon' => 'warning',
+                'variant' => 'warning',
+            ],
+            [
+                'label' => 'Total Nilai Stok',
+                'value' => 'Rp ' . number_format($stockValue, 0, ',', '.'),
+                'description' => 'Estimasi nilai modal inventory',
+                'icon' => 'trending_up',
+                'variant' => 'secondary',
+            ],
+        ];
+    }
+
+    private function getLowStockProducts(): array
+    {
+        if (! Schema::hasTable('product_batches') || ! Schema::hasTable('products')) {
+            return [];
+        }
+
+        $nameColumn = Schema::hasColumn('products', 'name') ? 'name' : 'nama_barang';
+
+        $query = DB::table('product_batches')
+            ->join('products', 'products.id', '=', 'product_batches.product_id')
+            ->when(Schema::hasTable('suppliers'), fn ($q) => $q->leftJoin('suppliers', 'suppliers.id', '=', 'product_batches.supplier_id'))
+            ->when(Schema::hasColumn('product_batches', 'deleted_at'), fn ($q) => $q->whereNull('product_batches.deleted_at'))
+            ->when(Schema::hasColumn('products', 'deleted_at'), fn ($q) => $q->whereNull('products.deleted_at'))
+            ->where('product_batches.stock', '<=', 10)
+            ->orderBy('product_batches.stock')
+            ->orderByDesc('product_batches.updated_at');
+
+        $selects = [
+            'product_batches.id as batch_id',
+            "products.{$nameColumn} as product_name",
+            'product_batches.batch_code',
+            'product_batches.stock',
+            'product_batches.selling_price',
+        ];
+
+        if (Schema::hasColumn('suppliers', 'name')) {
+            $selects[] = 'suppliers.name as supplier_name';
+        }
+
+        return $query->limit(100)->get($selects)->map(fn ($row) => [
+            'batch_id' => (int) $row->batch_id,
+            'product_name' => $row->product_name ?? '-',
+            'batch_code' => $row->batch_code ?? '-',
+            'stock' => (int) ($row->stock ?? 0),
+            'supplier_name' => $row->supplier_name ?? '-',
+            'selling_price' => 'Rp ' . number_format((float) ($row->selling_price ?? 0), 0, ',', '.'),
+        ])->toArray();
+    }
+
+    private function getProducts(): array
+    {
+        if (! Schema::hasTable('products')) {
+            $demo = $this->demoProducts();
+
+            return [
+                'items' => $demo,
+                'pagination' => [
+                    'current_page' => 1,
+                    'per_page' => count($demo),
+                    'total' => count($demo),
+                    'last_page' => 1,
+                    'from' => count($demo) > 0 ? 1 : 0,
+                    'to' => count($demo),
+                    'has_prev' => false,
+                    'has_next' => false,
+                    'prev_page' => null,
+                    'next_page' => null,
+                ],
+            ];
+        }
+
+        $nameColumn = Schema::hasColumn('products', 'name') ? 'name' : 'nama_barang';
+        $barcodeColumn = Schema::hasColumn('products', 'barcode') ? 'barcode' : null;
+
+        $query = DB::table('products')
+            ->when(Schema::hasColumn('products', 'deleted_at'), fn ($query) => $query->whereNull('products.deleted_at'));
+
+        if (Schema::hasTable('categories') && Schema::hasColumn('products', 'category_id')) {
+            $query->leftJoin('categories', 'categories.id', '=', 'products.category_id');
+        }
+
+        if (Schema::hasTable('brands') && Schema::hasColumn('products', 'brand_id')) {
+            $query->leftJoin('brands', 'brands.id', '=', 'products.brand_id');
+        }
+
+        $hasCategoryJoin = Schema::hasTable('categories') && Schema::hasColumn('products', 'category_id');
+        $hasBrandJoin = Schema::hasTable('brands') && Schema::hasColumn('products', 'brand_id');
+        $categorySearchColumn = Schema::hasColumn('categories', 'name')
+            ? 'categories.name'
+            : (Schema::hasColumn('categories', 'nama') ? 'categories.nama' : null);
+        $brandSearchColumn = Schema::hasColumn('brands', 'name')
+            ? 'brands.name'
+            : (Schema::hasColumn('brands', 'nama') ? 'brands.nama' : null);
+
+        // Global search: nama barang, barcode, kategori, brand
+        if (!empty($this->search)) {
+            $search = '%' . $this->search . '%';
+            $query->where(function ($q) use ($nameColumn, $barcodeColumn, $search, $hasCategoryJoin, $hasBrandJoin, $categorySearchColumn, $brandSearchColumn) {
+                $q->where("products.{$nameColumn}", 'like', $search);
+                if ($barcodeColumn) {
+                    $q->orWhere("products.{$barcodeColumn}", 'like', $search);
+                }
+                if ($hasCategoryJoin && $categorySearchColumn) {
+                    $q->orWhere($categorySearchColumn, 'like', $search);
+                }
+                if ($hasBrandJoin && $brandSearchColumn) {
+                    $q->orWhere($brandSearchColumn, 'like', $search);
+                }
+            });
+        }
+
+        $selects = [
+            "products.id",
+            "products.{$nameColumn} as product_name",
+        ];
+
+        if ($barcodeColumn) {
+            $selects[] = "products.{$barcodeColumn} as barcode";
+        }
+
+        if (Schema::hasTable('categories') && Schema::hasColumn('products', 'category_id')) {
+            $categoryNameColumn = Schema::hasColumn('categories', 'name') ? 'name' : 'nama';
+            $selects[] = "categories.{$categoryNameColumn} as category_name";
+        }
+
+        if (Schema::hasTable('brands') && Schema::hasColumn('products', 'brand_id')) {
+            $brandNameColumn = Schema::hasColumn('brands', 'name') ? 'name' : 'nama';
+            $selects[] = "brands.{$brandNameColumn} as brand_name";
+        }
+
+        $page = max((int) request()->query('page', 1), 1);
+        $this->currentPage = $page;
+
+        $total = (clone $query)->count('products.id');
+        $lastPage = max((int) ceil($total / $this->perPage), 1);
+
+        if ($page > $lastPage) {
+            $page = $lastPage;
+            $this->currentPage = $lastPage;
+        }
+
+        $items = $query
+            ->select($selects)
+            ->latest('products.id')
+            ->forPage($page, $this->perPage)
+            ->get();
+
+        if ($items->isEmpty()) {
+            $demo = $this->demoProducts();
+
+            return [
+                'items' => $demo,
+                'pagination' => [
+                    'current_page' => 1,
+                    'per_page' => count($demo),
+                    'total' => count($demo),
+                    'last_page' => 1,
+                    'from' => count($demo) > 0 ? 1 : 0,
+                    'to' => count($demo),
+                    'has_prev' => false,
+                    'has_next' => false,
+                    'prev_page' => null,
+                    'next_page' => null,
+                ],
+            ];
+        }
+
+        $mappedItems = $items->map(function ($item) {
+            $details = $this->getProductDetails((int) $item->id);
+            $stock = (int) ($details['stock'] ?? 0);
+
+            return [
+                'id' => $item->id,
+                'name' => $item->product_name ?? '-',
+                'sku' => $item->barcode ?: 'SKU-' . str_pad((string) $item->id, 4, '0', STR_PAD_LEFT),
+                'barcode' => $item->barcode,
+                'category' => $item->category_name ?? '-',
+                'category_id' => $details['category_id'] ?? null,
+                'brand' => $item->brand_name ?? '-',
+                'brand_id' => $details['brand_id'] ?? null,
+                'stock' => $stock,
+                'purchase_price' => $this->formatRupiah($details['purchase_price'] ?? 0),
+                'purchase_price_value' => (float) ($details['purchase_price'] ?? 0),
+                'selling_price' => $this->formatRupiah($details['selling_price'] ?? 0),
+                'selling_price_value' => (float) ($details['selling_price'] ?? 0),
+                'supplier_id' => $details['supplier_id'] ?? null,
+                'supplier' => $details['supplier_name'] ?? '-',
+                'supplier_name' => $details['supplier_name'] ?? '',
+                'supplier_branch' => $details['supplier_branch'] ?? '',
+                'supplier_phone' => $details['supplier_phone'] ?? '',
+                'supplier_address' => $details['supplier_address'] ?? '',
+                'supplier_note' => $details['supplier_note'] ?? '',
+                'batch_id' => $details['batch_id'] ?? null,
+                'batch_code' => $details['batch_code'] ?? null,
+                'expired_at' => $details['expired_at'] ?? null,
+                'description' => $details['description'] ?? null,
+                'image_url' => $details['image_url'] ?? null,
+                'is_active' => (bool) ($details['is_active'] ?? true),
+            ];
+        })->toArray();
+
+        $from = $total > 0 ? (($page - 1) * $this->perPage) + 1 : 0;
+        $to = min($page * $this->perPage, $total);
+
+        return [
+            'items' => $mappedItems,
+            'pagination' => [
+                'current_page' => $page,
+                'per_page' => $this->perPage,
+                'total' => $total,
+                'last_page' => $lastPage,
+                'from' => $from,
+                'to' => $to,
+                'has_prev' => $page > 1,
+                'has_next' => $page < $lastPage,
+                'prev_page' => $page > 1 ? $page - 1 : null,
+                'next_page' => $page < $lastPage ? $page + 1 : null,
+            ],
+        ];
+    }
+
+    private function getProductDetails(int $productId): array
+    {
+        $product = Product::query()
+            ->with([
+                'latestBatch.supplier',
+            ])
+            ->find($productId);
+
+        if (! $product) {
+            return [];
+        }
+
+        $batch = $product->latestBatch;
+
+        return [
+            'category_id' => $product->category_id,
+            'brand_id' => $product->brand_id,
+            'description' => $product->description,
+            'image_url' => $product->image_path ? '/storage/' . ltrim($product->image_path, '/') : null,
+            'is_active' => $product->is_active,
+            'stock' => (int) ($batch?->stock ?? 0),
+            'purchase_price' => (float) ($batch?->purchase_price ?? 0),
+            'selling_price' => (float) ($batch?->selling_price ?? 0),
+            'supplier_id' => $batch?->supplier_id,
+            'supplier_name' => $batch?->supplier?->name,
+            'supplier_branch' => $batch?->supplier?->branch,
+            'supplier_phone' => $batch?->supplier?->phone,
+            'supplier_address' => $batch?->supplier?->address,
+            'supplier_note' => $batch?->supplier?->note,
+            'batch_id' => $batch?->id,
+            'batch_code' => $batch?->batch_code,
+            'expired_at' => $batch?->expired_at?->toDateString(),
+        ];
+    }
+
+    private function getCategories(): array
+    {
+        if (! Schema::hasTable('categories')) {
+            return ['Elektronik', 'Peralatan Rumah', 'Pakaian', 'Makanan & Minuman'];
+        }
+
+        $nameColumn = Schema::hasColumn('categories', 'name') ? 'name' : 'nama';
+
+        return DB::table('categories')
+            ->when(Schema::hasColumn('categories', 'deleted_at'), fn ($query) => $query->whereNull('deleted_at'))
+            ->limit(10)
+            ->pluck($nameColumn)
+            ->toArray();
+    }
+
+    private function getCategoryOptions(): array
+    {
+        if (! Schema::hasTable('categories')) {
+            return [];
+        }
+
+        $nameColumn = Schema::hasColumn('categories', 'name') ? 'name' : 'nama';
+
+        return DB::table('categories')
+            ->select(['id', "{$nameColumn} as name"])
+            ->when(Schema::hasColumn('categories', 'deleted_at'), fn ($query) => $query->whereNull('deleted_at'))
+            ->orderBy($nameColumn)
+            ->get()
+            ->map(fn ($item) => [
+                'id' => (int) $item->id,
+                'name' => $item->name,
+            ])
+            ->toArray();
+    }
+
+    private function getBrands(): array
+    {
+        if (! Schema::hasTable('brands')) {
+            return ['Sony', 'Samsung', 'Apple', 'Logitech'];
+        }
+
+        $nameColumn = Schema::hasColumn('brands', 'name') ? 'name' : 'nama';
+
+        return DB::table('brands')
+            ->when(Schema::hasColumn('brands', 'deleted_at'), fn ($query) => $query->whereNull('deleted_at'))
+            ->limit(10)
+            ->pluck($nameColumn)
+            ->toArray();
+    }
+
+    private function getBrandOptions(): array
+    {
+        if (! Schema::hasTable('brands')) {
+            return [];
+        }
+
+        $nameColumn = Schema::hasColumn('brands', 'name') ? 'name' : 'nama';
+
+        return DB::table('brands')
+            ->select(['id', "{$nameColumn} as name"])
+            ->when(Schema::hasColumn('brands', 'deleted_at'), fn ($query) => $query->whereNull('deleted_at'))
+            ->orderBy($nameColumn)
+            ->get()
+            ->map(fn ($item) => [
+                'id' => (int) $item->id,
+                'name' => $item->name,
+            ])
+            ->toArray();
+    }
+
+    private function getSupplierOptions(): array
+    {
+        if (! Schema::hasTable('suppliers')) {
+            return [];
+        }
+
+        $nameColumn = Schema::hasColumn('suppliers', 'name') ? 'name' : 'nama';
+
+        return DB::table('suppliers')
+            ->select(['id', "{$nameColumn} as name"])
+            ->when(Schema::hasColumn('suppliers', 'deleted_at'), fn ($query) => $query->whereNull('deleted_at'))
+            ->orderBy($nameColumn)
+            ->get()
+            ->map(fn ($item) => [
+                'id' => (int) $item->id,
+                'name' => $item->name,
+            ])
+            ->toArray();
+    }
+
+    private function formatRupiah(int|float|null $value): string
+    {
+        return 'Rp ' . number_format((float) $value, 0, ',', '.');
+    }
+
+    private function demoProducts(): array
+    {
+        return [
+            [
+                'id' => 1,
+                'name' => 'Nike Air Max 270',
+                'sku' => 'SHOE-2023-001',
+                'category' => 'Pakaian',
+                'brand' => 'Nike',
+                'stock' => 124,
+                'purchase_price' => 'Rp 1.200.000',
+                'selling_price' => 'Rp 1.850.000',
+            ],
+            [
+                'id' => 2,
+                'name' => 'Sony WH-1000XM4',
+                'sku' => 'ELEC-SNY-42',
+                'category' => 'Elektronik',
+                'brand' => 'Sony',
+                'stock' => 8,
+                'purchase_price' => 'Rp 3.100.000',
+                'selling_price' => 'Rp 4.499.000',
+            ],
+            [
+                'id' => 3,
+                'name' => 'Minimalist Watch',
+                'sku' => 'ACCS-GEN-08',
+                'category' => 'Aksesoris',
+                'brand' => 'Generic',
+                'stock' => 45,
+                'purchase_price' => 'Rp 250.000',
+                'selling_price' => 'Rp 599.000',
+            ],
+            [
+                'id' => 4,
+                'name' => 'Logitech G915 TKL',
+                'sku' => 'ELEC-LOGI-915',
+                'category' => 'Elektronik',
+                'brand' => 'Logitech',
+                'stock' => 3,
+                'purchase_price' => 'Rp 2.400.000',
+                'selling_price' => 'Rp 3.250.000',
+            ],
+        ];
+    }
+
+    public function deleteProduct(int $id): void
+    {
+        if (Schema::hasTable('products')) {
+            $product = Product::query()->find($id);
+            $deleted = false;
+
+            if ($product) {
+                $deleted = (bool) $product->delete();
+            }
+
+            if ($deleted) {
+                Notification::make()
+                    ->title('Produk berhasil dihapus')
+                    ->success()
+                    ->send();
+            } else {
+                Notification::make()
+                    ->title('Produk tidak ditemukan')
+                    ->danger()
+                    ->send();
+            }
+        }
+    }
+
+    public function updateSearch(string $search): void
+    {
+        $this->search = $search;
+    }
+
+    public function updateCategoryFilter(string $category): void
+    {
+        $this->categoryFilter = $category;
+    }
+
+    public function updateBrandFilter(string $brand): void
+    {
+        $this->brandFilter = $brand;
+    }
+
+    public function resetFilters(): void
+    {
+        $this->search = '';
+        $this->categoryFilter = '';
+        $this->brandFilter = '';
+    }
+}

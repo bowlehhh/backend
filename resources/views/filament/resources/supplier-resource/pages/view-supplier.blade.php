@@ -155,7 +155,7 @@
               <p class="text-sm text-[#52615a]">Seluruh riwayat pembelian dari supplier ini (kredit dan lunas).</p>
             </div>
             <div class="overflow-x-auto table-container">
-              <table class="sf-table w-full min-w-[1400px] text-left border-collapse">
+              <table class="sf-table w-full min-w-[1500px] text-left border-collapse">
                 <thead>
                   <tr class="bg-[#eceef0] text-[#3d4a42] border-b border-[#d4dbd7]">
                     <th class="px-4 py-2.5 font-medium uppercase tracking-wider">Waktu</th>
@@ -174,6 +174,7 @@
                     <th class="px-4 py-2.5 font-medium uppercase tracking-wider">Total Dibayar</th>
                     <th class="px-4 py-2.5 font-medium uppercase tracking-wider">Jatuh Tempo</th>
                     <th class="px-4 py-2.5 font-medium uppercase tracking-wider">Status</th>
+                    <th class="px-4 py-2.5 font-medium uppercase tracking-wider text-right">Nota</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -200,10 +201,19 @@
                       <td class="px-4 py-2.5">{{ $row['total_dibayar'] ?? $row['sudah_dibayar'] ?? '-' }}</td>
                       <td class="px-4 py-2.5">{{ $row['payment_type'] === 'KREDIT' ? ($row['credit_days'] . ' hari (' . $row['credit_due_date'] . ')') : '-' }}</td>
                       <td class="px-4 py-2.5"><span class="inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold {{ $statusClass }}">{{ $row['status'] }}</span></td>
+                      <td class="px-4 py-2.5 text-right">
+                        @if (!empty($row['receipt_url']))
+                          <a href="{{ $row['receipt_url'] }}" target="_blank" rel="noopener" class="inline-flex items-center rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">
+                            Lihat Nota
+                          </a>
+                        @else
+                          <span class="text-sm text-[#52615a]">-</span>
+                        @endif
+                      </td>
                     </tr>
                   @empty
                     <tr>
-                      <td colspan="16" class="px-4 py-8 text-center text-[#52615a]">Belum ada riwayat pembelian untuk supplier ini.</td>
+                      <td colspan="17" class="px-4 py-8 text-center text-[#52615a]">Belum ada riwayat pembelian untuk supplier ini.</td>
                     </tr>
                   @endforelse
                 </tbody>

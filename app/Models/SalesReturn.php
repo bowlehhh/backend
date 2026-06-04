@@ -21,6 +21,10 @@ class SalesReturn extends Model
         'reason_other',
         'return_total',
         'refund_amount',
+        'exchange_total',
+        'price_difference_total',
+        'extra_payment_amount',
+        'extra_payment_change_amount',
         'returned_at',
     ];
 
@@ -29,6 +33,10 @@ class SalesReturn extends Model
         return [
             'return_total' => 'decimal:2',
             'refund_amount' => 'decimal:2',
+            'exchange_total' => 'decimal:2',
+            'price_difference_total' => 'decimal:2',
+            'extra_payment_amount' => 'decimal:2',
+            'extra_payment_change_amount' => 'decimal:2',
             'returned_at' => 'datetime',
         ];
     }
@@ -64,5 +72,20 @@ class SalesReturn extends Model
         $reason = trim((string) ($this->reason ?? ''));
 
         return $reason !== '' ? $reason : null;
+    }
+
+    public function getAdjustmentAmountAttribute(): float
+    {
+        return (float) ($this->price_difference_total ?? 0);
+    }
+
+    public function getExtraPaymentAttribute(): float
+    {
+        return (float) ($this->extra_payment_amount ?? 0);
+    }
+
+    public function getExtraPaymentChangeAttribute(): float
+    {
+        return (float) ($this->extra_payment_change_amount ?? 0);
     }
 }

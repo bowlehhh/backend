@@ -75,6 +75,7 @@ class ViewSupplier extends ViewRecord
 
             return [
                 'batch_id' => (int) $batch->id,
+                'receipt_url' => route('admin.credits.receipt', ['batch' => $batch->id]),
                 'waktu' => $batch->created_at ? $batch->created_at->format('d M Y H:i') : '-',
                 'part_number' => strtoupper((string) ($batch->product?->barcode ?? '-')),
                 'part_name' => strtoupper((string) ($batch->product?->name ?? '-')),

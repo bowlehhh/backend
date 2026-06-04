@@ -17,6 +17,7 @@ class CheckoutRequest extends FormRequest
         return [
             'payment_method' => ['required', Rule::in(['cash', 'transfer', 'qris', 'debit', 'credit'])],
             'paid_amount' => ['nullable', 'numeric', 'min:0'],
+            'credit_days' => ['nullable', 'integer', 'min:1', 'max:3650'],
             'credit_due_date' => ['nullable', 'date'],
             'customer_name' => ['nullable', 'string', 'max:100'],
             'customer_phone' => ['nullable', 'string', 'max:30'],

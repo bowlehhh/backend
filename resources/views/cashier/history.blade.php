@@ -62,7 +62,8 @@
         @endif
 
         <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-            <table class="min-w-full text-sm">
+            <div class="overflow-x-auto w-full max-w-full">
+            <table class="min-w-[1280px] w-max text-sm">
                 <thead class="bg-slate-50">
                 <tr>
                     <th class="px-4 py-3 text-left font-semibold text-slate-600">Invoice</th>
@@ -73,6 +74,7 @@
                     <th class="px-4 py-3 text-right font-semibold text-slate-600">Total</th>
                     <th class="px-4 py-3 text-right font-semibold text-slate-600">DP</th>
                     <th class="px-4 py-3 text-right font-semibold text-slate-600">Sisa Kredit</th>
+                    <th class="px-4 py-3 text-center font-semibold text-slate-600">Status</th>
                     <th class="px-4 py-3 text-right font-semibold text-slate-600">Aksi</th>
                 </tr>
                 </thead>
@@ -88,7 +90,18 @@
                         $canModify = ! $hasReturn;
                         $creditAmount = (float) ($sale->credit_amount ?? 0);
                         $downPayment = (float) ($sale->paid_amount ?? 0);
+                        $installmentPaid = (float) ($installmentPaidMap[$sale->id] ?? 0);
+                        $remainingCredit = max(0, $creditAmount - $installmentPaid);
                         $isCredit = strtolower((string) $sale->payment_method) === 'credit';
+                        $canInstallment = $isCredit && $remainingCredit > 0;
+                        $paymentStatus = $isCredit
+                            ? ($remainingCredit > 0 ? 'BELUM LUNAS' : 'LUNAS')
+                            : 'LUNAS';
+                        $paymentStatusClass = $isCredit
+                            ? ($remainingCredit > 0
+                                ? 'border-amber-200 bg-amber-50 text-amber-700'
+                                : 'border-emerald-200 bg-emerald-50 text-emerald-700')
+                            : 'border-emerald-200 bg-emerald-50 text-emerald-700';
                     @endphp
                     <tr class="border-t border-slate-100">
                         <td class="px-4 py-3 font-semibold">{{ $sale->invoice_number }}</td>
@@ -109,15 +122,28 @@
                             @endif
                         </td>
                         <td class="px-4 py-3 text-right {{ $isCredit ? 'font-semibold text-emerald-700' : 'text-slate-500' }}">
-                            {{ $isCredit ? ('Rp ' . number_format($downPayment, 0, ',', '.')) : '-' }}
+                            @if($isCredit)
+                                <div>DP: Rp {{ number_format($downPayment, 0, ',', '.') }}</div>
+                                <div class="text-xs text-slate-500">Cicilan: Rp {{ number_format($installmentPaid, 0, ',', '.') }}</div>
+                            @else
+                                -
+                            @endif
                         </td>
-                        <td class="px-4 py-3 text-right {{ $isCredit && $creditAmount > 0 ? 'font-semibold text-amber-700' : 'text-slate-500' }}">
-                            {{ $isCredit ? ('Rp ' . number_format($creditAmount, 0, ',', '.')) : '-' }}
+                        <td class="px-4 py-3 text-right {{ $isCredit && $remainingCredit > 0 ? 'font-semibold text-amber-700' : 'text-slate-500' }}">
+                            {{ $isCredit ? ('Rp ' . number_format($remainingCredit, 0, ',', '.')) : '-' }}
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            <span class="inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold {{ $paymentStatusClass }}">
+                                {{ $paymentStatus }}
+                            </span>
                         </td>
                         <td class="px-4 py-3">
                             <div class="flex justify-end gap-2">
                                 <a href="{{ route('cashier.receipt', $sale) }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50">Lihat Detail</a>
                                 <a href="{{ route('cashier.receipt', $sale) }}?pdf=1" target="_blank" rel="noopener" class="rounded-lg border border-emerald-700 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-50">Print</a>
+                                @if($canInstallment)
+                                    <a href="{{ route('cashier.history.installment.form', $sale) }}" class="rounded-lg border border-amber-600 px-3 py-1.5 text-xs font-semibold text-amber-700 hover:bg-amber-50">Cicil</a>
+                                @endif
                                 @if($canModify)
                                     <a href="{{ route('cashier.history.edit', $sale) }}" class="rounded-lg border border-indigo-500 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-50">Edit</a>
                                     <form method="POST" action="{{ route('cashier.history.destroy', $sale) }}" class="inline-flex js-delete-sale-form">
@@ -139,11 +165,12 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="9" class="px-4 py-8 text-center text-slate-500">Belum ada transaksi.</td>
+                        <td colspan="10" class="px-4 py-8 text-center text-slate-500">Belum ada transaksi.</td>
                     </tr>
                 @endforelse
                 </tbody>
             </table>
+            </div>
         </div>
 
         <div class="mt-4">{{ $sales->links() }}</div>
@@ -153,8 +180,8 @@
                 <h3 class="text-xl font-extrabold text-slate-900">Riwayat Return Penjualan</h3>
                 <p class="text-sm text-slate-500">Track record return per invoice lengkap dengan nota return.</p>
             </div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full text-sm">
+            <div class="overflow-x-auto w-full max-w-full">
+                <table class="min-w-[1280px] w-max text-sm">
                     <thead class="bg-slate-50">
                     <tr>
                         <th class="px-4 py-3 text-left font-semibold text-slate-600">Nomor Return</th>
@@ -175,6 +202,7 @@
                             $itemNames = collect($return->items ?? [])->pluck('part_name')->filter()->unique()->take(2)->implode(', ');
                             $qtyReturn = (int) collect($return->items ?? [])->sum('qty_return');
                             $reason = trim((string) ($return->reason_other ?: $return->reason ?: '-'));
+                            $cashierName = $return->sale?->cashier_display_name ?: ($return->user?->name ?? '-');
                         @endphp
                         <tr class="border-t border-slate-100">
                             <td class="px-4 py-3 font-semibold">{{ $return->return_number }}</td>
@@ -183,9 +211,19 @@
                             <td class="px-4 py-3">{{ $qtyReturn }}</td>
                             <td class="px-4 py-3 uppercase">{{ str_replace('_', ' ', (string) $return->return_type) }}</td>
                             <td class="px-4 py-3">{{ $reason }}</td>
-                            <td class="px-4 py-3 text-right font-bold">Rp {{ number_format((float) $return->return_total, 0, ',', '.') }}</td>
+                            <td class="px-4 py-3 text-right font-bold">
+                                <div>Rp {{ number_format((float) $return->return_total, 0, ',', '.') }}</div>
+                                @if((float) ($return->exchange_total ?? 0) > 0)
+                                    <div class="text-xs font-semibold text-emerald-700">Ganti: Rp {{ number_format((float) $return->exchange_total, 0, ',', '.') }}</div>
+                                @endif
+                                @if((float) ($return->price_difference_total ?? 0) !== 0.0)
+                                    <div class="text-xs font-semibold {{ (float) $return->price_difference_total > 0 ? 'text-amber-600' : 'text-emerald-700' }}">
+                                        Selisih: Rp {{ number_format(abs((float) $return->price_difference_total), 0, ',', '.') }}
+                                    </div>
+                                @endif
+                            </td>
                             <td class="px-4 py-3">{{ $return->returned_at?->format('d M Y H:i') ?: '-' }}</td>
-                            <td class="px-4 py-3">{{ $return->user?->name ?: '-' }}</td>
+                            <td class="px-4 py-3">{{ $cashierName }}</td>
                             <td class="px-4 py-3">
                                 <div class="flex justify-end gap-2">
                                     <a href="{{ route('cashier.return.receipt', $return) }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50">Lihat</a>
@@ -208,8 +246,8 @@
                 <h3 class="text-xl font-extrabold text-slate-900">Riwayat Edit Transaksi</h3>
                 <p class="text-sm text-slate-500">Track record perubahan transaksi kasir.</p>
             </div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full text-sm">
+            <div class="overflow-x-auto w-full max-w-full">
+                <table class="min-w-[1100px] w-max text-sm">
                     <thead class="bg-slate-50">
                     <tr>
                         <th class="px-4 py-3 text-left font-semibold text-slate-600">Waktu</th>
@@ -243,8 +281,8 @@
                 <h3 class="text-xl font-extrabold text-slate-900">Riwayat Hapus Transaksi</h3>
                 <p class="text-sm text-slate-500">Track record transaksi yang dihapus permanen.</p>
             </div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full text-sm">
+            <div class="overflow-x-auto w-full max-w-full">
+                <table class="min-w-[1100px] w-max text-sm">
                     <thead class="bg-slate-50">
                     <tr>
                         <th class="px-4 py-3 text-left font-semibold text-slate-600">Waktu</th>

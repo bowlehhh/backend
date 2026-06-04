@@ -52,8 +52,12 @@ Route::middleware(['auth', 'role:cashier'])
         // History & draft transaksi kasir.
         Route::get('/history', [CashierTransactionController::class, 'history'])->name('cashier.history');
         Route::get('/history-supplier', [CashierTransactionController::class, 'historyBySupplier'])->name('cashier.history.supplier');
+        Route::get('/history-supplier/detail', [CashierTransactionController::class, 'historyBySupplierDetail'])->name('cashier.history.supplier.detail');
         Route::get('/drafts', [CashierTransactionController::class, 'drafts'])->name('cashier.drafts');
         Route::get('/history/{sale}/receipt', [CashierTransactionController::class, 'receipt'])->name('cashier.receipt');
+        Route::get('/history/{sale}/installment', [CashierTransactionController::class, 'installmentForm'])->name('cashier.history.installment.form');
+        Route::post('/history/{sale}/installment', [CashierTransactionController::class, 'storeInstallment'])->name('cashier.history.installment.store');
+        Route::get('/history/{sale}/installments/{installment}/receipt', [CashierTransactionController::class, 'installmentReceipt'])->name('cashier.history.installment.receipt');
         Route::get('/history/{sale}/edit', [CashierTransactionController::class, 'editHistory'])->name('cashier.history.edit');
         Route::put('/history/{sale}/edit', [CashierTransactionController::class, 'updateHistory'])->name('cashier.history.update');
         Route::delete('/history/{sale}/delete', [CashierTransactionController::class, 'destroyHistory'])->name('cashier.history.destroy');

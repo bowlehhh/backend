@@ -10,6 +10,7 @@ use App\Models\Sale;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class CashierDashboardController extends Controller
 {
@@ -47,6 +48,9 @@ class CashierDashboardController extends Controller
         $totalTransactionsToday = (clone $todaySalesQuery)->count();
 
         $totalRevenueToday = (float) (clone $todaySalesQuery)->sum('total');
+        $historyCount = Sale::query()
+            ->where('user_id', $user?->id)
+            ->count();
 
         $activeProducts = Product::query()->where('is_active', true)->count();
         $categories = Category::query()
@@ -98,10 +102,20 @@ class CashierDashboardController extends Controller
             ->where('user_id', $user?->id)
             ->count();
 
+        $supplierCount = DB::table('sale_items')
+            ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
+            ->leftJoin('product_batches', 'product_batches.id', '=', 'sale_items.product_batch_id')
+            ->where('sales.user_id', $user?->id)
+            ->whereNull('sales.deleted_at')
+            ->whereNotNull('product_batches.supplier_id')
+            ->distinct()
+            ->count('product_batches.supplier_id');
+
         return view('cashier.dashboard', [
             'user' => $user,
             'totalTransactionsToday' => $totalTransactionsToday,
             'totalRevenueToday' => $totalRevenueToday,
+            'historyCount' => $historyCount,
             'activeProducts' => $activeProducts,
             'categories' => $categories,
             'products' => $products,
@@ -111,6 +125,7 @@ class CashierDashboardController extends Controller
             'subtotal' => $subtotal,
             'cartTotal' => $total,
             'draftCount' => $draftCount,
+            'supplierCount' => $supplierCount,
             'searchSuggestions' => $searchSuggestions,
             'nextResetAtIso' => $nextResetAt->toIso8601String(),
         ]);

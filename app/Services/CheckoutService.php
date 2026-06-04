@@ -106,19 +106,21 @@ class CheckoutService
 
                 if ($creditAmount > 0) {
                     $dueDateInput = $payload['credit_due_date'] ?? null;
+                    $creditDaysInput = isset($payload['credit_days']) ? (int) $payload['credit_days'] : null;
 
-                    if ($dueDateInput === null || trim((string) $dueDateInput) === '') {
-                        throw ValidationException::withMessages([
-                            'credit_due_date' => ['Credit due date is required when payment is not fully paid.'],
-                        ]);
-                    }
-
-                    try {
-                        $creditDueDate = Carbon::parse((string) $dueDateInput)->startOfDay();
-                    } catch (\Throwable) {
-                        throw ValidationException::withMessages([
-                            'credit_due_date' => ['Credit due date is invalid.'],
-                        ]);
+                    if ($dueDateInput !== null && trim((string) $dueDateInput) !== '') {
+                        try {
+                            $creditDueDate = Carbon::parse((string) $dueDateInput)->startOfDay();
+                        } catch (\Throwable) {
+                            throw ValidationException::withMessages([
+                                'credit_due_date' => ['Credit due date is invalid.'],
+                            ]);
+                        }
+                    } elseif ($creditDaysInput !== null && $creditDaysInput > 0) {
+                        $creditDueDate = Carbon::today()->addDays($creditDaysInput)->startOfDay();
+                    } else {
+                        $creditDaysInput = 30;
+                        $creditDueDate = Carbon::today()->addDays($creditDaysInput)->startOfDay();
                     }
 
                     if ($creditDueDate->lt(Carbon::today())) {

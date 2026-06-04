@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\ProductBatch;
 use App\Models\SalesReturn;
 use App\Models\SalesReturnItem;
 use App\Models\StockHistory;
@@ -17,10 +18,30 @@ class SalesReturnService
     public function create(User $cashier, Sale $sale, array $payload): SalesReturn
     {
         return DB::transaction(function () use ($cashier, $sale, $payload): SalesReturn {
+            $reason = (string) ($payload['return_reason'] ?? 'barang_rusak');
             $requested = collect((array) ($payload['items'] ?? []))
                 ->map(fn (array $item): array => [
                     'sale_item_id' => (int) ($item['sale_item_id'] ?? 0),
                     'qty' => max(0, (int) ($item['qty'] ?? 0)),
+                    'replacement_product_id' => (int) ($item['replacement_product_id'] ?? 0),
+                    'replacement_batch_id' => (int) ($item['replacement_batch_id'] ?? 0),
+                    'replacement_qty' => max(0, (int) ($item['replacement_qty'] ?? 0)),
+                    'replacement_lines' => collect((array) ($item['replacement_lines'] ?? []))
+                        ->map(function (array $line): array {
+                            $replacementQty = max(0, (int) ($line['qty'] ?? 0));
+                            $replacementPrice = isset($line['price']) ? (float) preg_replace('/[^\d.]/', '', (string) $line['price']) : 0.0;
+
+                            return [
+                                'product_id' => (int) ($line['product_id'] ?? 0),
+                                'batch_id' => (int) ($line['batch_id'] ?? 0),
+                                'qty' => $replacementQty,
+                                'price' => $replacementPrice,
+                                'label' => trim((string) ($line['label'] ?? '')),
+                            ];
+                        })
+                        ->filter(fn (array $line): bool => $line['qty'] > 0 || $line['product_id'] > 0 || $line['batch_id'] > 0)
+                        ->values()
+                        ->all(),
                 ])
                 ->filter(fn (array $item): bool => $item['qty'] > 0)
                 ->values();
@@ -53,6 +74,10 @@ class SalesReturnService
             $returnNumber = $this->generateReturnNumber();
             $returnItems = [];
             $totalRefund = 0.0;
+            $exchangeTotal = 0.0;
+            $priceDifferenceTotal = 0.0;
+            $extraPaymentAmount = max(0, (float) preg_replace('/[^\d]/', '', (string) ($payload['extra_payment_amount'] ?? 0)));
+            $extraPaymentChangeAmount = 0.0;
 
             foreach ($requested as $requestedItem) {
                 $saleItemId = (int) $requestedItem['sale_item_id'];
@@ -74,6 +99,111 @@ class SalesReturnService
                     ]);
                 }
 
+                $replacementProductId = (int) ($requestedItem['replacement_product_id'] ?? 0);
+                $replacementBatchId = (int) ($requestedItem['replacement_batch_id'] ?? 0);
+                $replacementQty = max(0, (int) ($requestedItem['replacement_qty'] ?? 0));
+                $subtotal = (float) $saleItem->price * $returnQty;
+                $replacementPrice = null;
+                $replacementSubtotal = 0.0;
+                $priceDifference = 0.0;
+                $replacementDetails = [];
+
+                if ($reason === 'ganti_barang') {
+                    $replacementLines = collect((array) ($requestedItem['replacement_lines'] ?? []));
+
+                    if ($replacementLines->isEmpty() && $replacementProductId > 0 && $replacementBatchId > 0) {
+                        $replacementLines = collect([[
+                            'product_id' => $replacementProductId,
+                            'batch_id' => $replacementBatchId,
+                            'qty' => $replacementQty > 0 ? $replacementQty : $returnQty,
+                            'price' => 0,
+                            'label' => '',
+                        ]]);
+                    }
+
+                    if ($replacementLines->isEmpty()) {
+                        throw ValidationException::withMessages([
+                            'items' => ["Pilih barang pengganti untuk item {$saleItem->product_name}."],
+                        ]);
+                    }
+
+                    foreach ($replacementLines as $lineIndex => $line) {
+                        $lineProductId = (int) ($line['product_id'] ?? 0);
+                        $lineBatchId = (int) ($line['batch_id'] ?? 0);
+                        $lineQty = max(0, (int) ($line['qty'] ?? 0));
+
+                        if ($lineProductId <= 0 || $lineBatchId <= 0) {
+                            throw ValidationException::withMessages([
+                                'items' => ["Pilih barang pengganti untuk item {$saleItem->product_name}."],
+                            ]);
+                        }
+
+                        if ($lineQty <= 0) {
+                            throw ValidationException::withMessages([
+                                'items' => ["Qty barang pengganti untuk {$saleItem->product_name} harus lebih dari 0."],
+                            ]);
+                        }
+
+                        $replacementBatch = ProductBatch::query()
+                            ->with('product:id,name,barcode')
+                            ->whereKey($lineBatchId)
+                            ->lockForUpdate()
+                            ->first();
+
+                        if (! $replacementBatch) {
+                            throw ValidationException::withMessages([
+                                'items' => ["Barang pengganti untuk item {$saleItem->product_name} tidak ditemukan."],
+                            ]);
+                        }
+
+                        if ((int) $replacementBatch->product_id !== $lineProductId) {
+                            throw ValidationException::withMessages([
+                                'items' => ["Barang pengganti untuk item {$saleItem->product_name} tidak valid."],
+                            ]);
+                        }
+
+                        if ((int) $replacementBatch->stock < $lineQty) {
+                            throw ValidationException::withMessages([
+                                'items' => ["Stok barang pengganti untuk {$saleItem->product_name} tidak mencukupi."],
+                            ]);
+                        }
+
+                        $linePrice = (float) $replacementBatch->selling_price;
+                        $lineSubtotal = $linePrice * $lineQty;
+                        $replacementSubtotal += $lineSubtotal;
+                        $replacementDetails[] = [
+                            'product_id' => $lineProductId,
+                            'batch_id' => $lineBatchId,
+                            'label' => trim((string) ($line['label'] ?? $replacementBatch->product?->name ?? '-')),
+                            'part_number' => strtoupper((string) ($replacementBatch->product?->barcode ?? '-')),
+                            'part_name' => strtoupper((string) ($replacementBatch->product?->name ?? '-')),
+                            'qty' => $lineQty,
+                            'price' => $linePrice,
+                            'subtotal' => $lineSubtotal,
+                        ];
+
+                        $replacementStockBefore = (int) $replacementBatch->stock;
+                        $replacementStockAfter = max(0, $replacementStockBefore - $lineQty);
+                        $replacementBatch->update(['stock' => $replacementStockAfter]);
+
+                        StockHistory::create([
+                            'product_id' => $lineProductId,
+                            'product_batch_id' => $lineBatchId,
+                            'user_id' => $cashier->id,
+                            'type' => StockHistory::TYPE_OUT,
+                            'qty' => $lineQty,
+                            'stock_before' => $replacementStockBefore,
+                            'stock_after' => $replacementStockAfter,
+                            'reference' => $returnNumber,
+                            'description' => "Stock replacement used for sales return {$sale->invoice_number}.",
+                        ]);
+                    }
+
+                    $exchangeTotal += $replacementSubtotal;
+                    $priceDifference = $replacementSubtotal - $subtotal;
+                    $priceDifferenceTotal += $priceDifference;
+                }
+
                 $batch = $saleItem->productBatch;
 
                 if (! $batch) {
@@ -82,7 +212,6 @@ class SalesReturnService
                     ]);
                 }
 
-                $subtotal = (float) $saleItem->price * $returnQty;
                 $totalRefund += $subtotal;
 
                 $stockBefore = (int) $batch->stock;
@@ -110,21 +239,40 @@ class SalesReturnService
                     'qty_sold' => (int) $saleItem->qty,
                     'qty_return' => $returnQty,
                     'subtotal_return' => $subtotal,
+                    'replacement_product_id' => $reason === 'ganti_barang' ? ($replacementDetails[0]['product_id'] ?? null) : null,
+                    'replacement_batch_id' => $reason === 'ganti_barang' ? ($replacementDetails[0]['batch_id'] ?? null) : null,
+                    'replacement_qty' => $reason === 'ganti_barang' ? array_sum(array_map(fn (array $line): int => (int) ($line['qty'] ?? 0), $replacementDetails)) : null,
+                    'replacement_price' => $reason === 'ganti_barang' ? ($replacementDetails[0]['price'] ?? null) : null,
+                    'replacement_subtotal' => $reason === 'ganti_barang' ? $replacementSubtotal : null,
+                    'price_difference' => $reason === 'ganti_barang' ? $priceDifference : null,
+                    'replacement_details' => $reason === 'ganti_barang' ? $replacementDetails : null,
                 ];
             }
 
             $note = trim((string) ($payload['notes'] ?? ''));
+            $reason = (string) ($payload['return_reason'] ?? 'lainnya');
+            $reasonLabel = match ($reason) {
+                'barang_rusak' => 'Barang rusak',
+                'ganti_barang' => 'Ganti barang',
+                'pengembalian_dana' => 'Pengembalian dana',
+                'salah_kirim' => 'Salah kirim',
+                default => 'Lainnya',
+            };
 
             $salesReturn = SalesReturn::create([
                 'sale_id' => $sale->id,
                 'user_id' => $cashier->id,
                 'return_number' => $returnNumber,
                 'invoice_number' => (string) $sale->invoice_number,
-                'return_type' => 'refund',
-                'reason' => $note !== '' ? 'Lainnya' : 'Retur penjualan',
+                'return_type' => $reason === 'ganti_barang' ? 'exchange' : 'refund',
+                'reason' => $reasonLabel,
                 'reason_other' => $note !== '' ? $note : null,
                 'return_total' => $totalRefund,
-                'refund_amount' => $totalRefund,
+                'refund_amount' => $reason === 'ganti_barang' ? 0 : $totalRefund,
+                'exchange_total' => $exchangeTotal,
+                'price_difference_total' => $reason === 'ganti_barang' ? $priceDifferenceTotal : (-1 * $totalRefund),
+                'extra_payment_amount' => $reason === 'ganti_barang' ? $extraPaymentAmount : 0,
+                'extra_payment_change_amount' => $reason === 'ganti_barang' ? $extraPaymentChangeAmount : 0,
                 'returned_at' => now(),
             ]);
 
@@ -132,7 +280,16 @@ class SalesReturnService
 
             if (strtolower((string) $sale->payment_method) === 'credit') {
                 $currentCredit = (float) ($sale->credit_amount ?? 0);
-                $remainingCredit = max(0, $currentCredit - $totalRefund);
+                $creditAdjustment = $reason === 'ganti_barang'
+                    ? $priceDifferenceTotal
+                    : (-1 * $totalRefund);
+                $remainingCreditBeforeExtraPayment = max(0, $currentCredit + $creditAdjustment);
+                $remainingCredit = max(0, $remainingCreditBeforeExtraPayment - $extraPaymentAmount);
+                $extraPaymentChangeAmount = max(0, $extraPaymentAmount - $remainingCreditBeforeExtraPayment);
+                $salesReturn->update([
+                    'extra_payment_amount' => $extraPaymentAmount,
+                    'extra_payment_change_amount' => $extraPaymentChangeAmount,
+                ]);
 
                 $sale->fill([
                     'credit_amount' => $remainingCredit,
@@ -141,6 +298,12 @@ class SalesReturnService
                         : null,
                     'credit_due_date' => $remainingCredit > 0 ? $sale->credit_due_date : null,
                 ])->save();
+            } elseif ($reason === 'ganti_barang') {
+                $extraPaymentChangeAmount = max(0, $extraPaymentAmount - max(0, $priceDifferenceTotal));
+                $salesReturn->update([
+                    'extra_payment_amount' => $extraPaymentAmount,
+                    'extra_payment_change_amount' => $extraPaymentChangeAmount,
+                ]);
             }
 
             return $salesReturn->load(['sale.user:id,name', 'items']);

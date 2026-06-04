@@ -7,6 +7,7 @@ use App\Models\CashierDraft;
 use App\Models\Product;
 use App\Models\ProductBatch;
 use App\Models\Sale;
+use App\Models\SaleInstallment;
 use App\Models\SaleDeleteLog;
 use App\Models\SaleEditLog;
 use App\Models\SalesReturn;
@@ -20,6 +21,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
 
@@ -224,6 +226,7 @@ class CashierTransactionController extends Controller
 
         $paymentMethod = (string) $request->input('payment_method', 'cash');
         $paidAmount = (float) $request->input('paid_amount', 0);
+        $creditDays = (int) $request->input('credit_days', 0);
         $creditDueDate = trim((string) $request->input('credit_due_date', ''));
         $customerName = trim((string) $request->input('customer_name', ''));
         $customerPhone = trim((string) $request->input('customer_phone', ''));
@@ -235,6 +238,7 @@ class CashierTransactionController extends Controller
             $sale = $this->checkoutService->checkout($request->user(), [
                 'payment_method' => $paymentMethod,
                 'paid_amount' => $paidAmount,
+                'credit_days' => $creditDays > 0 ? $creditDays : null,
                 'credit_due_date' => $creditDueDate !== '' ? $creditDueDate : null,
                 'customer_name' => $customerName !== '' ? mb_substr($customerName, 0, 100) : null,
                 'customer_phone' => $customerPhone !== '' ? mb_substr($customerPhone, 0, 30) : null,
@@ -275,7 +279,12 @@ class CashierTransactionController extends Controller
             ->paginate(15);
 
         $returns = SalesReturn::query()
-            ->with(['user:id,name', 'items'])
+            ->with([
+                'user:id,name',
+                'sale:id,user_id,cashier_service_name',
+                'sale.user:id,name',
+                'items',
+            ])
             ->where('user_id', $user->id)
             ->latest('id')
             ->limit(20)
@@ -295,28 +304,231 @@ class CashierTransactionController extends Controller
             ->limit(20)
             ->get();
 
+        $installmentPaidMap = $this->getSaleInstallmentPaidMap($sales->getCollection()->pluck('id')->all());
+
         return view('cashier.history', [
             'user' => $user,
             'sales' => $sales,
             'returns' => $returns,
             'editLogs' => $editLogs,
             'deleteLogs' => $deleteLogs,
+            'installmentPaidMap' => $installmentPaidMap,
         ]);
+    }
+
+    public function installmentForm(Request $request, Sale $sale): View
+    {
+        if ((int) $sale->user_id !== (int) $request->user()->id) {
+            abort(403, 'Anda tidak berhak memproses cicilan transaksi ini.');
+        }
+
+        $sale->loadMissing(['items', 'user:id,name', 'installments.user:id,name']);
+
+        $installmentPaid = $this->getSaleInstallmentPaidTotal($sale->id);
+        $remainingCredit = max(0, (float) ($sale->credit_amount ?? 0));
+        $history = $sale->installments()->with('user:id,name')->latest('paid_at')->latest('id')->get();
+
+        return view('cashier.installment-form', [
+            'user' => $request->user(),
+            'sale' => $sale,
+            'installmentPaid' => $installmentPaid,
+            'remainingCredit' => $remainingCredit,
+            'history' => $history,
+        ]);
+    }
+
+    public function storeInstallment(Request $request, Sale $sale): RedirectResponse
+    {
+        if ((int) $sale->user_id !== (int) $request->user()->id) {
+            abort(403, 'Anda tidak berhak memproses cicilan transaksi ini.');
+        }
+
+        if (! Schema::hasTable('sale_installments')) {
+            return back()->withErrors(['installment' => 'Fitur cicilan belum aktif. Jalankan migrasi database terlebih dahulu.']);
+        }
+
+        $validated = $request->validate([
+            'amount' => ['required', 'string'],
+            'note' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $remainingCredit = max(0, (float) ($sale->credit_amount ?? 0));
+        $amount = (float) preg_replace('/[^\d]/', '', (string) $validated['amount']);
+
+        if ($remainingCredit <= 0) {
+            return back()->withErrors(['amount' => 'Transaksi ini sudah lunas.']);
+        }
+
+        if ($amount <= 0) {
+            return back()->withErrors(['amount' => 'Nominal cicilan harus lebih dari 0.'])->withInput();
+        }
+
+        $appliedAmount = min($amount, $remainingCredit);
+        $changeAmount = max(0, $amount - $appliedAmount);
+        session()->flash('last_installment_change', $changeAmount);
+        $isFullSettlement = $appliedAmount >= $remainingCredit;
+
+        $installment = null;
+
+        DB::transaction(function () use ($request, $sale, $amount, $appliedAmount, $changeAmount, $validated, $remainingCredit, &$installment): void {
+            $installment = SaleInstallment::create([
+                'sale_id' => $sale->id,
+                'user_id' => $request->user()->id,
+                'amount' => $appliedAmount,
+                'received_amount' => $amount,
+                'change_amount' => $changeAmount,
+                'paid_at' => now(),
+                'note' => trim((string) ($validated['note'] ?? '')) ?: null,
+            ]);
+
+            $newRemaining = max(0, $remainingCredit - $appliedAmount);
+            $sale->update([
+                'credit_amount' => $newRemaining,
+                'credit_due_date' => $newRemaining > 0 ? $sale->credit_due_date : null,
+            ]);
+        });
+
+        $successMessage = $isFullSettlement
+            ? ($amount > $remainingCredit
+                ? 'Cicilan berhasil dicatat. Nominal berlebih otomatis dipakai sampai kredit lunas.'
+                : 'Cicilan berhasil dicatat dan kredit sudah lunas.')
+            : 'Cicilan berhasil dicatat.';
+
+        return redirect()
+            ->route('cashier.receipt', $sale)
+            ->with('success', $successMessage)
+            ->with('last_installment_id', $installment?->id);
+    }
+
+    public function installmentReceipt(Request $request, Sale $sale, SaleInstallment $installment): View|Response
+    {
+        if ((int) $sale->user_id !== (int) $request->user()->id || (int) $installment->sale_id !== (int) $sale->id) {
+            abort(403, 'Anda tidak berhak melihat nota cicilan ini.');
+        }
+
+        $sale->loadMissing(['user:id,name', 'installments.user:id,name', 'items']);
+        $installmentPaid = $this->getSaleInstallmentPaidTotal($sale->id);
+        $remainingCredit = max(0, (float) ($sale->credit_amount ?? 0));
+
+        $viewData = [
+            'sale' => $sale,
+            'installment' => $installment,
+            'installmentPaid' => $installmentPaid,
+            'remainingCredit' => $remainingCredit,
+            'historyUrl' => route('cashier.history'),
+            'installmentUrl' => route('cashier.history.installment.form', $sale),
+        ];
+
+        if ($request->boolean('pdf')) {
+            $pdf = Pdf::loadView('cashier.installment-receipt', $viewData)->setPaper('a4', 'portrait');
+
+            return $pdf->download("cicilan-{$sale->invoice_number}-{$installment->id}.pdf");
+        }
+
+        return response()->view('cashier.installment-receipt', $viewData)
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
     }
 
     public function historyBySupplier(Request $request): View
     {
         $user = $request->user();
 
-        $rows = DB::table('sale_items')
+        return view('cashier.history-supplier', [
+            'user' => $user,
+            'groups' => $this->getPtCvGroupsForCashier((int) $user->id),
+        ]);
+    }
+
+    public function historyBySupplierDetail(Request $request): View
+    {
+        $user = $request->user();
+        $ptName = $this->normalizePtCvName((string) $request->query('pt', ''));
+
+        if ($ptName === 'TANPA PT/CV') {
+            abort(404, 'Nama PT/CV tidak ditemukan.');
+        }
+
+        $group = $this->getPtCvDetailForCashier((int) $user->id, $ptName);
+
+        if ($group === null) {
+            abort(404, 'Riwayat PT/CV tidak ditemukan.');
+        }
+
+        return view('cashier.history-supplier-detail', [
+            'user' => $user,
+            'group' => $group,
+        ]);
+    }
+
+    /**
+     * Ambil daftar kelompok transaksi PT/CV untuk kasir aktif.
+     *
+     * Data ini dipakai di halaman list dan halaman detail supaya konsisten.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function getPtCvGroupsForCashier(int $userId): array
+    {
+        $rows = $this->getPtCvRowsForCashier($userId);
+        $now = Carbon::now();
+
+        return $rows
+            ->groupBy(fn ($row) => $this->normalizePtCvName((string) ($row->pt_name ?? '')))
+            ->map(function ($items) use ($now): array {
+                $ptName = $this->normalizePtCvName((string) ($items->first()->pt_name ?? ''));
+                $transactions = $items->map(fn ($row): array => $this->mapPtCvTransactionRow($row))->values();
+
+                return [
+                    'pt_name' => $ptName,
+                    'summary' => [
+                        'total_transaksi' => $transactions->count(),
+                        'total_qty' => $transactions->sum('qty'),
+                        'total_nilai' => 'Rp ' . number_format((float) $items->sum('subtotal'), 0, ',', '.'),
+                        'kredit' => $transactions->whereIn('status', ['BELUM LUNAS', 'JATUH TEMPO'])->count(),
+                        'lunas' => $transactions->where('status', 'LUNAS')->count(),
+                    ],
+                    'transactions' => $transactions,
+                    'last_transaction' => $transactions->first(),
+                ];
+            })
+            ->sortByDesc(fn (array $group): string => (string) ($group['last_transaction']['waktu_raw'] ?? ''))
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Ambil detail transaksi untuk satu PT/CV.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function getPtCvDetailForCashier(int $userId, string $ptName): ?array
+    {
+        $group = collect($this->getPtCvGroupsForCashier($userId))
+            ->first(function (array $group) use ($ptName): bool {
+                return $this->normalizePtCvName((string) ($group['pt_name'] ?? '')) === $ptName;
+            });
+
+        if ($group === null) {
+            return null;
+        }
+
+        return $group;
+    }
+
+    /**
+     * Ambil data transaksi mentah untuk dikelompokkan per PT/CV.
+     */
+    private function getPtCvRowsForCashier(int $userId)
+    {
+        return DB::table('sale_items')
             ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
             ->leftJoin('product_batches', 'product_batches.id', '=', 'sale_items.product_batch_id')
             ->leftJoin('suppliers', 'suppliers.id', '=', 'product_batches.supplier_id')
-            ->where('sales.user_id', $user->id)
+            ->where('sales.user_id', $userId)
             ->whereNull('sales.deleted_at')
             ->selectRaw('
                 COALESCE(suppliers.id, 0) as supplier_id,
-                COALESCE(suppliers.name, "Tanpa Supplier") as supplier_name,
+                COALESCE(NULLIF(TRIM(suppliers.name), ""), "Tanpa PT/CV") as pt_name,
                 sales.id as sale_id,
                 sales.invoice_number,
                 sales.payment_method,
@@ -340,55 +552,73 @@ class CashierTransactionController extends Controller
             )
             ->orderByDesc('sales.id')
             ->get();
+    }
 
-        $now = Carbon::now();
-        $grouped = $rows
-            ->groupBy('supplier_id')
-            ->map(function ($items) use ($now) {
-                $supplierName = (string) ($items->first()->supplier_name ?? 'Tanpa Supplier');
-                $transactions = $items->map(function ($row) use ($now) {
-                    $method = strtoupper((string) $row->payment_method);
-                    $creditAmount = (float) ($row->credit_amount ?? 0);
-                    $dueDateRaw = $row->credit_due_date;
-                    $dueDate = $dueDateRaw ? Carbon::parse($dueDateRaw) : null;
+    /**
+     * Ubah satu baris hasil query menjadi format yang siap dipakai view.
+     */
+    private function mapPtCvTransactionRow(object $row): array
+    {
+        $method = strtoupper((string) $row->payment_method);
+        $creditAmount = (float) ($row->credit_amount ?? 0);
+        $dueDateRaw = $row->credit_due_date;
+        $dueDate = $dueDateRaw ? Carbon::parse($dueDateRaw) : null;
 
-                    $status = 'LUNAS';
-                    if ($method === 'CREDIT' && $creditAmount > 0) {
-                        $status = ($dueDate && $dueDate->isPast()) ? 'JATUH TEMPO' : 'BELUM LUNAS';
-                    }
+        $status = 'LUNAS';
+        if ($method === 'CREDIT' && $creditAmount > 0) {
+            $status = ($dueDate && $dueDate->isPast()) ? 'JATUH TEMPO' : 'BELUM LUNAS';
+        }
 
-                    return [
-                        'sale_id' => (int) $row->sale_id,
-                        'invoice_number' => (string) $row->invoice_number,
-                        'waktu' => $row->created_at ? Carbon::parse($row->created_at)->format('d M Y H:i') : '-',
-                        'metode' => $method,
-                        'qty' => (int) ($row->qty ?? 0),
-                        'subtotal' => 'Rp ' . number_format((float) ($row->subtotal ?? 0), 0, ',', '.'),
-                        'credit_amount' => 'Rp ' . number_format($creditAmount, 0, ',', '.'),
-                        'credit_due_date' => $dueDate ? $dueDate->format('d M Y') : '-',
-                        'status' => $status,
-                    ];
-                })->values();
+        return [
+            'sale_id' => (int) $row->sale_id,
+            'invoice_number' => (string) $row->invoice_number,
+            'waktu_raw' => $row->created_at ? Carbon::parse($row->created_at)->toDateTimeString() : '',
+            'waktu' => $row->created_at ? Carbon::parse($row->created_at)->format('d M Y H:i') : '-',
+            'metode' => $method,
+            'qty' => (int) ($row->qty ?? 0),
+            'subtotal' => 'Rp ' . number_format((float) ($row->subtotal ?? 0), 0, ',', '.'),
+            'credit_amount' => 'Rp ' . number_format($creditAmount, 0, ',', '.'),
+            'credit_due_date' => $dueDate ? $dueDate->format('d M Y') : '-',
+            'status' => $status,
+        ];
+    }
 
-                return [
-                    'supplier_id' => (int) ($items->first()->supplier_id ?? 0),
-                    'supplier_name' => $supplierName,
-                    'summary' => [
-                        'total_transaksi' => $transactions->count(),
-                        'total_qty' => $transactions->sum('qty'),
-                        'total_nilai' => 'Rp ' . number_format((float) $items->sum('subtotal'), 0, ',', '.'),
-                        'kredit' => $transactions->whereIn('status', ['BELUM LUNAS', 'JATUH TEMPO'])->count(),
-                        'lunas' => $transactions->where('status', 'LUNAS')->count(),
-                    ],
-                    'transactions' => $transactions,
-                ];
-            })
-            ->values();
+    /**
+     * Normalisasi nama PT/CV supaya nama yang mirip tetap tergabung.
+     */
+    private function normalizePtCvName(?string $name): string
+    {
+        $normalized = strtoupper(trim((string) $name));
+        return preg_replace('/\s+/', ' ', $normalized) ?: 'TANPA PT/CV';
+    }
 
-        return view('cashier.history-supplier', [
-            'user' => $user,
-            'groups' => $grouped,
-        ]);
+    /**
+     * @return array<int, float>
+     */
+    private function getSaleInstallmentPaidMap(array $saleIds): array
+    {
+        if ($saleIds === [] || ! Schema::hasTable('sale_installments')) {
+            return [];
+        }
+
+        return SaleInstallment::query()
+            ->whereIn('sale_id', $saleIds)
+            ->selectRaw('sale_id, SUM(amount) as total_amount')
+            ->groupBy('sale_id')
+            ->get()
+            ->mapWithKeys(fn ($row): array => [(int) $row->sale_id => (float) $row->total_amount])
+            ->all();
+    }
+
+    private function getSaleInstallmentPaidTotal(int $saleId): float
+    {
+        if (! Schema::hasTable('sale_installments')) {
+            return 0.0;
+        }
+
+        return (float) SaleInstallment::query()
+            ->where('sale_id', $saleId)
+            ->sum('amount');
     }
 
     public function editHistory(Request $request, Sale $sale): View
@@ -757,10 +987,36 @@ class CashierTransactionController extends Controller
             ->get()
             ->mapWithKeys(fn ($row): array => [(int) $row->sale_item_id => (int) $row->total_qty]);
 
+        $replacementOptions = ProductBatch::query()
+            ->with(['product:id,name,barcode'])
+            ->where('is_active', true)
+            ->where('stock', '>', 0)
+            ->orderByDesc('id')
+            ->limit(500)
+            ->get()
+            ->map(function (ProductBatch $batch): array {
+                $partNumber = strtoupper((string) ($batch->product?->barcode ?? '-'));
+                $partName = strtoupper((string) ($batch->product?->name ?? '-'));
+
+                return [
+                    'product_id' => (int) $batch->product_id,
+                    'batch_id' => (int) $batch->id,
+                    'part_number' => $partNumber,
+                    'part_name' => $partName,
+                    'stock' => (int) $batch->stock,
+                    'price' => (float) $batch->selling_price,
+                    'label' => trim("{$partNumber} - {$partName}"),
+                    'search_text' => strtoupper(trim("{$partNumber} {$partName} {$batch->batch_code}")),
+                ];
+            })
+            ->values()
+            ->all();
+
         return view('cashier.return-form', [
             'user' => $request->user(),
             'sale' => $sale,
             'returnedQtyMap' => $returnedQtyMap,
+            'replacementOptions' => $replacementOptions,
         ]);
     }
 
@@ -774,6 +1030,18 @@ class CashierTransactionController extends Controller
             'items' => ['required', 'array', 'min:1'],
             'items.*.sale_item_id' => ['required', 'integer'],
             'items.*.qty' => ['nullable', 'integer', 'min:0'],
+            'items.*.replacement_product_id' => ['nullable', 'integer'],
+            'items.*.replacement_batch_id' => ['nullable', 'integer'],
+            'items.*.replacement_qty' => ['nullable', 'integer', 'min:0'],
+            'items.*.replacement_price' => ['nullable', 'numeric', 'min:0'],
+            'items.*.replacement_lines' => ['nullable', 'array'],
+            'items.*.replacement_lines.*.product_id' => ['nullable', 'integer'],
+            'items.*.replacement_lines.*.batch_id' => ['nullable', 'integer'],
+            'items.*.replacement_lines.*.qty' => ['nullable', 'integer', 'min:0'],
+            'items.*.replacement_lines.*.price' => ['nullable', 'numeric', 'min:0'],
+            'items.*.replacement_lines.*.label' => ['nullable', 'string', 'max:255'],
+            'extra_payment_amount' => ['nullable', 'string'],
+            'return_reason' => ['required', 'in:barang_rusak,ganti_barang,pengembalian_dana,salah_kirim,lainnya'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ]);
 
@@ -790,7 +1058,7 @@ class CashierTransactionController extends Controller
 
     public function returnReceipt(Request $request, SalesReturn $salesReturn): View|Response
     {
-        $salesReturn->loadMissing(['sale.user:id,name', 'items']);
+        $salesReturn->loadMissing(['sale.user:id,name', 'items.replacementBatch.product']);
 
         if ((int) $salesReturn->sale->user_id !== (int) $request->user()->id) {
             abort(403, 'Anda tidak berhak melihat nota retur ini.');
@@ -817,11 +1085,18 @@ class CashierTransactionController extends Controller
 
     public function receipt(Request $request, Sale $sale): View|Response
     {
-        if ((int) $sale->user_id !== (int) $request->user()->id) {
+        $fromReturn = $request->boolean('from_return') || $request->query('from') === 'return';
+
+        if ((int) $sale->user_id !== (int) $request->user()->id && ! $fromReturn) {
             abort(403, 'Anda tidak berhak melihat nota ini.');
         }
 
-        $sale->loadMissing(['items', 'user:id,name', 'returns']);
+        $sale->loadMissing([
+            'items.product',
+            'user:id,name',
+            'returns.items.replacementBatch.product',
+            'installments.user:id,name',
+        ]);
 
         if ($request->boolean('pdf')) {
             $pdf = Pdf::loadView('cashier.receipt', [

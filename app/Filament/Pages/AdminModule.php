@@ -45,7 +45,7 @@ class AdminModule extends Page
         $modules = [
             'batches' => ['label' => 'Batch Barang', 'icon' => 'layers'],
             'credits' => ['label' => 'Kredit', 'icon' => 'credit_card'],
-            'supplier-transactions' => ['label' => 'Transaksi PT', 'icon' => 'account_tree'],
+            'supplier-transactions' => ['label' => 'Transaksi PT/CV', 'icon' => 'account_tree'],
             'taxonomy' => ['label' => 'Kategori & Merek', 'icon' => 'category'],
             'reports' => ['label' => 'Laporan', 'icon' => 'analytics'],
             'users' => ['label' => 'User', 'icon' => 'group'],
@@ -434,7 +434,8 @@ class AdminModule extends Page
             'sales.customer_name',
             'sales.total',
             'sales.created_at',
-            'users.name as cashier_name',
+            'sales.cashier_service_name',
+            'users.name as cashier_user_name',
         ];
 
         if (Schema::hasColumn('sales', 'payment_method')) {
@@ -474,7 +475,10 @@ class AdminModule extends Page
             'sale_id' => (int) $row->id,
             'invoice_number' => $row->invoice_number ?: '-',
             'customer_name' => $row->customer_name ?: 'Pembeli Umum',
-            'cashier_name' => $row->cashier_name ?: '-',
+            'cashier_name' => $this->resolveCashierDisplayName(
+                (string) ($row->cashier_service_name ?? ''),
+                (string) ($row->cashier_user_name ?? '')
+            ),
             'created_at' => $row->created_at ? Carbon::parse($row->created_at)->format('d M Y H:i') : '-',
             'payment_method' => strtoupper((string) ($row->payment_method ?? 'cash')),
             'credit_amount' => 'Rp ' . number_format((float) ($row->credit_amount ?? 0), 0, ',', '.'),
@@ -482,6 +486,25 @@ class AdminModule extends Page
             'total_return_refund' => 'Rp ' . number_format((float) ($row->total_return_refund ?? 0), 0, ',', '.'),
             'total' => 'Rp ' . number_format((float) ($row->total ?? 0), 0, ',', '.'),
         ])->toArray();
+    }
+
+    private function resolveCashierDisplayName(string $serviceName, string $fallbackName): string
+    {
+        $serviceName = trim($serviceName);
+        $fallbackName = trim($fallbackName);
+
+        if ($serviceName === '') {
+            return $fallbackName !== '' ? $fallbackName : '-';
+        }
+
+        $normalized = mb_strtolower($serviceName);
+        $looksLikeCreditDays = (bool) preg_match('/^\d+\s*(hari|day|days)?$/u', $normalized) || str_contains($normalized, 'hari');
+
+        if ($looksLikeCreditDays && $fallbackName !== '') {
+            return $fallbackName;
+        }
+
+        return $serviceName;
     }
 
     private function getReportTransactions(): array

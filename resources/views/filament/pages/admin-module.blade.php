@@ -90,6 +90,7 @@
       }
       .sf-main-scroll {
         min-height: calc(100vh - 64px);
+        min-width: 0;
         overflow: visible;
       }
       .sf-nav-item { font-size: 14px; }
@@ -140,9 +141,9 @@
           </div>
           <nav class="flex-1 min-h-0 space-y-1 overflow-y-auto">
             <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] rounded-lg font-medium" href="{{ url('/admin/products') }}"><span class="material-symbols-outlined">inventory_2</span><span class="nav-label">Barang</span></a>
-            <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] rounded-lg font-medium" href="{{ url('/admin/suppliers') }}"><span class="material-symbols-outlined">local_shipping</span><span class="nav-label">Supplier</span></a>
+            <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] rounded-lg font-medium" href="{{ url('/admin/suppliers') }}"><span class="material-symbols-outlined">local_shipping</span><span class="nav-label">PT/CV</span></a>
             <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'credits' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=credits') }}"><span class="material-symbols-outlined">credit_card</span><span class="nav-label">Kredit</span></a>
-            <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'supplier-transactions' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=supplier-transactions') }}"><span class="material-symbols-outlined">account_tree</span><span class="nav-label">Transaksi PT</span></a>
+            <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'supplier-transactions' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=supplier-transactions') }}"><span class="material-symbols-outlined">account_tree</span><span class="nav-label">Transaksi PT/CV</span></a>
             <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'batches' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=batches') }}"><span class="material-symbols-outlined">layers</span><span class="nav-label">Batch Barang</span></a>
             <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'taxonomy' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=taxonomy') }}"><span class="material-symbols-outlined">category</span><span class="nav-label">Kategori & Merek</span></a>
             <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'reports' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=reports') }}"><span class="material-symbols-outlined">analytics</span><span class="nav-label">Laporan</span></a>
@@ -199,7 +200,7 @@
                 <p class="text-sm text-[#52615a]">Klik detail untuk masuk ke riwayat transaksi supplier terkait.</p>
               </div>
               <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+                <table class="min-w-[1180px] w-full text-left border-collapse">
                   <thead>
                     <tr class="bg-[#eceef0] text-[#3d4a42] border-b border-[#d4dbd7]">
                       <th class="px-6 py-4 font-medium uppercase tracking-wider">Tanggal</th>
@@ -242,13 +243,13 @@
             <div class="mt-6 bg-white border border-[#d4dbd7] rounded-xl overflow-hidden custom-shadow">
               <div class="px-6 py-4 border-b border-[#d4dbd7]">
                 <h2 class="text-lg font-semibold text-[#191c1e]">Kelompok PT: Kredit & Lunas</h2>
-                <p class="text-sm text-[#52615a]">Ringkasan transaksi per PT/supplier, dipisahkan status kredit dan lunas.</p>
+                <p class="text-sm text-[#52615a]">Ringkasan transaksi per PT/CV, dipisahkan status kredit dan lunas.</p>
               </div>
               <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+                <table class="min-w-[980px] w-full text-left border-collapse">
                   <thead>
                     <tr class="bg-[#eceef0] text-[#3d4a42] border-b border-[#d4dbd7]">
-                      <th class="px-6 py-4 font-medium uppercase tracking-wider">PT / Supplier</th>
+                      <th class="px-6 py-4 font-medium uppercase tracking-wider">PT / CV</th>
                       <th class="px-6 py-4 font-medium uppercase tracking-wider">Total Transaksi</th>
                       <th class="px-6 py-4 font-medium uppercase tracking-wider">Total Qty</th>
                       <th class="px-6 py-4 font-medium uppercase tracking-wider">Total Modal</th>
@@ -334,7 +335,7 @@
           @elseif ($type === 'supplier-transactions')
             <div class="bg-white border border-[#d4dbd7] rounded-xl overflow-hidden custom-shadow">
               <div class="px-6 py-4 border-b border-[#d4dbd7]">
-                <h2 class="text-lg font-semibold text-[#191c1e]">Kelompok Transaksi PT (Kredit & Lunas)</h2>
+                <h2 class="text-lg font-semibold text-[#191c1e]">Kelompok Transaksi PT/CV (Kredit & Lunas)</h2>
                 <p class="text-sm text-[#52615a]">Data ini khusus dari transaksi kasir ke customer PT/CV.</p>
               </div>
               <div class="overflow-x-auto">
@@ -443,7 +444,7 @@
             @endif
             <div class="bg-white border border-[#d4dbd7] rounded-xl overflow-hidden custom-shadow">
               <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-xs md:text-sm">
+                <table class="min-w-[1180px] w-full text-left border-collapse text-xs md:text-sm">
                   <thead>
                     <tr class="bg-[#eceef0] text-[#3d4a42] border-b border-[#d4dbd7]">
                       <th class="px-3 py-2.5 font-medium uppercase tracking-wider whitespace-nowrap">Supplier</th>
@@ -530,9 +531,9 @@
               <div class="rounded-xl border border-[#d4dbd7] bg-white p-4 custom-shadow"><p class="text-xs uppercase text-[#52615a]">Total Produk</p><p class="mt-1 text-2xl font-semibold text-[#006948]">{{ number_format((int) $taxonomyStats['total_products'], 0, ',', '.') }}</p></div>
             </div>
 
-            <div class="bg-white border border-[#d4dbd7] rounded-xl overflow-hidden custom-shadow">
-              <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+            <div class="bg-white border border-[#d4dbd7] rounded-xl overflow-hidden custom-shadow min-w-0">
+              <div class="overflow-x-auto w-full max-w-full">
+                <table class="min-w-[1180px] w-max text-left border-collapse">
                   <thead>
                     <tr class="bg-[#eceef0] text-[#3d4a42] border-b border-[#d4dbd7]">
                       @php
@@ -599,8 +600,8 @@
                   <h3 class="text-lg font-semibold text-[#191c1e]">Daftar Produk Terkait</h3>
                   <p class="text-sm text-[#52615a]">Kategori ID {{ $taxonomySelectedCategoryId }} & Brand ID {{ $taxonomySelectedBrandId }}</p>
                 </div>
-                <div class="overflow-x-auto">
-                  <table class="w-full text-left border-collapse">
+              <div class="overflow-x-auto w-full max-w-full">
+                <table class="min-w-[1100px] w-max text-left border-collapse">
                     <thead>
                       <tr class="bg-[#eceef0] text-[#3d4a42] border-b border-[#d4dbd7]">
                         <th class="px-6 py-3 font-medium uppercase tracking-wider">Nama Produk</th>

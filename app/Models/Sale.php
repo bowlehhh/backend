@@ -56,6 +56,11 @@ class Sale extends Model
         return $this->hasMany(SalesReturn::class);
     }
 
+    public function installments(): HasMany
+    {
+        return $this->hasMany(SaleInstallment::class);
+    }
+
     public function returnedItems(): HasManyThrough
     {
         return $this->hasManyThrough(
@@ -76,5 +81,24 @@ class Sale extends Model
     public function deleteLogs(): HasMany
     {
         return $this->hasMany(SaleDeleteLog::class);
+    }
+
+    public function getCashierDisplayNameAttribute(): string
+    {
+        $serviceName = trim((string) ($this->cashier_service_name ?? ''));
+        $fallbackName = trim((string) ($this->user?->name ?? ''));
+
+        if ($serviceName === '') {
+            return $fallbackName !== '' ? $fallbackName : '-';
+        }
+
+        $normalized = mb_strtolower($serviceName);
+        $looksLikeCreditDays = (bool) preg_match('/^\d+\s*(hari|day|days)?$/u', $normalized) || str_contains($normalized, 'hari');
+
+        if ($looksLikeCreditDays && $fallbackName !== '') {
+            return $fallbackName;
+        }
+
+        return $serviceName;
     }
 }

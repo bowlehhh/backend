@@ -5,7 +5,7 @@
     $products = $viewData['products'] ?? [];
     $categories = $viewData['categories'] ?? [];
     $brands = $viewData['brands'] ?? [];
-    $categoryOptions = $viewData['categoryOptions'] ?? [];
+    $categoryOptions = $viewData['categoryOptions'] ?? 
     $brandOptions = $viewData['brandOptions'] ?? [];
     $supplierOptions = $viewData['supplierOptions'] ?? [];
     $lowStockProducts = $viewData['lowStockProducts'] ?? [];

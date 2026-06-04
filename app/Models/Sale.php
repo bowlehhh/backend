@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Sale extends Model
@@ -16,12 +17,16 @@ class Sale extends Model
         'user_id',
         'invoice_number',
         'customer_name',
+        'customer_phone',
         'cashier_service_name',
         'cashier_phone',
         'total',
         'payment_method',
         'paid_amount',
         'change_amount',
+        'credit_amount',
+        'credit_days',
+        'credit_due_date',
     ];
 
     protected function casts(): array
@@ -30,6 +35,9 @@ class Sale extends Model
             'total' => 'decimal:2',
             'paid_amount' => 'decimal:2',
             'change_amount' => 'decimal:2',
+            'credit_amount' => 'decimal:2',
+            'credit_days' => 'integer',
+            'credit_due_date' => 'date',
         ];
     }
 
@@ -41,5 +49,32 @@ class Sale extends Model
     public function items(): HasMany
     {
         return $this->hasMany(SaleItem::class);
+    }
+
+    public function returns(): HasMany
+    {
+        return $this->hasMany(SalesReturn::class);
+    }
+
+    public function returnedItems(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            SalesReturnItem::class,
+            SalesReturn::class,
+            'sale_id',
+            'sales_return_id',
+            'id',
+            'id',
+        );
+    }
+
+    public function editLogs(): HasMany
+    {
+        return $this->hasMany(SaleEditLog::class);
+    }
+
+    public function deleteLogs(): HasMany
+    {
+        return $this->hasMany(SaleDeleteLog::class);
     }
 }

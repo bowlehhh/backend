@@ -16,6 +16,8 @@
     $reportStats = $reportStats ?? ['today_total' => 0, 'month_total' => 0, 'year_total' => 0, 'today_count' => 0, 'month_count' => 0, 'year_count' => 0];
     $reportTransactions = $reportTransactions ?? [];
     $reportCashierTransactions = $reportCashierTransactions ?? [];
+    $ptCustomerGroups = $ptCustomerGroups ?? [];
+    $ptCustomerDetail = $ptCustomerDetail ?? ['pt_name' => '', 'rows' => [], 'summary' => null];
 @endphp
 
 <x-filament-panels::page>
@@ -26,6 +28,23 @@
     <style>
       .sf-wrap { font-family: 'Hanken Grotesk', sans-serif; }
       .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; display: inline-block; vertical-align: middle; }
+      /* Hard override: always hide native Filament shell on this custom page */
+      .fi-sidebar,
+      .fi-topbar,
+      .fi-header,
+      .fi-page-header,
+      .fi-breadcrumbs {
+        display: none !important;
+      }
+      .fi-main,
+      .fi-page,
+      .fi-page-content,
+      .fi-main-ctn {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
       html.sf-dashboard-page,
       .sf-dashboard-page,
       .sf-dashboard-page body,
@@ -34,8 +53,9 @@
       .sf-dashboard-page .fi-main,
       .sf-dashboard-page .fi-main-ctn {
         background: #f7f9fb !important;
-        height: 100% !important;
-        overflow: hidden !important;
+        min-height: 100% !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
       }
       .sf-dashboard-page .fi-sidebar,
       .sf-dashboard-page .fi-topbar,
@@ -48,29 +68,29 @@
         width: 100% !important;
         margin: 0 !important;
         padding: 0 !important;
-        height: 100% !important;
-        overflow: hidden !important;
+        min-height: 100% !important;
+        overflow: visible !important;
       }
       html.sf-dashboard-page,
       .sf-dashboard-page,
       .sf-dashboard-page body,
-      .sf-dashboard-page .fi-body { height: 100% !important; overflow: hidden !important; }
+      .sf-dashboard-page .fi-body { min-height: 100% !important; overflow-x: hidden !important; overflow-y: auto !important; }
       .sf-layout {
         display: grid;
         grid-template-columns: 240px minmax(0, 1fr);
         gap: 0;
-        height: calc(100vh - 64px);
+        min-height: calc(100vh - 64px);
       }
       .sf-sidebar {
         position: sticky;
         top: 64px;
         height: calc(100vh - 64px);
         border-right: 1px solid #d4dbd7;
-        overflow: hidden;
+        overflow-y: auto;
       }
       .sf-main-scroll {
-        height: calc(100vh - 64px);
-        overflow-y: auto;
+        min-height: calc(100vh - 64px);
+        overflow: visible;
       }
       .sf-nav-item { font-size: 14px; }
       .sf-sidebar-collapsed .sf-layout { grid-template-columns: 76px minmax(0, 1fr); }
@@ -98,7 +118,7 @@
       }
     </style>
 
-    <div class="sf-wrap bg-[#f7f9fb] text-[#191c1e] antialiased h-screen w-screen max-w-none ml-[calc(50%-50vw)] mr-[calc(50%-50vw)] overflow-hidden">
+    <div class="sf-wrap bg-[#f7f9fb] text-[#191c1e] antialiased min-h-screen w-screen max-w-none ml-[calc(50%-50vw)] mr-[calc(50%-50vw)] overflow-x-hidden">
       <header class="bg-white border-b border-[#d4dbd7] shadow-sm flex justify-between items-center px-6 h-16 w-full sticky top-0 z-20">
         <div class="flex items-center gap-4"><span class="text-xl font-bold text-[#006948]">Toko Pak Paul</span></div>
         <button id="toggleSidebarBtn" type="button" class="hidden lg:inline-flex items-center gap-1 rounded-lg border border-[#bccac0] px-3 py-2 text-sm text-[#3d4a42] hover:bg-[#f1f4f2]">
@@ -121,13 +141,15 @@
           <nav class="flex-1 min-h-0 space-y-1 overflow-y-auto">
             <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] rounded-lg font-medium" href="{{ url('/admin/products') }}"><span class="material-symbols-outlined">inventory_2</span><span class="nav-label">Barang</span></a>
             <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] rounded-lg font-medium" href="{{ url('/admin/suppliers') }}"><span class="material-symbols-outlined">local_shipping</span><span class="nav-label">Supplier</span></a>
+            <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'credits' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=credits') }}"><span class="material-symbols-outlined">credit_card</span><span class="nav-label">Kredit</span></a>
+            <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'supplier-transactions' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=supplier-transactions') }}"><span class="material-symbols-outlined">account_tree</span><span class="nav-label">Transaksi PT</span></a>
             <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'batches' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=batches') }}"><span class="material-symbols-outlined">layers</span><span class="nav-label">Batch Barang</span></a>
-            <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'taxonomy' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=taxonomy') }}"><span class="material-symbols-outlined">category</span><span class="nav-label">Kategori & Brand</span></a>
+            <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'taxonomy' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=taxonomy') }}"><span class="material-symbols-outlined">category</span><span class="nav-label">Kategori & Merek</span></a>
             <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'reports' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=reports') }}"><span class="material-symbols-outlined">analytics</span><span class="nav-label">Laporan</span></a>
             <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'users' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=users') }}"><span class="material-symbols-outlined">group</span><span class="nav-label">User</span></a>
           </nav>
           <div class="mt-4 pt-3 pb-5 border-t border-[#d4dbd7]">
-            <form method="POST" action="{{ url('/admin/logout') }}">
+            <form method="POST" action="{{ route('logout') }}" onsubmit="return confirm('Yakin ingin logout dari akun ini?')">
               @csrf
               <button type="submit" class="sf-nav-item w-full flex items-center gap-3 text-[#ba1a1a] px-3 py-2 hover:bg-[#ffdad6] rounded-lg font-medium text-left">
                 <span class="material-symbols-outlined">logout</span>
@@ -219,6 +241,53 @@
 
             <div class="mt-6 bg-white border border-[#d4dbd7] rounded-xl overflow-hidden custom-shadow">
               <div class="px-6 py-4 border-b border-[#d4dbd7]">
+                <h2 class="text-lg font-semibold text-[#191c1e]">Kelompok PT: Kredit & Lunas</h2>
+                <p class="text-sm text-[#52615a]">Ringkasan transaksi per PT/supplier, dipisahkan status kredit dan lunas.</p>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                  <thead>
+                    <tr class="bg-[#eceef0] text-[#3d4a42] border-b border-[#d4dbd7]">
+                      <th class="px-6 py-4 font-medium uppercase tracking-wider">PT / Supplier</th>
+                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Total Transaksi</th>
+                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Total Qty</th>
+                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Total Modal</th>
+                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Kredit</th>
+                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Jatuh Tempo</th>
+                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Lunas</th>
+                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Terakhir Beli</th>
+                      <th class="px-6 py-4 font-medium uppercase tracking-wider text-right">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-[#e4e8e6]">
+                    @forelse ($reportSupplierGroups as $group)
+                      <tr class="hover:bg-[#f6f8f7] transition-colors">
+                        <td class="px-6 py-4 font-semibold">{{ $group['supplier'] }}</td>
+                        <td class="px-6 py-4">{{ number_format((int) $group['total_transaksi'], 0, ',', '.') }}</td>
+                        <td class="px-6 py-4">{{ number_format((int) $group['total_qty'], 0, ',', '.') }}</td>
+                        <td class="px-6 py-4 font-semibold">{{ $group['total_modal'] }}</td>
+                        <td class="px-6 py-4">{{ number_format((int) $group['kredit_count'], 0, ',', '.') }}</td>
+                        <td class="px-6 py-4">{{ number_format((int) $group['jatuh_tempo_count'], 0, ',', '.') }}</td>
+                        <td class="px-6 py-4">{{ number_format((int) $group['lunas_count'], 0, ',', '.') }}</td>
+                        <td class="px-6 py-4">{{ $group['last_purchase_at'] }}</td>
+                        <td class="px-6 py-4 text-right">
+                          @if(!empty($group['supplier_id']))
+                            <a href="{{ url('/admin/suppliers/' . $group['supplier_id']) }}#riwayat-pembelian" class="inline-flex items-center rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">Detail</a>
+                          @else
+                            <span class="text-sm text-[#52615a]">-</span>
+                          @endif
+                        </td>
+                      </tr>
+                    @empty
+                      <tr><td colspan="9" class="px-6 py-10 text-center text-[#52615a]">Belum ada data kelompok PT.</td></tr>
+                    @endforelse
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="mt-6 bg-white border border-[#d4dbd7] rounded-xl overflow-hidden custom-shadow">
+              <div class="px-6 py-4 border-b border-[#d4dbd7]">
                 <h2 class="text-lg font-semibold text-[#191c1e]">List Transaksi Kasir Terbaru</h2>
                 <p class="text-sm text-[#52615a]">Data transaksi kasir terbaru untuk monitoring harian.</p>
               </div>
@@ -229,8 +298,11 @@
                       <th class="px-6 py-4 font-medium uppercase tracking-wider">Invoice</th>
                       <th class="px-6 py-4 font-medium uppercase tracking-wider">Pembeli</th>
                       <th class="px-6 py-4 font-medium uppercase tracking-wider">Kasir</th>
+                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Metode</th>
                       <th class="px-6 py-4 font-medium uppercase tracking-wider">Waktu</th>
                       <th class="px-6 py-4 font-medium uppercase tracking-wider text-right">Total</th>
+                      <th class="px-6 py-4 font-medium uppercase tracking-wider text-right">Sisa Kredit</th>
+                      <th class="px-6 py-4 font-medium uppercase tracking-wider text-right">Total Retur</th>
                       <th class="px-6 py-4 font-medium uppercase tracking-wider text-right">Aksi</th>
                     </tr>
                   </thead>
@@ -240,14 +312,189 @@
                         <td class="px-6 py-4 font-semibold">{{ $trx['invoice_number'] }}</td>
                         <td class="px-6 py-4">{{ $trx['customer_name'] }}</td>
                         <td class="px-6 py-4">{{ $trx['cashier_name'] }}</td>
+                        <td class="px-6 py-4 uppercase">{{ $trx['payment_method'] }}</td>
                         <td class="px-6 py-4">{{ $trx['created_at'] }}</td>
                         <td class="px-6 py-4 text-right font-semibold">{{ $trx['total'] }}</td>
+                        <td class="px-6 py-4 text-right">
+                          <div>{{ $trx['credit_amount'] }}</div>
+                          <div class="text-xs text-[#52615a]">Tempo: {{ $trx['credit_due_date'] }}</div>
+                        </td>
+                        <td class="px-6 py-4 text-right">{{ $trx['total_return_refund'] }}</td>
                         <td class="px-6 py-4 text-right">
                           <a href="{{ route('admin.sales.receipt', ['sale' => $trx['sale_id']]) }}" target="_blank" rel="noopener" class="inline-flex items-center rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">Detail</a>
                         </td>
                       </tr>
                     @empty
-                      <tr><td colspan="6" class="px-6 py-10 text-center text-[#52615a]">Belum ada transaksi kasir.</td></tr>
+                      <tr><td colspan="9" class="px-6 py-10 text-center text-[#52615a]">Belum ada transaksi kasir.</td></tr>
+                    @endforelse
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          @elseif ($type === 'supplier-transactions')
+            <div class="bg-white border border-[#d4dbd7] rounded-xl overflow-hidden custom-shadow">
+              <div class="px-6 py-4 border-b border-[#d4dbd7]">
+                <h2 class="text-lg font-semibold text-[#191c1e]">Kelompok Transaksi PT (Kredit & Lunas)</h2>
+                <p class="text-sm text-[#52615a]">Data ini khusus dari transaksi kasir ke customer PT/CV.</p>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                  <thead>
+                    <tr class="bg-[#eceef0] text-[#3d4a42] border-b border-[#d4dbd7]">
+                      <th class="px-6 py-4 font-medium uppercase tracking-wider">PT / CV</th>
+                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Total Transaksi</th>
+                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Total Qty</th>
+                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Total Nilai Belanja</th>
+                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Kredit</th>
+                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Jatuh Tempo</th>
+                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Lunas</th>
+                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Terakhir Beli</th>
+                      <th class="px-6 py-4 font-medium uppercase tracking-wider text-right">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-[#e4e8e6]">
+                    @forelse ($ptCustomerGroups as $group)
+                      <tr class="hover:bg-[#f6f8f7] transition-colors">
+                        <td class="px-6 py-4 font-semibold">{{ $group['pt_name'] }}</td>
+                        <td class="px-6 py-4">{{ number_format((int) $group['total_transaksi'], 0, ',', '.') }}</td>
+                        <td class="px-6 py-4">{{ number_format((int) $group['total_qty'], 0, ',', '.') }}</td>
+                        <td class="px-6 py-4 font-semibold">{{ $group['total_nilai'] }}</td>
+                        <td class="px-6 py-4">{{ number_format((int) $group['kredit'], 0, ',', '.') }}</td>
+                        <td class="px-6 py-4">{{ number_format((int) $group['jatuh_tempo'], 0, ',', '.') }}</td>
+                        <td class="px-6 py-4">{{ number_format((int) $group['lunas'], 0, ',', '.') }}</td>
+                        <td class="px-6 py-4">{{ $group['terakhir_beli'] }}</td>
+                        <td class="px-6 py-4 text-right">
+                          <a href="{{ url('/admin/admin-module?type=supplier-transactions&pt=' . urlencode($group['pt_name'])) }}" class="inline-flex items-center rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">Detail</a>
+                        </td>
+                      </tr>
+                    @empty
+                      <tr><td colspan="9" class="px-6 py-10 text-center text-[#52615a]">Belum ada data kelompok PT.</td></tr>
+                    @endforelse
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            @if(!empty($ptCustomerDetail['pt_name']))
+              <div class="mt-6 bg-white border border-[#d4dbd7] rounded-xl overflow-hidden custom-shadow">
+                <div class="px-6 py-4 border-b border-[#d4dbd7]">
+                  <h2 class="text-lg font-semibold text-[#191c1e]">Detail Riwayat PT: {{ $ptCustomerDetail['pt_name'] }}</h2>
+                  <p class="text-sm text-[#52615a]">Riwayat pembelian PT/CV ini dari transaksi kasir, lengkap dengan nota.</p>
+                </div>
+                @if(!empty($ptCustomerDetail['summary']))
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-3 px-6 py-4 border-b border-[#d4dbd7] bg-[#f8faf9]">
+                    <div><p class="text-xs uppercase text-[#52615a]">Total Transaksi</p><p class="text-xl font-semibold text-[#191c1e]">{{ number_format((int) $ptCustomerDetail['summary']['total_transaksi'], 0, ',', '.') }} kali</p></div>
+                    <div><p class="text-xs uppercase text-[#52615a]">Total Qty</p><p class="text-xl font-semibold text-[#191c1e]">{{ number_format((int) $ptCustomerDetail['summary']['total_qty'], 0, ',', '.') }}</p></div>
+                    <div><p class="text-xs uppercase text-[#52615a]">Total Nilai</p><p class="text-xl font-semibold text-[#191c1e]">{{ $ptCustomerDetail['summary']['total_nilai'] }}</p></div>
+                  </div>
+                @endif
+                <div class="overflow-x-auto">
+                  <table class="w-full text-left border-collapse">
+                    <thead>
+                      <tr class="bg-[#eceef0] text-[#3d4a42] border-b border-[#d4dbd7]">
+                        <th class="px-6 py-4 font-medium uppercase tracking-wider">Invoice</th>
+                        <th class="px-6 py-4 font-medium uppercase tracking-wider">Waktu</th>
+                        <th class="px-6 py-4 font-medium uppercase tracking-wider">Metode</th>
+                        <th class="px-6 py-4 font-medium uppercase tracking-wider">Qty</th>
+                        <th class="px-6 py-4 font-medium uppercase tracking-wider">Total</th>
+                        <th class="px-6 py-4 font-medium uppercase tracking-wider">Kredit</th>
+                        <th class="px-6 py-4 font-medium uppercase tracking-wider">Jatuh Tempo</th>
+                        <th class="px-6 py-4 font-medium uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-4 font-medium uppercase tracking-wider text-right">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#e4e8e6]">
+                      @forelse($ptCustomerDetail['rows'] as $row)
+                        <tr class="hover:bg-[#f6f8f7] transition-colors">
+                          <td class="px-6 py-4 font-semibold">{{ $row['invoice'] }}</td>
+                          <td class="px-6 py-4">{{ $row['waktu'] }}</td>
+                          <td class="px-6 py-4">{{ $row['metode'] }}</td>
+                          <td class="px-6 py-4">{{ number_format((int) $row['qty'], 0, ',', '.') }}</td>
+                          <td class="px-6 py-4 font-semibold">{{ $row['total'] }}</td>
+                          <td class="px-6 py-4">{{ $row['kredit'] }}</td>
+                          <td class="px-6 py-4">{{ $row['jatuh_tempo'] }}</td>
+                          <td class="px-6 py-4">
+                            @php
+                              $s = $row['status'] ?? 'LUNAS';
+                              $statusClass = $s === 'LUNAS'
+                                  ? 'bg-emerald-100 text-emerald-700'
+                                  : ($s === 'JATUH TEMPO' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700');
+                            @endphp
+                            <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $statusClass }}">{{ $s }}</span>
+                          </td>
+                          <td class="px-6 py-4 text-right">
+                            <a href="{{ route('admin.sales.receipt', ['sale' => $row['sale_id']]) }}" target="_blank" rel="noopener" class="inline-flex items-center rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">Lihat Nota</a>
+                          </td>
+                        </tr>
+                      @empty
+                        <tr><td colspan="9" class="px-6 py-10 text-center text-[#52615a]">Belum ada riwayat transaksi PT ini.</td></tr>
+                      @endforelse
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            @endif
+          @elseif ($type === 'credits')
+            @if(session('success'))
+              <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{{ session('success') }}</div>
+            @endif
+            @if($errors->any())
+              <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ $errors->first() }}</div>
+            @endif
+            <div class="bg-white border border-[#d4dbd7] rounded-xl overflow-hidden custom-shadow">
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs md:text-sm">
+                  <thead>
+                    <tr class="bg-[#eceef0] text-[#3d4a42] border-b border-[#d4dbd7]">
+                      <th class="px-3 py-2.5 font-medium uppercase tracking-wider whitespace-nowrap">Supplier</th>
+                      <th class="px-3 py-2.5 font-medium uppercase tracking-wider whitespace-nowrap">Part Number</th>
+                      <th class="px-3 py-2.5 font-medium uppercase tracking-wider whitespace-nowrap">Part Name</th>
+                      <th class="px-3 py-2.5 font-medium uppercase tracking-wider whitespace-nowrap">Merek</th>
+                      <th class="px-3 py-2.5 font-medium uppercase tracking-wider whitespace-nowrap">Unit</th>
+                      <th class="px-3 py-2.5 font-medium uppercase tracking-wider whitespace-nowrap">Qty</th>
+                      <th class="px-3 py-2.5 font-medium uppercase tracking-wider whitespace-nowrap">Harga Beli</th>
+                      <th class="px-3 py-2.5 font-medium uppercase tracking-wider whitespace-nowrap">Total Kredit</th>
+                      <th class="px-3 py-2.5 font-medium uppercase tracking-wider whitespace-nowrap">DP / Uang Muka</th>
+                      <th class="px-3 py-2.5 font-medium uppercase tracking-wider whitespace-nowrap">Total Dibayar</th>
+                      <th class="px-3 py-2.5 font-medium uppercase tracking-wider whitespace-nowrap">Sisa Kredit</th>
+                      <th class="px-3 py-2.5 font-medium uppercase tracking-wider whitespace-nowrap">Jatuh Tempo</th>
+                      <th class="px-3 py-2.5 font-medium uppercase tracking-wider whitespace-nowrap">Status</th>
+                      <th class="px-3 py-2.5 font-medium uppercase tracking-wider text-right whitespace-nowrap">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-[#e4e8e6]">
+                    @forelse ($rows as $row)
+                      <tr class="hover:bg-[#f6f8f7] transition-colors">
+                        <td class="px-3 py-2.5 text-[13px] font-semibold whitespace-nowrap">{{ $row['supplier'] }}</td>
+                        <td class="px-3 py-2.5 text-[13px] whitespace-nowrap">{{ $row['part_number'] }}</td>
+                        <td class="px-3 py-2.5 text-[13px] whitespace-nowrap">{{ $row['part_name'] }}</td>
+                        <td class="px-3 py-2.5 text-[13px] whitespace-nowrap">{{ $row['merek'] ?? '-' }}</td>
+                        <td class="px-3 py-2.5 text-[13px] whitespace-nowrap">{{ $row['unit'] }}</td>
+                        <td class="px-3 py-2.5 text-[13px] whitespace-nowrap">{{ $row['qty'] }}</td>
+                        <td class="px-3 py-2.5 text-[13px] whitespace-nowrap">{{ $row['harga_beli'] }}</td>
+                        <td class="px-3 py-2.5 text-[13px] font-semibold whitespace-nowrap">{{ $row['total_kredit'] }}</td>
+                        <td class="px-3 py-2.5 text-[13px] whitespace-nowrap">{{ $row['down_payment'] ?? 'Rp 0' }}</td>
+                        <td class="px-3 py-2.5 text-[13px] whitespace-nowrap">{{ $row['sudah_dibayar'] }}</td>
+                        <td class="px-3 py-2.5 text-[13px] font-semibold whitespace-nowrap">{{ $row['sisa_kredit'] }}</td>
+                        <td class="px-3 py-2.5 text-[13px] whitespace-nowrap">{{ $row['jatuh_tempo'] }}</td>
+                        <td class="px-3 py-2.5 text-[13px] whitespace-nowrap">
+                          @php
+                            $status = $row['status'] ?? 'BELUM LUNAS';
+                            $statusClass = $status === 'LUNAS'
+                                ? 'bg-emerald-100 text-emerald-700'
+                                : ($status === 'JATUH TEMPO' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700');
+                          @endphp
+                          <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $statusClass }}">{{ $status }}</span>
+                        </td>
+                        <td class="px-3 py-2.5 text-right whitespace-nowrap">
+                          <div class="flex min-w-max flex-row flex-nowrap items-center justify-end gap-1.5">
+                            <a href="{{ route('admin.credits.detail', ['batch' => $row['batch_id']]) }}" class="inline-flex h-8 items-center rounded-lg border border-[#bccac0] bg-white px-2.5 py-1 text-xs text-[#006948] hover:bg-[#f1f4f2]">Detail</a>
+                            <a href="{{ route('admin.credits.receipt', ['batch' => $row['batch_id']]) }}" target="_blank" rel="noopener" class="inline-flex h-8 items-center rounded-lg border border-[#bccac0] bg-white px-2.5 py-1 text-xs text-[#006948] hover:bg-[#f1f4f2]">Nota</a>
+                          </div>
+                        </td>
+                      </tr>
+                    @empty
+                      <tr><td colspan="14" class="px-6 py-10 text-center text-[#52615a]">Belum ada data kredit.</td></tr>
                     @endforelse
                   </tbody>
                 </table>
@@ -480,9 +727,22 @@
               @endforelse
             </div>
           @else
+            @if ($type === 'batches')
+              <form method="GET" action="{{ url('/admin/admin-module') }}" class="mb-4">
+                <input type="hidden" name="type" value="batches">
+                <div class="bg-white border border-[#d4dbd7] rounded-xl p-4 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto_auto] gap-3 items-center">
+                  <input type="text" name="q" value="{{ $searchKeyword }}" placeholder="Cari kode batch... (contoh: BATCH-008 atau 202605)" class="w-full rounded-lg border-[#bccac0] focus:border-[#006948] focus:ring-[#006948]/20">
+                  <button type="submit" class="rounded-lg bg-[#006948] px-4 py-2 text-white">Cari</button>
+                  <a href="{{ url('/admin/admin-module?type=batches') }}" class="rounded-lg border border-[#bccac0] px-4 py-2 text-[#3d4a42] text-center">Reset</a>
+                </div>
+              </form>
+            @endif
             <div class="bg-white border border-[#d4dbd7] rounded-xl overflow-hidden custom-shadow">
+              <div class="px-6 py-4 border-b border-[#d4dbd7] flex items-center justify-end">
+                <button type="button" onclick="window.print()" class="inline-flex items-center rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">Print Tabel</button>
+              </div>
               <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+                <table class="w-full text-left border-collapse print-source-table">
                   <thead>
                     <tr class="bg-[#eceef0] text-[#3d4a42] border-b border-[#d4dbd7]">
                       @if (!empty($rows))
@@ -510,6 +770,37 @@
         </main>
       </div>
     </div>
+
+    @if ($type === 'credits')
+      <div id="creditInstallmentModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 px-4">
+        <div class="w-full max-w-xl rounded-xl border border-[#d4dbd7] bg-white p-6 shadow-2xl">
+          <h3 class="text-xl font-semibold text-[#191c1e]">Bayar Cicilan Kredit</h3>
+          <p id="creditInstallmentInfo" class="mt-1 text-sm text-[#52615a]">Isi nominal cicilan untuk kredit yang dipilih.</p>
+          <form id="creditInstallmentForm" method="POST" class="mt-4 space-y-4">
+            @csrf
+            <div>
+              <label class="mb-1 block text-sm font-medium text-[#3d4a42]">Nominal Cicilan</label>
+              <input id="creditInstallmentAmount" type="text" name="amount" inputmode="numeric" placeholder="Contoh: 500000" class="w-full rounded-lg border-[#bccac0] focus:border-[#006948] focus:ring-[#006948]/20" required>
+              <p id="creditInstallmentHint" class="mt-1 text-xs text-[#52615a]">Sisa kredit: Rp 0</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="mb-1 block text-sm font-medium text-[#3d4a42]">Tanggal Bayar</label>
+                <input id="creditInstallmentPaidAt" type="date" name="paid_at" class="w-full rounded-lg border-[#bccac0] focus:border-[#006948] focus:ring-[#006948]/20">
+              </div>
+              <div>
+                <label class="mb-1 block text-sm font-medium text-[#3d4a42]">Catatan</label>
+                <input type="text" name="note" placeholder="Opsional" class="w-full rounded-lg border-[#bccac0] focus:border-[#006948] focus:ring-[#006948]/20">
+              </div>
+            </div>
+            <div class="flex justify-end gap-2">
+              <button type="button" id="closeCreditInstallmentModalBtn" class="rounded-lg border border-[#bccac0] px-4 py-2 text-[#3d4a42]">Batal</button>
+              <button type="submit" class="rounded-lg bg-[#006948] px-4 py-2 text-white">Simpan Cicilan</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    @endif
 
     @if ($type === 'taxonomy')
       <div id="taxonomyModal" class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-900/50 px-4">
@@ -632,6 +923,56 @@
       sidebarToggleBtn?.addEventListener('click', () => {
         wrap?.classList.toggle('sf-sidebar-collapsed');
       });
+
+      @if ($type === 'credits')
+      const creditInstallmentModal = document.getElementById('creditInstallmentModal');
+      const creditInstallmentForm = document.getElementById('creditInstallmentForm');
+      const creditInstallmentInfo = document.getElementById('creditInstallmentInfo');
+      const creditInstallmentHint = document.getElementById('creditInstallmentHint');
+      const creditInstallmentAmount = document.getElementById('creditInstallmentAmount');
+      const creditInstallmentPaidAt = document.getElementById('creditInstallmentPaidAt');
+      const closeCreditInstallmentModalBtn = document.getElementById('closeCreditInstallmentModalBtn');
+
+      const formatRupiahInput = (value) => {
+        const digits = String(value ?? '').replace(/[^\d]/g, '');
+        if (!digits) return '';
+        return Number(digits).toLocaleString('id-ID');
+      };
+
+      const openCreditInstallmentModal = (row) => {
+        if (!creditInstallmentModal || !creditInstallmentForm) return;
+        creditInstallmentForm.action = `/admin/credits/${row.batch_id}/installment`;
+        creditInstallmentInfo.textContent = `${row.supplier || '-'} - ${row.part_number || '-'} (${row.part_name || '-'})`;
+        creditInstallmentHint.textContent = `DP: ${row.down_payment || 'Rp 0'} | Sisa kredit: ${row.sisa_kredit || 'Rp 0'}`;
+        creditInstallmentAmount.value = '';
+        if (creditInstallmentPaidAt) {
+          creditInstallmentPaidAt.value = new Date().toISOString().slice(0, 10);
+        }
+        creditInstallmentModal.classList.remove('hidden');
+        creditInstallmentModal.classList.add('flex');
+      };
+
+      const closeCreditInstallmentModal = () => {
+        creditInstallmentModal?.classList.add('hidden');
+        creditInstallmentModal?.classList.remove('flex');
+      };
+
+      document.querySelectorAll('[data-credit-installment]').forEach((button) => {
+        button.addEventListener('click', () => {
+          const row = JSON.parse(button.getAttribute('data-credit-installment') || '{}');
+          openCreditInstallmentModal(row);
+        });
+      });
+
+      creditInstallmentAmount?.addEventListener('input', () => {
+        creditInstallmentAmount.value = formatRupiahInput(creditInstallmentAmount.value);
+      });
+
+      closeCreditInstallmentModalBtn?.addEventListener('click', closeCreditInstallmentModal);
+      creditInstallmentModal?.addEventListener('click', (event) => {
+        if (event.target === creditInstallmentModal) closeCreditInstallmentModal();
+      });
+      @endif
 
       @if ($type === 'taxonomy')
       const taxonomySearchInput = document.getElementById('taxonomySearchInput');

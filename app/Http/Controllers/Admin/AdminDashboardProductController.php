@@ -31,21 +31,40 @@ class AdminDashboardProductController extends Controller
                 'category_id' => $category->id,
                 'brand_id' => $brand->id,
                 'name' => $payload['name'],
-                'slug' => $this->makeUniqueSlug($payload['slug'] ?: $payload['name']),
-                'barcode' => $payload['barcode'] ?: null,
-                'description' => $payload['description'] ?: null,
+                'slug' => $this->makeUniqueSlug(($payload['slug'] ?? '') ?: $payload['name']),
+                'barcode' => ($payload['barcode'] ?? '') ?: null,
+                'unit' => ($payload['unit'] ?? '') ?: null,
+                'weight' => ($payload['weight'] ?? null) !== null ? (float) $payload['weight'] : null,
+                'description' => ($payload['description'] ?? '') ?: null,
                 'image_path' => $this->storeProductImage($request),
                 'is_active' => (bool) $payload['is_active'],
             ]);
 
+            $paymentType = strtoupper((string) ($payload['payment_type'] ?? 'LUNAS'));
+            if (! in_array($paymentType, ['LUNAS', 'KREDIT'], true)) {
+                $paymentType = 'LUNAS';
+            }
+
+            $creditDays = $paymentType === 'KREDIT' ? (int) ($payload['credit_days'] ?? 0) : null;
+            $creditDueDate = $paymentType === 'KREDIT' ? ($payload['credit_due_date'] ?: null) : null;
+            $totalPurchase = ((float) $payload['purchase_price']) * ((int) $payload['stock']) + ((float) ($payload['expedition_cost'] ?? 0));
+            $downPaymentAmount = $paymentType === 'KREDIT'
+                ? min($totalPurchase, max(0, (float) ($payload['down_payment_amount'] ?? 0)))
+                : 0.0;
+
             $batch = ProductBatch::create([
                 'product_id' => $product->id,
                 'supplier_id' => $supplier->id,
-                'batch_code' => $payload['batch_code'] ?: $this->generateBatchCode($product),
+                'batch_code' => ($payload['batch_code'] ?? '') ?: $this->generateBatchCode($product),
                 'purchase_price' => $payload['purchase_price'],
+                'expedition_cost' => $payload['expedition_cost'] ?? 0,
+                'down_payment_amount' => $downPaymentAmount,
                 'selling_price' => $payload['selling_price'],
                 'stock' => $payload['stock'],
-                'expired_at' => $payload['expired_at'] ?: null,
+                'payment_type' => $paymentType,
+                'credit_days' => $creditDays,
+                'credit_due_date' => $creditDueDate,
+                'expired_at' => ($payload['expired_at'] ?? '') ?: null,
                 'is_active' => true,
             ]);
 
@@ -84,9 +103,11 @@ class AdminDashboardProductController extends Controller
                 'category_id' => $product->category_id,
                 'brand_id' => $product->brand_id,
                 'name' => $payload['name'],
-                'slug' => $this->makeUniqueSlug($payload['slug'] ?: $payload['name'], $product->id),
-                'barcode' => $payload['barcode'] ?: null,
-                'description' => $payload['description'] ?: null,
+                'slug' => $this->makeUniqueSlug(($payload['slug'] ?? '') ?: $payload['name'], $product->id),
+                'barcode' => ($payload['barcode'] ?? '') ?: null,
+                'unit' => ($payload['unit'] ?? '') ?: null,
+                'weight' => ($payload['weight'] ?? null) !== null ? (float) $payload['weight'] : null,
+                'description' => ($payload['description'] ?? '') ?: null,
                 'is_active' => (bool) $payload['is_active'],
             ]);
 
@@ -114,14 +135,29 @@ class AdminDashboardProductController extends Controller
 
             $stockBefore = (int) $batch->stock;
             $stockAfter = (int) $payload['stock'];
+            $paymentType = strtoupper((string) ($payload['payment_type'] ?? 'LUNAS'));
+            if (! in_array($paymentType, ['LUNAS', 'KREDIT'], true)) {
+                $paymentType = 'LUNAS';
+            }
+            $creditDays = $paymentType === 'KREDIT' ? (int) ($payload['credit_days'] ?? 0) : null;
+            $creditDueDate = $paymentType === 'KREDIT' ? ($payload['credit_due_date'] ?: null) : null;
+            $totalPurchase = ((float) $payload['purchase_price']) * ((int) $payload['stock']) + ((float) ($payload['expedition_cost'] ?? 0));
+            $downPaymentAmount = $paymentType === 'KREDIT'
+                ? min($totalPurchase, max(0, (float) ($payload['down_payment_amount'] ?? 0)))
+                : 0.0;
 
             $batch->fill([
                 'supplier_id' => $supplier->id,
-                'batch_code' => $payload['batch_code'] ?: ($batch->batch_code ?: $this->generateBatchCode($product)),
+                'batch_code' => ($payload['batch_code'] ?? '') ?: ($batch->batch_code ?: $this->generateBatchCode($product)),
                 'purchase_price' => $payload['purchase_price'],
+                'expedition_cost' => $payload['expedition_cost'] ?? 0,
+                'down_payment_amount' => $downPaymentAmount,
                 'selling_price' => $payload['selling_price'],
                 'stock' => $stockAfter,
-                'expired_at' => $payload['expired_at'] ?: null,
+                'payment_type' => $paymentType,
+                'credit_days' => $creditDays,
+                'credit_due_date' => $creditDueDate,
+                'expired_at' => ($payload['expired_at'] ?? '') ?: null,
                 'is_active' => true,
             ]);
             $batch->product_id = $product->id;
@@ -181,8 +217,11 @@ class AdminDashboardProductController extends Controller
         return [
             'id' => $product->id,
             'name' => $product->name,
+            'slug' => $product->slug,
             'sku' => $product->barcode ?: 'SKU-' . str_pad((string) $product->id, 4, '0', STR_PAD_LEFT),
             'barcode' => $product->barcode,
+            'unit' => $product->unit,
+            'weight' => $product->weight,
             'description' => $product->description,
             'image_url' => $product->image_path ? '/storage/' . ltrim($product->image_path, '/') : null,
             'category' => $product->category?->name ?? '-',
@@ -192,6 +231,10 @@ class AdminDashboardProductController extends Controller
             'stock' => (int) ($batch?->stock ?? 0),
             'purchase_price' => $this->formatRupiah($batch?->purchase_price),
             'purchase_price_value' => (float) ($batch?->purchase_price ?? 0),
+            'expedition_cost' => $this->formatRupiah($batch?->expedition_cost),
+            'expedition_cost_value' => (float) ($batch?->expedition_cost ?? 0),
+            'down_payment_amount' => $this->formatRupiah($batch?->down_payment_amount),
+            'down_payment_amount_value' => (float) ($batch?->down_payment_amount ?? 0),
             'selling_price' => $this->formatRupiah($batch?->selling_price),
             'selling_price_value' => (float) ($batch?->selling_price ?? 0),
             'supplier_id' => $batch?->supplier_id,
@@ -202,6 +245,9 @@ class AdminDashboardProductController extends Controller
             'supplier_note' => $batch?->supplier?->note,
             'batch_id' => $batch?->id,
             'batch_code' => $batch?->batch_code,
+            'payment_type' => $batch?->payment_type ?? 'LUNAS',
+            'credit_days' => $batch?->credit_days,
+            'credit_due_date' => $batch?->credit_due_date?->toDateString(),
             'expired_at' => $batch?->expired_at?->toDateString(),
             'is_active' => (bool) $product->is_active,
         ];

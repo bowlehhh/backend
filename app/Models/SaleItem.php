@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SaleItem extends Model
 {
@@ -41,5 +42,10 @@ class SaleItem extends Model
     public function productBatch(): BelongsTo
     {
         return $this->belongsTo(ProductBatch::class, 'product_batch_id');
+    }
+
+    public function returnItems(): HasMany
+    {
+        return $this->hasMany(SalesReturnItem::class, 'sale_item_id');
     }
 }

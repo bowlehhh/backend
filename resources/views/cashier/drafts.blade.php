@@ -25,13 +25,17 @@
                 <span class="material-symbols-outlined">history</span>
                 <span class="font-semibold">History</span>
             </a>
+            <a href="{{ route('cashier.history.supplier') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-slate-100">
+                <span class="material-symbols-outlined">local_shipping</span>
+                <span class="font-semibold">Supplier</span>
+            </a>
             <a href="{{ route('cashier.drafts') }}" class="flex items-center gap-3 rounded-xl bg-indigo-500 px-3 py-2 text-white">
                 <span class="material-symbols-outlined">draft</span>
                 <span class="font-semibold">Draft</span>
             </a>
         </nav>
         <div class="p-4 border-t border-slate-200">
-            <form method="POST" action="{{ route('logout') }}">
+            <form method="POST" action="{{ route('logout') }}" onsubmit="return confirm('Yakin ingin logout dari akun ini?')">
                 @csrf
                 <button type="submit" class="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-red-50 hover:text-red-600">
                     <span class="material-symbols-outlined">lock_clock</span>

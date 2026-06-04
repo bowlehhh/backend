@@ -60,11 +60,17 @@
               <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">local_shipping</span>
               <span>Supplier</span>
             </a>
+            <a class="sf-nav-item w-full flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=credits') }}">
+              <span class="material-symbols-outlined">credit_card</span><span>Kredit</span>
+            </a>
+            <a class="sf-nav-item w-full flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=supplier-transactions') }}">
+              <span class="material-symbols-outlined">account_tree</span><span>Transaksi PT</span>
+            </a>
             <a class="sf-nav-item w-full flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=batches') }}">
               <span class="material-symbols-outlined">layers</span><span>Batch Barang</span>
             </a>
             <a class="sf-nav-item w-full flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=taxonomy') }}">
-              <span class="material-symbols-outlined">category</span><span>Kategori & Brand</span>
+              <span class="material-symbols-outlined">category</span><span>Kategori & Merek</span>
             </a>
             <a class="sf-nav-item w-full flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=reports') }}">
               <span class="material-symbols-outlined">analytics</span><span>Laporan</span>
@@ -74,10 +80,13 @@
             </a>
           </nav>
           <div class="mt-4 pt-3 pb-5 border-t border-[#d4dbd7]">
-            <button type="button" class="sf-nav-item w-full flex items-center gap-3 text-[#ba1a1a] px-3 py-2 hover:bg-[#ffdad6] transition-all rounded-lg font-medium text-left">
-              <span class="material-symbols-outlined">logout</span>
-              <span>Logout</span>
-            </button>
+            <form method="POST" action="{{ route('logout') }}" onsubmit="return confirm('Yakin ingin logout dari akun ini?')">
+              @csrf
+              <button type="submit" class="sf-nav-item w-full flex items-center gap-3 text-[#ba1a1a] px-3 py-2 hover:bg-[#ffdad6] transition-all rounded-lg font-medium text-left">
+                <span class="material-symbols-outlined">logout</span>
+                <span>Logout</span>
+              </button>
+            </form>
           </div>
         </aside>
 

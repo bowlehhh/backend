@@ -72,7 +72,12 @@ class CashierDashboardController extends Controller
             ->get();
 
         $searchSuggestions = Product::query()
-            ->with(['latestBatch.supplier:id,name'])
+            ->with([
+                'batches' => fn ($query) => $query
+                    ->where('is_active', true)
+                    ->latest('id')
+                    ->with('supplier:id,name'),
+            ])
             ->where('is_active', true)
             ->orderBy('name')
             ->limit(200)
@@ -80,7 +85,7 @@ class CashierDashboardController extends Controller
             ->map(fn (Product $product): array => [
                 'name' => $product->name,
                 'barcode' => $product->barcode,
-                'supplier' => $product->latestBatch?->supplier?->name,
+                'supplier' => $product->batches->first()?->supplier?->name,
             ])
             ->values()
             ->all();

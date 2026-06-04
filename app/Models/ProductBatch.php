@@ -17,8 +17,13 @@ class ProductBatch extends Model
         'supplier_id',
         'batch_code',
         'purchase_price',
+        'expedition_cost',
+        'down_payment_amount',
         'selling_price',
         'stock',
+        'payment_type',
+        'credit_days',
+        'credit_due_date',
         'expired_at',
         'is_active',
     ];
@@ -27,7 +32,11 @@ class ProductBatch extends Model
     {
         return [
             'purchase_price' => 'decimal:2',
+            'expedition_cost' => 'decimal:2',
+            'down_payment_amount' => 'decimal:2',
             'selling_price' => 'decimal:2',
+            'credit_days' => 'integer',
+            'credit_due_date' => 'date',
             'expired_at' => 'date',
             'is_active' => 'boolean',
         ];
@@ -51,5 +60,15 @@ class ProductBatch extends Model
     public function stockHistories(): HasMany
     {
         return $this->hasMany(StockHistory::class, 'product_batch_id');
+    }
+
+    public function salesReturnItems(): HasMany
+    {
+        return $this->hasMany(SalesReturnItem::class, 'product_batch_id');
+    }
+
+    public function creditInstallments(): HasMany
+    {
+        return $this->hasMany(CreditInstallment::class, 'product_batch_id');
     }
 }

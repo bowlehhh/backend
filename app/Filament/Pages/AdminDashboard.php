@@ -94,6 +94,8 @@ class AdminDashboard extends Page
         $totalProducts = 0;
         $lowStock = 0;
         $stockValue = 0;
+        $creditItems = 0;
+        $creditWarnings = 0;
 
         if (Schema::hasTable('products')) {
             $totalProducts = DB::table('products')
@@ -113,10 +115,68 @@ class AdminDashboard extends Page
             }
 
             if ($stockColumn && $purchaseColumn) {
+                $expeditionExpr = Schema::hasColumn('product_batches', 'expedition_cost') ? ' + expedition_cost' : '';
                 $stockValue = DB::table('product_batches')
                     ->when(Schema::hasColumn('product_batches', 'deleted_at'), fn ($query) => $query->whereNull('deleted_at'))
-                    ->selectRaw("SUM({$stockColumn} * {$purchaseColumn}) as total")
+                    ->selectRaw("SUM(({$stockColumn} * {$purchaseColumn}){$expeditionExpr}) as total")
                     ->value('total') ?? 0;
+            }
+
+            if (
+                $stockColumn
+                && $purchaseColumn
+                && Schema::hasColumn('product_batches', 'payment_type')
+                && Schema::hasColumn('product_batches', 'credit_due_date')
+            ) {
+                $paidByBatch = [];
+                if (Schema::hasTable('credit_installments') && Schema::hasColumn('credit_installments', 'product_batch_id') && Schema::hasColumn('credit_installments', 'amount')) {
+                    $paidByBatch = DB::table('credit_installments')
+                        ->selectRaw('product_batch_id, SUM(amount) as paid_total')
+                        ->groupBy('product_batch_id')
+                        ->pluck('paid_total', 'product_batch_id')
+                        ->map(fn ($v) => (float) $v)
+                        ->toArray();
+                }
+
+                $creditSelects = ['id', $stockColumn . ' as stock', $purchaseColumn . ' as purchase_price', 'credit_due_date'];
+                if (Schema::hasColumn('product_batches', 'expedition_cost')) {
+                    $creditSelects[] = 'expedition_cost';
+                } else {
+                    $creditSelects[] = DB::raw('0 as expedition_cost');
+                }
+                if (Schema::hasColumn('product_batches', 'down_payment_amount')) {
+                    $creditSelects[] = 'down_payment_amount';
+                } else {
+                    $creditSelects[] = DB::raw('0 as down_payment_amount');
+                }
+
+                $creditBatches = DB::table('product_batches')
+                    ->when(Schema::hasColumn('product_batches', 'deleted_at'), fn ($query) => $query->whereNull('product_batches.deleted_at'))
+                    ->whereRaw('UPPER(payment_type) = ?', ['KREDIT'])
+                    ->get($creditSelects);
+
+                $today = now()->startOfDay();
+                foreach ($creditBatches as $batch) {
+                    $expeditionCost = (float) ($batch->expedition_cost ?? 0);
+                    $total = ((float) ($batch->stock ?? 0) * (float) ($batch->purchase_price ?? 0)) + $expeditionCost;
+                    $downPayment = (float) ($batch->down_payment_amount ?? 0);
+                    $paid = min($total, $downPayment + (float) ($paidByBatch[$batch->id] ?? 0));
+                    $remaining = max(0, $total - $paid);
+
+                    if ($remaining <= 0) {
+                        continue;
+                    }
+
+                    $creditItems++;
+
+                    if (!empty($batch->credit_due_date)) {
+                        $due = \Illuminate\Support\Carbon::parse($batch->credit_due_date)->startOfDay();
+                        $days = $today->diffInDays($due, false);
+                        if ($days <= 3) {
+                            $creditWarnings++;
+                        }
+                    }
+                }
             }
         }
 
@@ -141,6 +201,20 @@ class AdminDashboard extends Page
                 'description' => 'Estimasi nilai modal inventory',
                 'icon' => 'trending_up',
                 'variant' => 'secondary',
+            ],
+            [
+                'label' => 'Barang Kredit',
+                'value' => number_format($creditItems, 0, ',', '.'),
+                'description' => 'Klik untuk lihat daftar kredit supplier',
+                'icon' => 'credit_card',
+                'variant' => 'info',
+            ],
+            [
+                'label' => 'Warning Kredit',
+                'value' => number_format($creditWarnings, 0, ',', '.'),
+                'description' => 'Jatuh tempo <= 3 hari',
+                'icon' => 'notifications_active',
+                'variant' => 'danger',
             ],
         ];
     }
@@ -311,6 +385,8 @@ class AdminDashboard extends Page
                 'name' => $item->product_name ?? '-',
                 'sku' => $item->barcode ?: 'SKU-' . str_pad((string) $item->id, 4, '0', STR_PAD_LEFT),
                 'barcode' => $item->barcode,
+                'unit' => $details['unit'] ?? null,
+                'weight' => $details['weight'] ?? null,
                 'category' => $item->category_name ?? '-',
                 'category_id' => $details['category_id'] ?? null,
                 'brand' => $item->brand_name ?? '-',
@@ -318,6 +394,10 @@ class AdminDashboard extends Page
                 'stock' => $stock,
                 'purchase_price' => $this->formatRupiah($details['purchase_price'] ?? 0),
                 'purchase_price_value' => (float) ($details['purchase_price'] ?? 0),
+                'expedition_cost' => $this->formatRupiah($details['expedition_cost'] ?? 0),
+                'expedition_cost_value' => (float) ($details['expedition_cost'] ?? 0),
+                'down_payment_amount' => $this->formatRupiah($details['down_payment_amount'] ?? 0),
+                'down_payment_amount_value' => (float) ($details['down_payment_amount'] ?? 0),
                 'selling_price' => $this->formatRupiah($details['selling_price'] ?? 0),
                 'selling_price_value' => (float) ($details['selling_price'] ?? 0),
                 'supplier_id' => $details['supplier_id'] ?? null,
@@ -329,6 +409,9 @@ class AdminDashboard extends Page
                 'supplier_note' => $details['supplier_note'] ?? '',
                 'batch_id' => $details['batch_id'] ?? null,
                 'batch_code' => $details['batch_code'] ?? null,
+                'payment_type' => $details['payment_type'] ?? 'LUNAS',
+                'credit_days' => $details['credit_days'] ?? null,
+                'credit_due_date' => $details['credit_due_date'] ?? null,
                 'expired_at' => $details['expired_at'] ?? null,
                 'description' => $details['description'] ?? null,
                 'image_url' => $details['image_url'] ?? null,
@@ -374,10 +457,14 @@ class AdminDashboard extends Page
             'category_id' => $product->category_id,
             'brand_id' => $product->brand_id,
             'description' => $product->description,
+            'unit' => $product->unit,
+            'weight' => $product->weight,
             'image_url' => $product->image_path ? '/storage/' . ltrim($product->image_path, '/') : null,
             'is_active' => $product->is_active,
             'stock' => (int) ($batch?->stock ?? 0),
             'purchase_price' => (float) ($batch?->purchase_price ?? 0),
+            'expedition_cost' => (float) ($batch?->expedition_cost ?? 0),
+            'down_payment_amount' => (float) ($batch?->down_payment_amount ?? 0),
             'selling_price' => (float) ($batch?->selling_price ?? 0),
             'supplier_id' => $batch?->supplier_id,
             'supplier_name' => $batch?->supplier?->name,
@@ -387,6 +474,9 @@ class AdminDashboard extends Page
             'supplier_note' => $batch?->supplier?->note,
             'batch_id' => $batch?->id,
             'batch_code' => $batch?->batch_code,
+            'payment_type' => $batch?->payment_type ?? 'LUNAS',
+            'credit_days' => $batch?->credit_days,
+            'credit_due_date' => $batch?->credit_due_date?->toDateString(),
             'expired_at' => $batch?->expired_at?->toDateString(),
         ];
     }

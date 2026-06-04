@@ -2,14 +2,24 @@
   <h3 class="mb-4 text-headline-md text-on-surface">Card 1: Informasi Barang</h3>
   <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
     <div>
-      <label class="mb-1 block text-sm font-medium text-on-surface">Nama Barang</label>
+      <label class="mb-1 block text-sm font-medium text-on-surface">Part Name</label>
       <input type="text" name="name" class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 focus:border-primary focus:outline-none">
       <p class="mt-1 text-xs text-error" data-error-for="name"></p>
     </div>
     <div>
-      <label class="mb-1 block text-sm font-medium text-on-surface">Barcode</label>
-      <input type="text" name="barcode" class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 focus:border-primary focus:outline-none">
+      <label class="mb-1 block text-sm font-medium text-on-surface">Part Number</label>
+      <input type="text" name="barcode" class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 uppercase focus:border-primary focus:outline-none">
       <p class="mt-1 text-xs text-error" data-error-for="barcode"></p>
+    </div>
+    <div>
+      <label class="mb-1 block text-sm font-medium text-on-surface">Unit</label>
+      <input type="text" name="unit" class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 uppercase focus:border-primary focus:outline-none" placeholder="PCS / UNIT / BOX">
+      <p class="mt-1 text-xs text-error" data-error-for="unit"></p>
+    </div>
+    <div>
+      <label class="mb-1 block text-sm font-medium text-on-surface">Berat (kg)</label>
+      <input type="number" step="0.01" min="0" name="weight" class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 focus:border-primary focus:outline-none" placeholder="0">
+      <p class="mt-1 text-xs text-error" data-error-for="weight"></p>
     </div>
     <div>
       <label class="mb-1 block text-sm font-medium text-on-surface">Slug</label>
@@ -18,18 +28,15 @@
     </div>
     <div>
       <label class="mb-1 block text-sm font-medium text-on-surface">Kategori</label>
-      <input type="text" name="category" class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 focus:border-primary focus:outline-none">
+      <select name="category" class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 focus:border-primary focus:outline-none">
+        <option value="Alat Berat">Alat Berat</option>
+      </select>
       <p class="mt-1 text-xs text-error" data-error-for="category"></p>
     </div>
     <div>
-      <label class="mb-1 block text-sm font-medium text-on-surface">Brand</label>
+      <label class="mb-1 block text-sm font-medium text-on-surface">Merek</label>
       <input type="text" name="brand" class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 focus:border-primary focus:outline-none">
       <p class="mt-1 text-xs text-error" data-error-for="brand"></p>
-    </div>
-    <div class="md:col-span-2">
-      <label class="mb-1 block text-sm font-medium text-on-surface">Deskripsi</label>
-      <textarea name="description" rows="4" class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 focus:border-primary focus:outline-none"></textarea>
-      <p class="mt-1 text-xs text-error" data-error-for="description"></p>
     </div>
     <div class="md:col-span-2">
       <label class="mb-1 block text-sm font-medium text-on-surface">Foto Barang</label>

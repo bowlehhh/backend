@@ -44,7 +44,9 @@ class AdminModule extends Page
 
         $modules = [
             'batches' => ['label' => 'Batch Barang', 'icon' => 'layers'],
-            'taxonomy' => ['label' => 'Kategori & Brand', 'icon' => 'category'],
+            'credits' => ['label' => 'Kredit', 'icon' => 'credit_card'],
+            'supplier-transactions' => ['label' => 'Transaksi PT', 'icon' => 'account_tree'],
+            'taxonomy' => ['label' => 'Kategori & Merek', 'icon' => 'category'],
             'reports' => ['label' => 'Laporan', 'icon' => 'analytics'],
             'users' => ['label' => 'User', 'icon' => 'group'],
         ];
@@ -63,6 +65,9 @@ class AdminModule extends Page
             'searchKeyword' => $searchKeyword,
             'reportStats' => $this->getReportStats(),
             'reportTransactions' => $this->getReportTransactions(),
+            'reportSupplierGroups' => $this->getReportSupplierGroups(),
+            'ptCustomerGroups' => $this->getPtCustomerGroups(),
+            'ptCustomerDetail' => $this->getPtCustomerDetail((string) request()->query('pt', '')),
             'reportCashierTransactions' => $this->getReportCashierTransactions(),
             'taxonomyStats' => $this->getTaxonomyStats(),
             'taxonomyPagination' => $taxonomyData['pagination'] ?? [],
@@ -78,14 +83,78 @@ class AdminModule extends Page
     private function getRows(string $type, string $searchKeyword = ''): array
     {
         return match ($type) {
-            'batches' => $this->getBatchRows(),
+            'batches' => $this->getBatchRows($searchKeyword),
+            'credits' => $this->getCreditRows(),
+            'supplier-transactions' => [],
             'taxonomy' => $this->getTaxonomyRows($searchKeyword)['items'] ?? [],
             'users' => $this->getUserRows(),
             default => [],
         };
     }
 
-    private function getBatchRows(): array
+    private function getCreditRows(): array
+    {
+        if (! Schema::hasTable('product_batches')) {
+            return [];
+        }
+
+        $query = ProductBatch::query()
+            ->with(['product:id,name,barcode,unit,brand_id', 'product.brand:id,name', 'supplier:id,name'])
+            ->where('payment_type', 'KREDIT')
+            ->latest('id')
+            ->limit(200);
+
+        $hasInstallments = Schema::hasTable('credit_installments');
+
+        return $query->get()->map(function (ProductBatch $batch) use ($hasInstallments): array {
+            $qty = (int) ($batch->stock ?? 0);
+            $unitPrice = (float) ($batch->purchase_price ?? 0);
+            $expeditionCost = (float) ($batch->expedition_cost ?? 0);
+            $downPayment = (float) ($batch->down_payment_amount ?? 0);
+            $subtotal = $qty * $unitPrice;
+            $totalCredit = $subtotal + $expeditionCost;
+            $installmentPaid = 0.0;
+
+            if ($hasInstallments) {
+                $installmentPaid = (float) DB::table('credit_installments')
+                    ->where('product_batch_id', $batch->id)
+                    ->sum('amount');
+            }
+
+            $paid = min($totalCredit, $downPayment + $installmentPaid);
+            $remaining = max(0, $totalCredit - $paid);
+
+            return [
+                'batch_id' => (int) $batch->id,
+                'supplier_id' => $batch->supplier_id ? (int) $batch->supplier_id : null,
+                'supplier' => $batch->supplier?->name ?: '-',
+                'part_number' => $batch->product?->barcode ?: '-',
+                'part_name' => $batch->product?->name ?: '-',
+                'merek' => $batch->product?->brand?->name ?: '-',
+                'unit' => $batch->product?->unit ?: '-',
+                'qty' => number_format($qty, 0, ',', '.'),
+                'harga_beli' => 'Rp ' . number_format($unitPrice, 0, ',', '.'),
+                'biaya_ekspedisi' => 'Rp ' . number_format($expeditionCost, 0, ',', '.'),
+                'total_kredit' => 'Rp ' . number_format($totalCredit, 0, ',', '.'),
+                'down_payment' => 'Rp ' . number_format($downPayment, 0, ',', '.'),
+                'down_payment_value' => $downPayment,
+                'sudah_dibayar' => 'Rp ' . number_format($paid, 0, ',', '.'),
+                'sisa_kredit' => 'Rp ' . number_format($remaining, 0, ',', '.'),
+                'total_kredit_value' => $totalCredit,
+                'sudah_dibayar_value' => $paid,
+                'sisa_kredit_value' => $remaining,
+                'hari_kredit' => (int) ($batch->credit_days ?? 0) > 0 ? ((int) $batch->credit_days . ' hari') : '-',
+                'hari_kredit_value' => (int) ($batch->credit_days ?? 0),
+                'jatuh_tempo' => $batch->credit_due_date ? Carbon::parse($batch->credit_due_date)->format('d M Y') : '-',
+                'jatuh_tempo_value' => $batch->credit_due_date?->toDateString(),
+                'status' => $remaining <= 0
+                    ? 'LUNAS'
+                    : (($batch->credit_due_date && Carbon::parse($batch->credit_due_date)->isPast()) ? 'JATUH TEMPO' : 'BELUM LUNAS'),
+            ];
+        })->toArray();
+    }
+
+    private function getBatchRows(string $searchKeyword = ''): array
     {
         if (! Schema::hasTable('product_batches')) {
             return [];
@@ -93,6 +162,10 @@ class AdminModule extends Page
 
         return ProductBatch::query()
             ->with(['product:id,name', 'supplier:id,name'])
+            ->when($searchKeyword !== '', function ($q) use ($searchKeyword) {
+                $like = '%' . $searchKeyword . '%';
+                $q->where('batch_code', 'like', $like);
+            })
             ->latest('id')
             ->limit(100)
             ->get()
@@ -290,7 +363,9 @@ class AdminModule extends Page
         $now = Carbon::now();
         $query = ProductBatch::query();
 
-        $sumExpr = 'purchase_price * stock';
+        $sumExpr = Schema::hasColumn('product_batches', 'expedition_cost')
+            ? '(purchase_price * stock) + expedition_cost'
+            : 'purchase_price * stock';
 
         $todayTotal = (float) (clone $query)
             ->whereDate('created_at', $now->toDateString())
@@ -337,19 +412,63 @@ class AdminModule extends Page
             return [];
         }
 
-        $rows = DB::table('sales')
+        $query = DB::table('sales')
             ->leftJoin('users', 'users.id', '=', 'sales.user_id')
-            ->when(Schema::hasColumn('sales', 'deleted_at'), fn ($q) => $q->whereNull('sales.deleted_at'))
+            ->when(Schema::hasColumn('sales', 'deleted_at'), fn ($q) => $q->whereNull('sales.deleted_at'));
+
+        if (
+            Schema::hasTable('sales_returns')
+            && Schema::hasColumn('sales_returns', 'sale_id')
+            && Schema::hasColumn('sales_returns', 'refund_amount')
+        ) {
+            $returnsQuery = DB::table('sales_returns')
+                ->selectRaw('sale_id, COALESCE(SUM(refund_amount), 0) as total_return_refund')
+                ->groupBy('sale_id');
+
+            $query->leftJoinSub($returnsQuery, 'returns_agg', fn ($join) => $join->on('returns_agg.sale_id', '=', 'sales.id'));
+        }
+
+        $selects = [
+            'sales.id',
+            'sales.invoice_number',
+            'sales.customer_name',
+            'sales.total',
+            'sales.created_at',
+            'users.name as cashier_name',
+        ];
+
+        if (Schema::hasColumn('sales', 'payment_method')) {
+            $selects[] = 'sales.payment_method';
+        } else {
+            $selects[] = DB::raw("'cash' as payment_method");
+        }
+
+        if (Schema::hasColumn('sales', 'credit_amount')) {
+            $selects[] = 'sales.credit_amount';
+        } else {
+            $selects[] = DB::raw('0 as credit_amount');
+        }
+
+        if (Schema::hasColumn('sales', 'credit_due_date')) {
+            $selects[] = 'sales.credit_due_date';
+        } else {
+            $selects[] = DB::raw('NULL as credit_due_date');
+        }
+
+        if (
+            Schema::hasTable('sales_returns')
+            && Schema::hasColumn('sales_returns', 'sale_id')
+            && Schema::hasColumn('sales_returns', 'refund_amount')
+        ) {
+            $selects[] = DB::raw('COALESCE(returns_agg.total_return_refund, 0) as total_return_refund');
+        } else {
+            $selects[] = DB::raw('0 as total_return_refund');
+        }
+
+        $rows = $query
             ->orderByDesc('sales.id')
             ->limit(20)
-            ->get([
-                'sales.id',
-                'sales.invoice_number',
-                'sales.customer_name',
-                'sales.total',
-                'sales.created_at',
-                'users.name as cashier_name',
-            ]);
+            ->get($selects);
 
         return $rows->map(fn ($row) => [
             'sale_id' => (int) $row->id,
@@ -357,6 +476,10 @@ class AdminModule extends Page
             'customer_name' => $row->customer_name ?: 'Pembeli Umum',
             'cashier_name' => $row->cashier_name ?: '-',
             'created_at' => $row->created_at ? Carbon::parse($row->created_at)->format('d M Y H:i') : '-',
+            'payment_method' => strtoupper((string) ($row->payment_method ?? 'cash')),
+            'credit_amount' => 'Rp ' . number_format((float) ($row->credit_amount ?? 0), 0, ',', '.'),
+            'credit_due_date' => ! empty($row->credit_due_date) ? Carbon::parse($row->credit_due_date)->format('d M Y') : '-',
+            'total_return_refund' => 'Rp ' . number_format((float) ($row->total_return_refund ?? 0), 0, ',', '.'),
             'total' => 'Rp ' . number_format((float) ($row->total ?? 0), 0, ',', '.'),
         ])->toArray();
     }
@@ -373,7 +496,8 @@ class AdminModule extends Page
             ->limit(50)
             ->get()
             ->map(function (ProductBatch $batch): array {
-                $total = (float) $batch->purchase_price * (int) $batch->stock;
+                $expeditionCost = (float) ($batch->expedition_cost ?? 0);
+                $total = ((float) $batch->purchase_price * (int) $batch->stock) + $expeditionCost;
 
                 return [
                     'tanggal' => optional($batch->created_at)->format('d M Y H:i') ?: '-',
@@ -381,10 +505,261 @@ class AdminModule extends Page
                     'barang' => $batch->product?->name ?: '-',
                     'qty' => (int) $batch->stock,
                     'harga_satuan' => 'Rp ' . number_format((float) $batch->purchase_price, 0, ',', '.'),
+                    'biaya_ekspedisi' => 'Rp ' . number_format($expeditionCost, 0, ',', '.'),
                     'total' => 'Rp ' . number_format($total, 0, ',', '.'),
                     'supplier_id' => $batch->supplier_id,
                 ];
             })
             ->toArray();
+    }
+
+    private function getReportSupplierGroups(): array
+    {
+        if (! Schema::hasTable('product_batches')) {
+            return [];
+        }
+
+        $hasInstallments = Schema::hasTable('credit_installments');
+        $installmentPaidMap = [];
+
+        if ($hasInstallments) {
+            $installmentPaidMap = DB::table('credit_installments')
+                ->selectRaw('product_batch_id, COALESCE(SUM(amount), 0) as paid_total')
+                ->groupBy('product_batch_id')
+                ->pluck('paid_total', 'product_batch_id')
+                ->map(fn ($value) => (float) $value)
+                ->toArray();
+        }
+
+        $batches = ProductBatch::query()
+            ->with('supplier:id,name')
+            ->latest('created_at')
+            ->get();
+
+        $grouped = [];
+        foreach ($batches as $batch) {
+            $supplierId = (int) ($batch->supplier_id ?? 0);
+            $supplierName = $batch->supplier?->name ?: 'Tanpa Supplier';
+
+            if (! isset($grouped[$supplierId])) {
+                $grouped[$supplierId] = [
+                    'supplier_id' => $supplierId > 0 ? $supplierId : null,
+                    'supplier' => $supplierName,
+                    'total_transaksi' => 0,
+                    'total_qty' => 0,
+                    'total_modal_value' => 0.0,
+                    'kredit_count' => 0,
+                    'lunas_count' => 0,
+                    'jatuh_tempo_count' => 0,
+                    'last_purchase_at_ts' => 0,
+                    'last_purchase_at' => '-',
+                ];
+            }
+
+            $qty = (int) ($batch->stock ?? 0);
+            $price = (float) ($batch->purchase_price ?? 0);
+            $expeditionCost = (float) ($batch->expedition_cost ?? 0);
+            $total = ($qty * $price) + $expeditionCost;
+            $paymentType = strtoupper((string) ($batch->payment_type ?? 'LUNAS'));
+            $downPayment = (float) ($batch->down_payment_amount ?? 0);
+            $installmentPaid = (float) ($installmentPaidMap[$batch->id] ?? 0);
+            $paid = min($total, $downPayment + $installmentPaid);
+            $remaining = max(0, $total - $paid);
+
+            $status = 'LUNAS';
+            if ($paymentType === 'KREDIT') {
+                if ($remaining <= 0) {
+                    $status = 'LUNAS';
+                } elseif ($batch->credit_due_date && Carbon::parse($batch->credit_due_date)->isPast()) {
+                    $status = 'JATUH TEMPO';
+                } else {
+                    $status = 'BELUM LUNAS';
+                }
+            }
+
+            $grouped[$supplierId]['total_transaksi']++;
+            $grouped[$supplierId]['total_qty'] += $qty;
+            $grouped[$supplierId]['total_modal_value'] += $total;
+            if (in_array($status, ['BELUM LUNAS', 'JATUH TEMPO'], true)) {
+                $grouped[$supplierId]['kredit_count']++;
+            }
+            if ($status === 'LUNAS') {
+                $grouped[$supplierId]['lunas_count']++;
+            }
+            if ($status === 'JATUH TEMPO') {
+                $grouped[$supplierId]['jatuh_tempo_count']++;
+            }
+
+            $ts = $batch->created_at?->timestamp ?? 0;
+            if ($ts > $grouped[$supplierId]['last_purchase_at_ts']) {
+                $grouped[$supplierId]['last_purchase_at_ts'] = $ts;
+                $grouped[$supplierId]['last_purchase_at'] = $batch->created_at?->format('d M Y H:i') ?: '-';
+            }
+        }
+
+        return collect($grouped)
+            ->map(function (array $row) {
+                $row['total_modal'] = 'Rp ' . number_format((float) $row['total_modal_value'], 0, ',', '.');
+                unset($row['total_modal_value'], $row['last_purchase_at_ts']);
+                return $row;
+            })
+            ->sortByDesc('total_transaksi')
+            ->values()
+            ->toArray();
+    }
+
+    private function getPtCustomerGroups(): array
+    {
+        if (! Schema::hasTable('sales')) {
+            return [];
+        }
+
+        $hasSaleItems = Schema::hasTable('sale_items');
+        $base = DB::table('sales')
+            ->whereNotNull('customer_name')
+            ->whereRaw("TRIM(customer_name) <> ''")
+            ->where(function ($q) {
+                $q->whereRaw("UPPER(TRIM(customer_name)) LIKE 'PT %'")
+                    ->orWhereRaw("UPPER(TRIM(customer_name)) LIKE 'CV %'");
+            })
+            ->when(Schema::hasColumn('sales', 'deleted_at'), fn ($q) => $q->whereNull('deleted_at'));
+
+        $itemsAgg = [];
+        if ($hasSaleItems) {
+            $itemsAgg = DB::table('sale_items')
+                ->selectRaw('sale_id, COUNT(*) as items_count, COALESCE(SUM(qty),0) as total_qty')
+                ->groupBy('sale_id')
+                ->get()
+                ->keyBy('sale_id');
+        }
+
+        $rows = $base->orderByDesc('id')->get([
+            'id',
+            'customer_name',
+            'total',
+            'payment_method',
+            'credit_amount',
+            'credit_due_date',
+            'created_at',
+        ]);
+
+        $grouped = [];
+        foreach ($rows as $row) {
+            $name = strtoupper(trim((string) $row->customer_name));
+            if (! isset($grouped[$name])) {
+                $grouped[$name] = [
+                    'pt_name' => $name,
+                    'total_transaksi' => 0,
+                    'total_qty' => 0,
+                    'total_nilai_value' => 0.0,
+                    'kredit' => 0,
+                    'jatuh_tempo' => 0,
+                    'lunas' => 0,
+                    'terakhir_beli_ts' => 0,
+                    'terakhir_beli' => '-',
+                ];
+            }
+
+            $method = strtoupper((string) ($row->payment_method ?? 'CASH'));
+            $creditAmount = (float) ($row->credit_amount ?? 0);
+            $dueDate = !empty($row->credit_due_date) ? Carbon::parse($row->credit_due_date) : null;
+            $status = 'LUNAS';
+            if ($method === 'CREDIT' && $creditAmount > 0) {
+                $status = ($dueDate && $dueDate->isPast()) ? 'JATUH TEMPO' : 'BELUM LUNAS';
+            }
+
+            $grouped[$name]['total_transaksi']++;
+            $grouped[$name]['total_qty'] += (int) ($itemsAgg[$row->id]->total_qty ?? 0);
+            $grouped[$name]['total_nilai_value'] += (float) ($row->total ?? 0);
+            if (in_array($status, ['BELUM LUNAS', 'JATUH TEMPO'], true)) {
+                $grouped[$name]['kredit']++;
+            }
+            if ($status === 'JATUH TEMPO') {
+                $grouped[$name]['jatuh_tempo']++;
+            }
+            if ($status === 'LUNAS') {
+                $grouped[$name]['lunas']++;
+            }
+
+            $ts = !empty($row->created_at) ? Carbon::parse($row->created_at)->timestamp : 0;
+            if ($ts > $grouped[$name]['terakhir_beli_ts']) {
+                $grouped[$name]['terakhir_beli_ts'] = $ts;
+                $grouped[$name]['terakhir_beli'] = !empty($row->created_at) ? Carbon::parse($row->created_at)->format('d M Y H:i') : '-';
+            }
+        }
+
+        return collect($grouped)
+            ->map(function (array $row) {
+                $row['total_nilai'] = 'Rp ' . number_format((float) $row['total_nilai_value'], 0, ',', '.');
+                unset($row['total_nilai_value'], $row['terakhir_beli_ts']);
+                return $row;
+            })
+            ->sortByDesc('total_transaksi')
+            ->values()
+            ->toArray();
+    }
+
+    private function getPtCustomerDetail(string $ptName): array
+    {
+        $ptName = strtoupper(trim($ptName));
+        if ($ptName === '' || ! Schema::hasTable('sales')) {
+            return ['pt_name' => '', 'rows' => [], 'summary' => null];
+        }
+
+        $rows = DB::table('sales')
+            ->whereRaw('UPPER(TRIM(customer_name)) = ?', [$ptName])
+            ->when(Schema::hasColumn('sales', 'deleted_at'), fn ($q) => $q->whereNull('deleted_at'))
+            ->orderByDesc('id')
+            ->get([
+                'id',
+                'invoice_number',
+                'customer_name',
+                'payment_method',
+                'total',
+                'credit_amount',
+                'credit_due_date',
+                'created_at',
+            ]);
+
+        $itemsQty = [];
+        if (Schema::hasTable('sale_items')) {
+            $itemsQty = DB::table('sale_items')
+                ->selectRaw('sale_id, COALESCE(SUM(qty),0) as total_qty')
+                ->groupBy('sale_id')
+                ->pluck('total_qty', 'sale_id')
+                ->toArray();
+        }
+
+        $mapped = collect($rows)->map(function ($row) use ($itemsQty) {
+            $method = strtoupper((string) ($row->payment_method ?? 'CASH'));
+            $creditAmount = (float) ($row->credit_amount ?? 0);
+            $dueDate = !empty($row->credit_due_date) ? Carbon::parse($row->credit_due_date) : null;
+            $status = 'LUNAS';
+            if ($method === 'CREDIT' && $creditAmount > 0) {
+                $status = ($dueDate && $dueDate->isPast()) ? 'JATUH TEMPO' : 'BELUM LUNAS';
+            }
+
+            return [
+                'sale_id' => (int) $row->id,
+                'invoice' => (string) ($row->invoice_number ?: '-'),
+                'waktu' => !empty($row->created_at) ? Carbon::parse($row->created_at)->format('d M Y H:i') : '-',
+                'metode' => $method,
+                'qty' => (int) ($itemsQty[$row->id] ?? 0),
+                'total' => 'Rp ' . number_format((float) ($row->total ?? 0), 0, ',', '.'),
+                'kredit' => 'Rp ' . number_format($creditAmount, 0, ',', '.'),
+                'jatuh_tempo' => $dueDate ? $dueDate->format('d M Y') : '-',
+                'status' => $status,
+            ];
+        })->values();
+
+        return [
+            'pt_name' => $ptName,
+            'rows' => $mapped->toArray(),
+            'summary' => [
+                'total_transaksi' => $mapped->count(),
+                'total_qty' => $mapped->sum('qty'),
+                'total_nilai' => 'Rp ' . number_format((float) collect($rows)->sum('total'), 0, ',', '.'),
+            ],
+        ];
     }
 }

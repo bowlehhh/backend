@@ -46,6 +46,13 @@
     </style>
 </head>
 <body>
+@php
+    $isCredit = strtolower((string) $sale->payment_method) === 'credit';
+    $downPayment = (float) ($sale->paid_amount ?? 0);
+    $creditOutstanding = (float) ($sale->credit_amount ?? 0);
+    $totalReturned = (float) ($sale->returns?->sum('total_refund') ?? 0);
+    $paymentStatus = ($isCredit && $creditOutstanding > 0) ? 'BELUM LUNAS' : 'LUNAS';
+@endphp
 <div class="wrap">
     <table class="header-table">
         <tr>
@@ -78,14 +85,14 @@
         <tr>
             <td class="label">Metode Bayar</td>
             <td>{{ strtoupper($sale->payment_method) }}</td>
-            <td class="label">No. Telp Kasir</td>
-            <td>{{ $sale->cashier_phone ?: '-' }}</td>
+            <td class="label">No. Telp Pembeli</td>
+            <td>{{ $sale->customer_phone ?: '-' }}</td>
         </tr>
         <tr>
-            <td class="label">Kasir Akun</td>
-            <td>Kasir</td>
+            <td class="label">No. Telp Kasir</td>
+            <td>{{ $sale->cashier_phone ?: '-' }}</td>
             <td class="label">Status</td>
-            <td>LUNAS</td>
+            <td>{{ $paymentStatus }}</td>
         </tr>
     </table>
 
@@ -117,10 +124,28 @@
 
     <table class="totals">
         <tr><td class="label">SUBTOTAL</td><td class="num">Rp {{ number_format((float) $sale->total, 0, ',', '.') }}</td></tr>
-        <tr><td class="label">BAYAR</td><td class="num">Rp {{ number_format((float) $sale->paid_amount, 0, ',', '.') }}</td></tr>
-        <tr><td class="label">KEMBALIAN</td><td class="num">Rp {{ number_format((float) $sale->change_amount, 0, ',', '.') }}</td></tr>
+        @if($isCredit)
+            <tr><td class="label">DP / UANG MUKA</td><td class="num">Rp {{ number_format($downPayment, 0, ',', '.') }}</td></tr>
+            <tr><td class="label">SISA CICILAN</td><td class="num">Rp {{ number_format($creditOutstanding, 0, ',', '.') }}</td></tr>
+        @else
+            <tr><td class="label">BAYAR</td><td class="num">Rp {{ number_format($downPayment, 0, ',', '.') }}</td></tr>
+            <tr><td class="label">KEMBALIAN</td><td class="num">Rp {{ number_format((float) $sale->change_amount, 0, ',', '.') }}</td></tr>
+        @endif
+        <tr><td class="label">TOTAL RETUR</td><td class="num">Rp {{ number_format($totalReturned, 0, ',', '.') }}</td></tr>
+        @if($isCredit)
+            <tr><td class="label">JATUH TEMPO</td><td class="num">{{ $sale->credit_due_date?->format('d M Y') ?: '-' }}</td></tr>
+        @endif
         <tr class="grand"><td class="label">GRAND TOTAL</td><td class="num">Rp {{ number_format((float) $sale->total, 0, ',', '.') }}</td></tr>
     </table>
+
+    @if($isCredit)
+        <table class="meta-table" style="margin-top: 10px;">
+            <tr>
+                <td class="label">Catatan Kredit</td>
+                <td>DP sudah tercatat sebagai uang muka. Sisa cicilan Rp {{ number_format($creditOutstanding, 0, ',', '.') }} akan tetap tampil sampai lunas.</td>
+            </tr>
+        </table>
+    @endif
 
     <table class="foot-table">
         <tr>

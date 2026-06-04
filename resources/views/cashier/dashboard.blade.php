@@ -8,6 +8,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     <style>
+        :root {
+            --cashier-sidebar-w: 220px;
+        }
         body { background-color: #f7f9fb; font-family: "Hanken Grotesk", sans-serif; }
         .material-symbols-outlined { font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -15,9 +18,38 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+        @media (min-width: 1024px) {
+            .cashier-compact {
+                font-size: 14px;
+            }
+            .cashier-compact aside.lg\:flex {
+                width: var(--cashier-sidebar-w);
+            }
+            .cashier-compact main.lg\:ml-\[260px\] {
+                margin-left: var(--cashier-sidebar-w);
+            }
+            .cashier-compact .text-3xl { font-size: 1.65rem !important; line-height: 2rem !important; }
+            .cashier-compact .text-4xl { font-size: 1.95rem !important; line-height: 2.15rem !important; }
+            .cashier-compact .text-2xl { font-size: 1.3rem !important; line-height: 1.7rem !important; }
+            .cashier-compact .rounded-2xl { border-radius: 12px !important; }
+            .cashier-compact .rounded-xl { border-radius: 10px !important; }
+            .cashier-compact .p-6 { padding: 1rem !important; }
+            .cashier-compact .p-4 { padding: .8rem !important; }
+            .cashier-compact .px-5 { padding-left: .9rem !important; padding-right: .9rem !important; }
+            .cashier-compact .py-5 { padding-top: .85rem !important; padding-bottom: .85rem !important; }
+            .cashier-compact .h-11 { height: 2.45rem !important; }
+            .cashier-compact .h-36 { height: 8rem !important; }
+            .cashier-compact .md\:h-44 { height: 9rem !important; }
+            .cashier-compact .xl\:flex.w-\[390px\] { width: 350px; }
+            .cashier-compact table th,
+            .cashier-compact table td { padding-top: .6rem; padding-bottom: .6rem; }
+            .cashier-compact input,
+            .cashier-compact select,
+            .cashier-compact textarea { min-height: 38px; }
+        }
     </style>
 </head>
-<body class="text-slate-900">
+<body class="cashier-compact text-slate-900">
 <div class="h-screen overflow-hidden bg-[#f7f9fb]">
     <aside class="hidden lg:flex fixed inset-y-0 left-0 z-30 w-[260px] flex-col border-r border-slate-300 bg-white">
         <div class="px-5 py-5 border-b border-slate-200">
@@ -33,6 +65,10 @@
                 <span class="material-symbols-outlined">history</span>
                 <span class="font-semibold">History</span>
             </a>
+            <a href="{{ route('cashier.history.supplier') }}" class="flex w-full items-center gap-3 rounded-xl {{ request()->routeIs('cashier.history.supplier') ? 'bg-indigo-500 text-white' : 'text-slate-600 hover:bg-slate-100' }} px-3 py-2">
+                <span class="material-symbols-outlined">local_shipping</span>
+                <span class="font-semibold">Supplier</span>
+            </a>
             <a href="{{ route('cashier.drafts') }}" class="flex w-full items-center gap-3 rounded-xl {{ request()->routeIs('cashier.drafts') ? 'bg-indigo-500 text-white' : 'text-slate-600 hover:bg-slate-100' }} px-3 py-2">
                 <span class="material-symbols-outlined">draft</span>
                 <span class="font-semibold">Draft</span>
@@ -42,7 +78,7 @@
             </a>
         </nav>
         <div class="p-4 border-t border-slate-200">
-            <form method="POST" action="{{ route('logout') }}">
+            <form method="POST" action="{{ route('logout') }}" onsubmit="return confirm('Yakin ingin logout dari akun ini?')">
                 @csrf
                 <button type="submit" class="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-red-50 hover:text-red-600">
                     <span class="material-symbols-outlined">lock_clock</span>
@@ -66,6 +102,9 @@
                         </a>
                         <a href="{{ route('cashier.drafts') }}" class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">
                             <span class="material-symbols-outlined text-[18px]">draft</span>
+                        </a>
+                        <a href="{{ route('cashier.history.supplier') }}" class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">
+                            <span class="material-symbols-outlined text-[18px]">local_shipping</span>
                         </a>
                     </div>
                 </div>
@@ -212,17 +251,36 @@
                         @csrf
                         <input data-print-receipt-input type="hidden" name="print_receipt" value="0" />
                         <div class="grid grid-cols-2 gap-2">
-                            <select name="payment_method" class="rounded-xl border border-slate-300 px-3 py-2 text-sm">
-                                <option value="cash">Cash</option>
-                                <option value="transfer">Transfer</option>
-                                <option value="qris">QRIS</option>
-                                <option value="debit">Debit</option>
+                            <select name="payment_method" data-payment-method class="rounded-xl border border-slate-300 px-3 py-2 text-sm">
+                                <option value="cash" @selected(old('payment_method', 'cash') === 'cash')>Cash</option>
+                                <option value="transfer" @selected(old('payment_method') === 'transfer')>Transfer</option>
+                                <option value="qris" @selected(old('payment_method') === 'qris')>QRIS</option>
+                                <option value="debit" @selected(old('payment_method') === 'debit')>Debit</option>
+                                <option value="credit" @selected(old('payment_method') === 'credit')>Credit</option>
                             </select>
-                            <input type="text" inputmode="numeric" name="paid_amount" value="{{ number_format((float) ceil($cartTotal), 0, ',', '.') }}" class="rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Jumlah bayar" data-rupiah-input data-select-all-on-focus />
+                            <div class="space-y-1">
+                                <label data-payment-amount-label class="block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Jumlah Bayar</label>
+                                <input
+                                    type="text"
+                                    inputmode="numeric"
+                                    name="paid_amount"
+                                    value="{{ old('payment_method') === 'credit' ? old('paid_amount', '0') : old('paid_amount', number_format((float) ceil($cartTotal), 0, ',', '.')) }}"
+                                    class="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                                    placeholder="Jumlah bayar"
+                                    data-rupiah-input
+                                    data-select-all-on-focus
+                                    data-paid-amount-input
+                                />
+                                <p data-payment-summary class="text-[11px] font-medium text-slate-500">DP: Rp 0 | Sisa kredit: Rp 0</p>
+                            </div>
+                        </div>
+                        <div data-credit-due-wrap class="{{ old('payment_method') === 'credit' ? '' : 'hidden' }}">
+                            <input type="date" name="credit_due_date" value="{{ old('credit_due_date') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" />
                         </div>
                         <input type="text" name="cashier_service_name" maxlength="100" value="{{ $user?->name ?? '' }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Nama pelayan / kasir" />
-                        <input type="text" name="cashier_phone" maxlength="30" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="No. telepon kasir" />
-                        <input type="text" name="customer_name" maxlength="100" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Nama pembeli (opsional)" />
+                        <input type="text" name="cashier_phone" maxlength="30" value="{{ old('cashier_phone', '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="No. telepon kasir" />
+                        <input type="text" name="customer_name" maxlength="100" value="{{ old('customer_name', '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Nama pembeli (opsional)" />
+                        <input type="text" name="customer_phone" maxlength="30" value="{{ old('customer_phone', '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="No. telepon pembeli (opsional)" />
                         <button type="submit" data-normal-submit class="w-full rounded-2xl bg-emerald-700 py-4 text-xl font-extrabold text-white">KONFIRMASI PENJUALAN</button>
                     </form>
                 </div>
@@ -248,11 +306,13 @@
     <form id="checkout-form-mobile" data-checkout-form method="POST" action="{{ route('cashier.checkout') }}" class="px-4 pt-2 pb-4 space-y-2">
         @csrf
         <input data-print-receipt-input type="hidden" name="print_receipt" value="0" />
-        <input type="hidden" name="payment_method" value="cash" />
-        <input type="hidden" name="paid_amount" value="{{ (int) ceil($cartTotal) }}" />
+        <input type="hidden" name="payment_method" value="{{ old('payment_method', 'cash') }}" />
+        <input type="hidden" name="paid_amount" value="{{ old('payment_method') === 'credit' ? old('paid_amount', '0') : old('paid_amount', (int) ceil($cartTotal)) }}" />
+        <input type="hidden" name="credit_due_date" value="{{ old('credit_due_date', '') }}" />
         <input type="hidden" name="cashier_service_name" value="{{ $user?->name ?? '' }}" />
-        <input type="hidden" name="cashier_phone" value="" />
-        <input type="hidden" name="customer_name" value="" />
+        <input type="hidden" name="cashier_phone" value="{{ old('cashier_phone', '') }}" />
+        <input type="hidden" name="customer_name" value="{{ old('customer_name', '') }}" />
+        <input type="hidden" name="customer_phone" value="{{ old('customer_phone', '') }}" />
         <div class="flex gap-2">
             <button type="button" data-print-btn class="w-12 rounded-xl border border-slate-300 bg-white text-slate-700">
                 <span class="material-symbols-outlined text-[18px]">print</span>
@@ -275,16 +335,34 @@
         <div id="mobile-confirm-fields" class="mt-3 hidden space-y-2 rounded-xl border border-slate-200 p-3">
             <div class="grid grid-cols-2 gap-2">
                 <select id="mobile-confirm-payment-method" class="rounded-xl border border-slate-300 px-3 py-2 text-sm">
-                    <option value="cash">Cash</option>
-                    <option value="transfer">Transfer</option>
-                    <option value="qris">QRIS</option>
-                    <option value="debit">Debit</option>
+                    <option value="cash" @selected(old('payment_method', 'cash') === 'cash')>Cash</option>
+                    <option value="transfer" @selected(old('payment_method') === 'transfer')>Transfer</option>
+                    <option value="qris" @selected(old('payment_method') === 'qris')>QRIS</option>
+                    <option value="debit" @selected(old('payment_method') === 'debit')>Debit</option>
+                    <option value="credit" @selected(old('payment_method') === 'credit')>Credit</option>
                 </select>
-                <input id="mobile-confirm-paid-amount" type="text" inputmode="numeric" value="{{ number_format((float) ceil($cartTotal), 0, ',', '.') }}" class="rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Jumlah bayar" data-rupiah-input data-select-all-on-focus />
+                <div class="space-y-1">
+                    <label id="mobile-confirm-paid-label" class="block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Jumlah Bayar</label>
+                    <input
+                        id="mobile-confirm-paid-amount"
+                        type="text"
+                        inputmode="numeric"
+                        value="{{ old('payment_method') === 'credit' ? old('paid_amount', '0') : old('paid_amount', number_format((float) ceil($cartTotal), 0, ',', '.')) }}"
+                        class="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                        placeholder="Jumlah bayar"
+                        data-rupiah-input
+                        data-select-all-on-focus
+                    />
+                    <p id="mobile-confirm-payment-summary" class="text-[11px] font-medium text-slate-500">DP: Rp 0 | Sisa kredit: Rp 0</p>
+                </div>
+            </div>
+            <div id="mobile-credit-due-wrap" class="{{ old('payment_method') === 'credit' ? '' : 'hidden' }}">
+                <input id="mobile-confirm-credit-due-date" type="date" value="{{ old('credit_due_date', '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" />
             </div>
             <input id="mobile-confirm-cashier-name" type="text" maxlength="100" value="{{ $user?->name ?? '' }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Nama pelayan / kasir" />
-            <input id="mobile-confirm-cashier-phone" type="text" maxlength="30" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="No. telepon kasir" />
-            <input id="mobile-confirm-customer-name" type="text" maxlength="100" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Nama pembeli (opsional)" />
+            <input id="mobile-confirm-cashier-phone" type="text" maxlength="30" value="{{ old('cashier_phone', '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="No. telepon kasir" />
+            <input id="mobile-confirm-customer-name" type="text" maxlength="100" value="{{ old('customer_name', '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Nama pembeli (opsional)" />
+            <input id="mobile-confirm-customer-phone" type="text" maxlength="30" value="{{ old('customer_phone', '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="No. telepon pembeli (opsional)" />
         </div>
 
         <div class="mt-4 space-y-1 rounded-xl bg-slate-50 p-3 text-sm">
@@ -301,6 +379,7 @@
 
 <script>
     const checkoutForms = Array.from(document.querySelectorAll('[data-checkout-form]'));
+    const desktopCheckoutForm = document.getElementById('checkout-form-desktop');
     const printInvoiceBtn = document.getElementById('print-invoice-btn');
     const mobilePrintButtons = Array.from(document.querySelectorAll('[data-print-btn]'));
     let activeCheckoutForm = null;
@@ -315,11 +394,22 @@
     const mobileConfirmFields = document.getElementById('mobile-confirm-fields');
     const mobileConfirmPaymentMethod = document.getElementById('mobile-confirm-payment-method');
     const mobileConfirmPaidAmount = document.getElementById('mobile-confirm-paid-amount');
+    const mobileConfirmPaidLabel = document.getElementById('mobile-confirm-paid-label');
+    const mobileConfirmPaymentSummary = document.getElementById('mobile-confirm-payment-summary');
+    const mobileConfirmCreditDueDate = document.getElementById('mobile-confirm-credit-due-date');
+    const mobileCreditDueWrap = document.getElementById('mobile-credit-due-wrap');
     const mobileConfirmCashierName = document.getElementById('mobile-confirm-cashier-name');
     const mobileConfirmCashierPhone = document.getElementById('mobile-confirm-cashier-phone');
     const mobileConfirmCustomerName = document.getElementById('mobile-confirm-customer-name');
+    const mobileConfirmCustomerPhone = document.getElementById('mobile-confirm-customer-phone');
     const cancelBtn = document.getElementById('cancel-confirm-btn');
     const submitBtn = document.getElementById('submit-confirm-btn');
+    const desktopPaymentMethod = desktopCheckoutForm?.querySelector('[data-payment-method]');
+    const desktopPaidAmountInput = desktopCheckoutForm?.querySelector('[data-paid-amount-input]');
+    const desktopPaymentAmountLabel = desktopCheckoutForm?.querySelector('[data-payment-amount-label]');
+    const desktopPaymentSummary = desktopCheckoutForm?.querySelector('[data-payment-summary]');
+    const desktopCreditDueWrap = desktopCheckoutForm?.querySelector('[data-credit-due-wrap]');
+    const desktopCreditDueInput = desktopCheckoutForm?.querySelector('input[name="credit_due_date"]');
 
     const cartItems = @json($cartItems);
     const subtotal = Number(@json($subtotal));
@@ -333,6 +423,8 @@
         const digits = sanitizeRupiahValue(value);
         return digits === '' ? '' : new Intl.NumberFormat('id-ID').format(Number(digits));
     };
+    const getNumericInputValue = (input) => Number(sanitizeRupiahValue(input?.value || 0));
+    const formatCurrencyLabel = (value) => `Rp ${toRupiah(value)}`;
 
     const rupiahInputs = Array.from(document.querySelectorAll('[data-rupiah-input]'));
     rupiahInputs.forEach((input) => {
@@ -393,6 +485,63 @@
     });
 
     recalculateCartSummary();
+
+    const syncPaymentSummary = (methodInput, amountInput, labelEl, summaryEl) => {
+        const isCredit = (methodInput?.value || 'cash') === 'credit';
+        const totalValue = Number(liveTotal || 0);
+        const currentAmount = Math.min(totalValue, Math.max(0, getNumericInputValue(amountInput)));
+
+        if (labelEl) {
+            labelEl.textContent = isCredit ? 'DP / Uang Muka' : 'Jumlah Bayar';
+        }
+
+        if (amountInput) {
+            amountInput.placeholder = isCredit ? 'Masukkan DP' : 'Jumlah bayar';
+            if (isCredit && (amountInput.value.trim() === '' || getNumericInputValue(amountInput) === totalValue)) {
+                amountInput.value = '0';
+            }
+            if (!isCredit && amountInput.value.trim() === '') {
+                amountInput.value = formatRupiahInputValue(totalValue);
+            }
+        }
+
+        const downPayment = isCredit ? Math.min(totalValue, Math.max(0, getNumericInputValue(amountInput))) : totalValue;
+        const remainingCredit = isCredit ? Math.max(0, totalValue - downPayment) : 0;
+
+        if (summaryEl) {
+            summaryEl.textContent = isCredit
+                ? `DP: ${formatCurrencyLabel(downPayment)} | Sisa kredit: ${formatCurrencyLabel(remainingCredit)}`
+                : `Bayar: ${formatCurrencyLabel(currentAmount || totalValue)} | Kembali: ${formatCurrencyLabel(Math.max(0, (currentAmount || totalValue) - totalValue))}`;
+        }
+
+        return { downPayment, remainingCredit, currentAmount };
+    };
+
+    const syncCreditDueVisibility = () => {
+        const desktopMethod = desktopPaymentMethod?.value || 'cash';
+        const showDesktopDue = desktopMethod === 'credit';
+        desktopCreditDueWrap?.classList.toggle('hidden', !showDesktopDue);
+        if (!showDesktopDue && desktopCreditDueInput) {
+            desktopCreditDueInput.value = '';
+        }
+
+        const mobileMethod = mobileConfirmPaymentMethod?.value || 'cash';
+        const showMobileDue = mobileMethod === 'credit';
+        mobileCreditDueWrap?.classList.toggle('hidden', !showMobileDue);
+        if (!showMobileDue && mobileConfirmCreditDueDate) {
+            mobileConfirmCreditDueDate.value = '';
+        }
+
+        syncPaymentSummary(desktopPaymentMethod, desktopPaidAmountInput, desktopPaymentAmountLabel, desktopPaymentSummary);
+        syncPaymentSummary(mobileConfirmPaymentMethod, mobileConfirmPaidAmount, mobileConfirmPaidLabel, mobileConfirmPaymentSummary);
+    };
+
+    desktopPaymentMethod?.addEventListener('change', syncCreditDueVisibility);
+    mobileConfirmPaymentMethod?.addEventListener('change', syncCreditDueVisibility);
+    desktopPaidAmountInput?.addEventListener('input', () => syncPaymentSummary(desktopPaymentMethod, desktopPaidAmountInput, desktopPaymentAmountLabel, desktopPaymentSummary));
+    mobileConfirmPaidAmount?.addEventListener('input', () => syncPaymentSummary(mobileConfirmPaymentMethod, mobileConfirmPaidAmount, mobileConfirmPaidLabel, mobileConfirmPaymentSummary));
+    syncCreditDueVisibility();
+
     const escapeHtml = (value) => String(value ?? '')
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
@@ -414,6 +563,15 @@
             if (mobileConfirmFields) {
                 mobileConfirmFields.classList.toggle('hidden', !isMobileCheckout);
             }
+            if (isMobileCheckout) {
+                mobileConfirmPaymentMethod.value = form.querySelector('input[name="payment_method"]')?.value || 'cash';
+                mobileConfirmPaidAmount.value = formatRupiahInputValue(form.querySelector('input[name="paid_amount"]')?.value || (mobileConfirmPaymentMethod.value === 'credit' ? 0 : liveTotal));
+                mobileConfirmCreditDueDate.value = form.querySelector('input[name="credit_due_date"]')?.value || '';
+                mobileConfirmCashierName.value = form.querySelector('input[name="cashier_service_name"]')?.value || '';
+                mobileConfirmCashierPhone.value = form.querySelector('input[name="cashier_phone"]')?.value || '';
+                mobileConfirmCustomerName.value = form.querySelector('input[name="customer_name"]')?.value || '';
+                mobileConfirmCustomerPhone.value = form.querySelector('input[name="customer_phone"]')?.value || '';
+            }
             itemsBox.innerHTML = cartItems.map((item) => {
                 const qty = Number(item.qty || 0);
                 const price = Number(item.price || 0);
@@ -434,6 +592,7 @@
             confirmCustomer.textContent = customerName !== '' ? customerName : '-';
             confirmSubtotal.textContent = `Rp ${toRupiah(liveSubtotal)}`;
             confirmTotal.textContent = `Rp ${toRupiah(liveTotal)}`;
+            syncCreditDueVisibility();
             modal.classList.remove('hidden');
             modal.classList.add('flex');
         });
@@ -447,14 +606,26 @@
     submitBtn?.addEventListener('click', () => {
         if (activeCheckoutForm?.id === 'checkout-form-mobile') {
             activeCheckoutForm.querySelector('input[name="payment_method"]').value = mobileConfirmPaymentMethod?.value || 'cash';
-            activeCheckoutForm.querySelector('input[name="paid_amount"]').value = sanitizeRupiahValue(mobileConfirmPaidAmount?.value || 0);
+            const mobileDownPayment = mobileConfirmPaymentMethod?.value === 'credit'
+                ? Math.min(liveTotal, Math.max(0, Number(sanitizeRupiahValue(mobileConfirmPaidAmount?.value || 0))))
+                : liveTotal;
+            activeCheckoutForm.querySelector('input[name="paid_amount"]').value = String(mobileDownPayment);
+            activeCheckoutForm.querySelector('input[name="credit_due_date"]').value = (mobileConfirmPaymentMethod?.value === 'credit' ? (mobileConfirmCreditDueDate?.value || '') : '');
             activeCheckoutForm.querySelector('input[name="cashier_service_name"]').value = mobileConfirmCashierName?.value || '';
             activeCheckoutForm.querySelector('input[name="cashier_phone"]').value = mobileConfirmCashierPhone?.value || '';
             activeCheckoutForm.querySelector('input[name="customer_name"]').value = mobileConfirmCustomerName?.value || '';
+            activeCheckoutForm.querySelector('input[name="customer_phone"]').value = mobileConfirmCustomerPhone?.value || '';
         } else if (activeCheckoutForm) {
             const paidInput = activeCheckoutForm.querySelector('input[name="paid_amount"]');
             if (paidInput) {
-                paidInput.value = sanitizeRupiahValue(paidInput.value || 0);
+                const methodInput = activeCheckoutForm.querySelector('select[name="payment_method"]');
+                const method = methodInput?.value || 'cash';
+                const amount = Math.min(liveTotal, Math.max(0, Number(sanitizeRupiahValue(paidInput.value || 0))));
+                paidInput.value = String(method === 'credit' ? amount : (amount > 0 ? amount : Math.round(liveTotal)));
+            }
+            const dueInput = activeCheckoutForm.querySelector('input[name="credit_due_date"]');
+            if ((activeCheckoutForm.querySelector('select[name="payment_method"]')?.value || 'cash') !== 'credit' && dueInput) {
+                dueInput.value = '';
             }
         }
         activeCheckoutForm?.submit();

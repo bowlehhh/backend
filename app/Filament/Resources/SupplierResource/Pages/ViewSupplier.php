@@ -5,6 +5,9 @@ namespace App\Filament\Resources\SupplierResource\Pages;
 use App\Filament\Resources\SupplierResource;
 use App\Models\Supplier;
 use Filament\Resources\Pages\ViewRecord;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class ViewSupplier extends ViewRecord
 {
@@ -22,39 +25,103 @@ class ViewSupplier extends ViewRecord
 
         $batches = $supplier->productBatches
             ->filter(fn ($batch) => $batch->product)
+            ->sortByDesc(fn ($batch) => $batch->created_at?->timestamp ?? 0)
             ->values();
 
-        $purchaseHistory = $batches
-            ->groupBy(fn ($batch) => optional($batch->created_at)->toDateString() ?: 'unknown')
-            ->map(function ($dailyBatches, $date) {
-                $transactions = $dailyBatches->count();
-                $totalQty = (int) $dailyBatches->sum('stock');
-                $totalModal = (float) $dailyBatches->sum(fn ($batch) => ((float) $batch->purchase_price) * ((int) $batch->stock));
+        $hasInstallments = Schema::hasTable('credit_installments');
 
-                return [
-                    'date_key' => $date,
-                    'date_label' => $date === 'unknown'
-                        ? '-'
-                        : optional($dailyBatches->first()->created_at)->format('d M Y'),
-                    'transactions' => $transactions,
-                    'total_qty' => $totalQty,
-                    'total_modal' => $totalModal,
-                    'batch_codes' => $dailyBatches
-                        ->pluck('batch_code')
-                        ->filter()
-                        ->implode(', '),
-                ];
-            })
-            ->sortByDesc('date_key')
-            ->values();
+        $purchaseRows = $batches->map(function ($batch) use ($hasInstallments) {
+            $qty = (int) ($batch->stock ?? 0);
+            $price = (float) ($batch->purchase_price ?? 0);
+            $expeditionCost = (float) ($batch->expedition_cost ?? 0);
+            $goodsSubtotal = $qty * $price;
+            $subtotal = $goodsSubtotal + $expeditionCost;
+            $paymentType = strtoupper((string) ($batch->payment_type ?? 'LUNAS'));
+            $downPayment = 0.0;
+            $installmentPaid = 0.0;
+            $remaining = 0.0;
+
+            if ($paymentType === 'KREDIT') {
+                $downPayment = (float) ($batch->down_payment_amount ?? 0);
+                if ($hasInstallments) {
+                    $installmentPaid = (float) DB::table('credit_installments')
+                        ->where('product_batch_id', $batch->id)
+                        ->sum('amount');
+                }
+
+                $paid = min($subtotal, $downPayment + $installmentPaid);
+                $remaining = max(0, $subtotal - $paid);
+            } else {
+                $paid = 0.0;
+            }
+
+            $dueDate = $batch->credit_due_date ? Carbon::parse($batch->credit_due_date) : null;
+            $status = 'LUNAS';
+            $warning = false;
+            if ($paymentType === 'KREDIT') {
+                if ($remaining <= 0) {
+                    $status = 'LUNAS';
+                } elseif ($dueDate && $dueDate->isPast()) {
+                    $status = 'JATUH TEMPO';
+                    $warning = true;
+                } else {
+                    $status = 'BELUM LUNAS';
+                    if ($dueDate) {
+                        $daysToDue = Carbon::now()->startOfDay()->diffInDays($dueDate->copy()->startOfDay(), false);
+                        $warning = $daysToDue <= 3;
+                    }
+                }
+            }
+
+            return [
+                'batch_id' => (int) $batch->id,
+                'waktu' => $batch->created_at ? $batch->created_at->format('d M Y H:i') : '-',
+                'part_number' => strtoupper((string) ($batch->product?->barcode ?? '-')),
+                'part_name' => strtoupper((string) ($batch->product?->name ?? '-')),
+                'merek' => $batch->product?->brand?->name ?? '-',
+                'kategori' => $batch->product?->category?->name ?? '-',
+                'unit' => strtoupper((string) ($batch->product?->unit ?? '-')),
+                'berat' => $batch->product?->weight !== null ? rtrim(rtrim((string) $batch->product->weight, '0'), '.') . ' Kg' : '-',
+                'qty' => $qty,
+                'stok' => $qty,
+                'harga_beli' => 'Rp ' . number_format($price, 0, ',', '.'),
+                'biaya_ekspedisi' => 'Rp ' . number_format($expeditionCost, 0, ',', '.'),
+                'subtotal' => 'Rp ' . number_format($subtotal, 0, ',', '.'),
+                'payment_type' => $paymentType,
+                'credit_days' => (int) ($batch->credit_days ?? 0),
+                'credit_due_date' => $dueDate?->format('d M Y') ?? '-',
+                'status' => $status,
+                'is_warning' => $warning,
+                'down_payment' => $paymentType === 'KREDIT' ? 'Rp ' . number_format($downPayment, 0, ',', '.') : '-',
+                'down_payment_value' => $downPayment,
+                'sudah_dibayar' => $paymentType === 'KREDIT' ? 'Rp ' . number_format($paid, 0, ',', '.') : '-',
+                'total_dibayar' => $paymentType === 'KREDIT' ? 'Rp ' . number_format($paid, 0, ',', '.') : '-',
+                'sisa_kredit' => $paymentType === 'KREDIT' ? 'Rp ' . number_format($remaining, 0, ',', '.') : '-',
+                'sisa_kredit_value' => $remaining,
+            ];
+        })->values();
+
+        $totalTransactions = (int) $purchaseRows->count();
+        $totalQty = (int) $purchaseRows->sum('qty');
+        $totalModal = (float) $batches->sum(fn ($batch) => (((float) ($batch->purchase_price ?? 0)) * ((int) ($batch->stock ?? 0))) + ((float) ($batch->expedition_cost ?? 0)));
+        $lastPurchaseAt = $batches->first()?->created_at?->format('d M Y H:i') ?? '-';
+        $kreditCount = $purchaseRows->filter(fn (array $row) => $row['payment_type'] === 'KREDIT' && (float) ($row['sisa_kredit_value'] ?? 0) > 0)->count();
+        $lunasCount = $purchaseRows->where('status', 'LUNAS')->count();
+        $warningCount = $purchaseRows->where('is_warning', true)->count();
 
         return [
             'supplier' => $supplier,
-            'productBatches' => $batches,
-            'totalProducts' => $batches->unique('product_id')->count(),
-            'totalStock' => (int) $batches->sum('stock'),
-            'totalTransactions' => (int) $batches->count(),
-            'purchaseHistory' => $purchaseHistory,
+            'purchaseRows' => $purchaseRows,
+            'summary' => [
+                'total_transactions' => $totalTransactions,
+                'total_products' => $batches->unique('product_id')->count(),
+                'total_qty' => $totalQty,
+                'total_modal' => 'Rp ' . number_format($totalModal, 0, ',', '.'),
+                'last_purchase_at' => $lastPurchaseAt,
+                'kredit_count' => $kreditCount,
+                'lunas_count' => $lunasCount,
+                'warning_count' => $warningCount,
+            ],
             'branch' => $supplier->branch,
             'note' => $supplier->note,
         ];

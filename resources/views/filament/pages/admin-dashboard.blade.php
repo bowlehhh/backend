@@ -106,12 +106,17 @@
     </script>
 
     <style>
+      :root {
+        --sf-topbar-h: 58px;
+        --sf-sidebar-w: 220px;
+      }
       .sf-wrap {
         font-family: 'Hanken Grotesk', sans-serif;
         width: 100vw;
         max-width: 100vw;
         margin-left: calc(50% - 50vw);
         margin-right: calc(50% - 50vw);
+        font-size: 14px;
       }
       .material-symbols-outlined {
         font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -169,24 +174,39 @@
       .sf-sidebar {
         position: fixed;
         left: 0;
-        top: 64px;
-        width: 240px;
-        height: calc(100vh - 64px);
+        top: var(--sf-topbar-h);
+        width: var(--sf-sidebar-w);
+        height: calc(100vh - var(--sf-topbar-h));
         border-right: 1px solid #d4dbd7;
         overflow: hidden;
         z-index: 30;
       }
       .sf-content {
         min-width: 0;
-        width: calc(100% - 240px);
-        margin-left: 240px;
-        height: calc(100vh - 64px);
+        width: calc(100% - var(--sf-sidebar-w));
+        margin-left: var(--sf-sidebar-w);
+        height: calc(100vh - var(--sf-topbar-h));
         overflow-y: auto;
       }
-      .sf-nav-item { font-size: 14px; }
-      .sf-nav-item .material-symbols-outlined { font-size: 18px; }
-      .sf-title { font-size: 34px; line-height: 40px; }
-      .sf-value { font-size: 34px; line-height: 40px; letter-spacing: -0.02em; }
+      .sf-nav-item { font-size: 13px; }
+      .sf-nav-item .material-symbols-outlined { font-size: 17px; }
+      .sf-title { font-size: 30px; line-height: 36px; }
+      .sf-value { font-size: 30px; line-height: 36px; letter-spacing: -0.02em; }
+      .sf-wrap .custom-shadow { box-shadow: 0 1px 3px rgba(0,0,0,.03); }
+      .sf-wrap .rounded-xl { border-radius: 10px !important; }
+      .sf-wrap .rounded-2xl { border-radius: 12px !important; }
+      .sf-wrap .p-6 { padding: 1rem !important; }
+      .sf-wrap .p-4 { padding: .8rem !important; }
+      .sf-wrap .px-6 { padding-left: 1rem !important; padding-right: 1rem !important; }
+      .sf-wrap .py-4 { padding-top: .7rem !important; padding-bottom: .7rem !important; }
+      .sf-wrap .h-16 { height: var(--sf-topbar-h) !important; }
+      .sf-wrap input,
+      .sf-wrap select,
+      .sf-wrap textarea { min-height: 40px; }
+      .sf-wrap table th,
+      .sf-wrap table td { padding-top: .65rem !important; padding-bottom: .65rem !important; }
+      .sf-wrap .text-\[34px\] { font-size: 28px !important; line-height: 34px !important; }
+      .sf-wrap .text-\[40px\] { font-size: 32px !important; line-height: 38px !important; }
       .sf-modal-panel { max-height: calc(100vh - 2rem); overflow: hidden; display: flex; flex-direction: column; }
       .sf-modal-form { overflow-y: auto; -webkit-overflow-scrolling: touch; }
       .sf-modal-form::-webkit-scrollbar { width: 8px; }
@@ -322,8 +342,10 @@
                 <span>Barang</span>
               </a>
               <a class="sf-nav-item w-full flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/suppliers') }}"><span class="material-symbols-outlined">local_shipping</span><span>Supplier</span></a>
+              <a class="sf-nav-item w-full flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=credits') }}"><span class="material-symbols-outlined">credit_card</span><span>Kredit</span></a>
+              <a class="sf-nav-item w-full flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=supplier-transactions') }}"><span class="material-symbols-outlined">account_tree</span><span>Transaksi PT</span></a>
               <a class="sf-nav-item w-full flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=batches') }}"><span class="material-symbols-outlined">layers</span><span>Batch Barang</span></a>
-              <a class="sf-nav-item w-full flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=taxonomy') }}"><span class="material-symbols-outlined">category</span><span>Kategori & Brand</span></a>
+              <a class="sf-nav-item w-full flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=taxonomy') }}"><span class="material-symbols-outlined">category</span><span>Kategori & Merek</span></a>
               <a class="sf-nav-item w-full flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=reports') }}"><span class="material-symbols-outlined">analytics</span><span>Laporan</span></a>
               <a class="sf-nav-item w-full flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=users') }}"><span class="material-symbols-outlined">group</span><span>User</span></a>
             </nav>
@@ -346,17 +368,29 @@
               </button>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6 mb-6">
               @foreach ($stats as $index => $stat)
-                <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant custom-shadow {{ $index === 1 ? 'cursor-pointer hover:shadow-md transition-shadow' : '' }}" @if($index===1) onclick="openLowStockModal()" @endif>
+                @php
+                  $variant = $stat['variant'] ?? 'secondary';
+                  $variantClass = match ($variant) {
+                    'primary' => 'text-primary bg-primary-container/20',
+                    'warning' => 'text-tertiary bg-tertiary-container/20',
+                    'secondary' => 'text-secondary bg-secondary-container/20',
+                    'info' => 'text-[#2563eb] bg-[#dbeafe]',
+                    'danger' => 'text-error bg-error-container/30',
+                    default => 'text-secondary bg-secondary-container/20',
+                  };
+                  $isLowStockCard = ($variant === 'warning');
+                @endphp
+                <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant custom-shadow {{ $isLowStockCard ? 'cursor-pointer hover:shadow-md transition-shadow' : '' }}" @if($isLowStockCard) onclick="openLowStockModal()" @endif>
                   <div class="flex items-center gap-3 mb-2">
-                    <div class="p-1 rounded-lg {{ $index === 0 ? 'bg-primary-container/20' : ($index === 1 ? 'bg-tertiary-container/20' : 'bg-secondary-container/20') }}">
-                      <span class="material-symbols-outlined {{ $index === 0 ? 'text-primary' : ($index === 1 ? 'text-tertiary' : 'text-secondary') }}">{{ $stat['icon'] ?? 'inventory_2' }}</span>
+                    <div class="p-1 rounded-lg {{ explode(' ', $variantClass)[1] }}">
+                      <span class="material-symbols-outlined {{ explode(' ', $variantClass)[0] }}">{{ $stat['icon'] ?? 'inventory_2' }}</span>
                     </div>
                     <span class="text-on-surface-variant font-medium">{{ $stat['label'] ?? '-' }}</span>
                   </div>
-                  <div class="sf-value {{ $index === 0 ? 'text-primary' : ($index === 1 ? 'text-tertiary' : 'text-secondary') }} font-bold leading-tight">{{ $stat['value'] ?? '0' }}</div>
-                  <p class="text-sm mt-1 font-medium {{ $index === 0 ? 'text-primary' : ($index === 1 ? 'text-tertiary' : 'text-secondary') }}">{{ $stat['description'] ?? '-' }}</p>
+                  <div class="sf-value {{ explode(' ', $variantClass)[0] }} font-bold leading-tight">{{ $stat['value'] ?? '0' }}</div>
+                  <p class="text-sm mt-1 font-medium {{ explode(' ', $variantClass)[0] }}">{{ $stat['description'] ?? '-' }}</p>
                 </div>
               @endforeach
             </div>
@@ -382,10 +416,13 @@
                     <tr class="bg-surface-container text-on-surface-variant border-b border-outline-variant">
                       <th class="px-6 py-4 font-medium uppercase tracking-wider">Part Number</th>
                       <th class="px-6 py-4 font-medium uppercase tracking-wider">Kategori</th>
-                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Brand</th>
+                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Merek</th>
+                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Berat</th>
+                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Unit</th>
                       <th class="px-6 py-4 font-medium uppercase tracking-wider">Stok</th>
                       <th class="px-6 py-4 font-medium uppercase tracking-wider">Harga Beli</th>
                       <th class="px-6 py-4 font-medium uppercase tracking-wider">Harga Jual</th>
+                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Biaya Ekspedisi</th>
                       <th class="px-6 py-4 font-medium uppercase tracking-wider text-right">Aksi</th>
                     </tr>
                   </thead>
@@ -394,6 +431,16 @@
                       @php
                         $stock = (int) ($product['stock'] ?? 0);
                         $low = $stock <= 5;
+                        $unit = trim((string) ($product['unit'] ?? '')) ?: '-';
+                        $stockUnit = $unit !== '-' ? $unit : 'Unit';
+                        $weight = $product['weight'] ?? null;
+                        $weightDisplay = ($weight !== null && $weight !== '')
+                            ? rtrim(rtrim(number_format((float) $weight, 2, ',', '.'), '0'), ',') . ' Kg'
+                            : '-';
+                        $expeditionCost = $product['expedition_cost_value'] ?? $product['expedition_cost'] ?? $product['shipping_cost'] ?? null;
+                        $expeditionCostDisplay = ($expeditionCost !== null && $expeditionCost !== '')
+                            ? 'Rp ' . number_format((float) $expeditionCost, 0, ',', '.')
+                            : 'Rp 0';
                       @endphp
                       <tr class="hover:bg-surface-container-low transition-colors group" data-product-id="{{ (int) ($product['id'] ?? 0) }}">
                         <td class="px-6 py-4">
@@ -415,13 +462,16 @@
                         </td>
                         <td class="px-6 py-4 text-body-md">{{ $product['category'] ?? '-' }}</td>
                         <td class="px-6 py-4 text-body-md">{{ $product['brand'] ?? '-' }}</td>
+                        <td class="px-6 py-4 text-body-md">{{ $weightDisplay }}</td>
+                        <td class="px-6 py-4 text-body-md">{{ $unit }}</td>
                         <td class="px-6 py-4">
                           <span class="px-3 py-1 rounded-full {{ $low ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700' }} text-label-sm font-semibold inline-flex items-center gap-1">
-                            <span class="w-1.5 h-1.5 rounded-full {{ $low ? 'bg-red-500' : 'bg-emerald-500' }}"></span>{{ $stock }} Unit
+                            <span class="w-1.5 h-1.5 rounded-full {{ $low ? 'bg-red-500' : 'bg-emerald-500' }}"></span>{{ $stock }} {{ $stockUnit }}
                           </span>
                         </td>
                         <td class="px-6 py-4 text-body-md">{{ $product['purchase_price'] ?? 'Rp 0' }}</td>
                         <td class="px-6 py-4 text-body-md">{{ $product['selling_price'] ?? 'Rp 0' }}</td>
+                        <td class="px-6 py-4 text-body-md">{{ $expeditionCostDisplay }}</td>
                         <td class="px-6 py-4 text-right">
                           <div class="flex justify-end gap-2">
                             <button type="button" class="p-1 hover:bg-surface-container rounded-lg text-primary transition-colors" onclick='openEditModal(@json($product))'><span class="material-symbols-outlined">edit</span></button>
@@ -431,7 +481,7 @@
                       </tr>
                     @empty
                       <tr id="emptyProductRow">
-                        <td colspan="7" class="px-6 py-10 text-center text-on-surface-variant">Belum ada barang.</td>
+                        <td colspan="10" class="px-6 py-10 text-center text-on-surface-variant">Belum ada barang.</td>
                       </tr>
                     @endforelse
                   </tbody>
@@ -482,7 +532,7 @@
         </div>
       </div>
     </div>
-    <form id="logoutForm" method="POST" action="{{ url('/admin/logout') }}" class="hidden">
+    <form id="logoutForm" method="POST" action="{{ route('logout') }}" class="hidden">
       @csrf
     </form>
     <div id="lowStockModal" class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-950/45 px-3 py-3 md:px-4 md:py-6">
@@ -590,11 +640,11 @@
       const imagePreviewTarget = document.getElementById('imagePreviewTarget');
       const imagePreviewTitle = document.getElementById('imagePreviewTitle');
       const pageMeta = { currentPage: {{ (int) ($pagination['current_page'] ?? 1) }}, perPage: {{ (int) ($pagination['per_page'] ?? (count($products) ?: 10)) }}, total: {{ (int) ($pagination['total'] ?? count($products)) }} };
-      const storeUrl = @json(route('admin.dashboard.products.store'));
-      const updateUrlBase = @json(url('/admin/dashboard/products'));
-      const csrfToken = @json(csrf_token());
-      const productsForNotification = @json($products);
-      const lowStockProducts = @json($lowStockProducts);
+      const storeUrl = {{ Illuminate\Support\Js::from(route('admin.dashboard.products.store')) }};
+      const updateUrlBase = {{ Illuminate\Support\Js::from(url('/admin/dashboard/products')) }};
+      const csrfToken = {{ Illuminate\Support\Js::from(csrf_token()) }};
+      const productsForNotification = {{ Illuminate\Support\Js::from($products) }};
+      const lowStockProducts = {{ Illuminate\Support\Js::from($lowStockProducts) }};
       const globalSearchInput = document.getElementById('globalSearchInput');
       function applyFilters() {
         const searchInput = document.getElementById('globalSearchInput')?.value || '';
@@ -816,6 +866,8 @@
         createForm.reset();
         setImagePreview(createForm, null);
         createForm.querySelector('input[type="checkbox"][name="is_active"]').checked = true;
+        createForm.querySelector('[name="payment_type"]').value = 'LUNAS';
+        syncBatchCreditFields(createForm);
         setCategoryBrandEditable(createForm, true);
         updatePurchaseTotal(createForm);
         createModal.classList.remove('hidden');
@@ -854,25 +906,151 @@
         });
       }
 
+      function syncBatchCreditFields(form) {
+        const paymentTypeInput = form.querySelector('[name="payment_type"]');
+        const creditDaysWrap = form.querySelector('[data-credit-days-wrap]');
+        const creditDueWrap = form.querySelector('[data-credit-due-wrap]');
+        const downPaymentWrap = form.querySelector('[data-down-payment-wrap]');
+        const creditDaysInput = form.querySelector('[name="credit_days"]');
+        const creditDueInput = form.querySelector('[name="credit_due_date"]');
+        const downPaymentInput = form.querySelector('[name="down_payment_amount"]');
+        const showCredit = (paymentTypeInput?.value || 'LUNAS') === 'KREDIT';
+        creditDaysWrap?.classList.toggle('hidden', !showCredit);
+        creditDueWrap?.classList.toggle('hidden', !showCredit);
+        downPaymentWrap?.classList.toggle('hidden', !showCredit);
+        if (creditDueInput) {
+          creditDueInput.readOnly = showCredit;
+          creditDueInput.classList.toggle('bg-surface-container-low', showCredit);
+        }
+        if (!showCredit) {
+          if (creditDaysInput) creditDaysInput.value = '';
+          if (creditDueInput) creditDueInput.value = '';
+          if (downPaymentInput) downPaymentInput.value = '';
+          updateCreditDueHuman(form, null);
+          updateCreditPaymentSummary(form, null);
+          return;
+        }
+        syncCreditDueDateFromDays(form);
+        updateCreditPaymentSummary(form);
+      }
+
+      function toIsoDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+
+      const indonesianMonths = [
+        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+      ];
+
+      function formatIndonesianDate(date) {
+        if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
+        return `${String(date.getDate()).padStart(2, '0')} ${indonesianMonths[date.getMonth()]} ${date.getFullYear()}`;
+      }
+
+      function dateFromIso(value) {
+        const match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (!match) return null;
+        return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+      }
+
+      function updateCreditDueHuman(form, date, days = null) {
+        const hint = form.querySelector('[data-credit-due-human]');
+        if (!hint) return;
+        const text = formatIndonesianDate(date);
+        hint.textContent = text ? `Tanggal jatuh tempo: ${days ? `${days} hari ` : ''}(${text})` : '';
+      }
+
+      function updateCreditPaymentSummary(form, totalOverride = null) {
+        const hint = form.querySelector('[data-down-payment-hint]');
+        const paymentType = form.querySelector('[name="payment_type"]')?.value || 'LUNAS';
+        const downPaymentInput = form.querySelector('[name="down_payment_amount"]');
+        if (!hint) return;
+        if (paymentType !== 'KREDIT') {
+          hint.textContent = '';
+          return;
+        }
+
+        const totalInput = form.querySelector('[name="total_purchase_display"]');
+        const total = Number.isFinite(totalOverride)
+          ? Number(totalOverride)
+          : parseCurrencyToNumber(totalInput?.value || 0);
+        let downPayment = parseCurrencyToNumber(downPaymentInput?.value || 0);
+        if (downPayment > total) {
+          downPayment = total;
+          if (downPaymentInput) {
+            downPaymentInput.value = formatRupiahInput(String(downPayment));
+          }
+        }
+
+        const remaining = Math.max(0, total - downPayment);
+        hint.textContent = `Sisa kredit otomatis: Rp ${Number.isFinite(remaining) ? remaining.toLocaleString('id-ID') : '0'}`;
+      }
+
+      function syncCreditDueDateFromDays(form) {
+        const paymentType = form.querySelector('[name="payment_type"]')?.value || 'LUNAS';
+        const creditDaysInput = form.querySelector('[name="credit_days"]');
+        const creditDueInput = form.querySelector('[name="credit_due_date"]');
+        if (!creditDaysInput || !creditDueInput) return;
+        if (paymentType !== 'KREDIT') {
+          creditDueInput.value = '';
+          updateCreditDueHuman(form, null);
+          updateCreditPaymentSummary(form, null);
+          return;
+        }
+        const days = Number(creditDaysInput.value || 0);
+        if (!Number.isFinite(days) || days <= 0) {
+          creditDueInput.value = '';
+          updateCreditDueHuman(form, null);
+          updateCreditPaymentSummary(form, null);
+          return;
+        }
+        const dueDate = new Date();
+        dueDate.setHours(0, 0, 0, 0);
+        dueDate.setDate(dueDate.getDate() + Math.floor(days));
+        creditDueInput.value = toIsoDate(dueDate);
+        updateCreditDueHuman(form, dueDate, Math.floor(days));
+        updateCreditPaymentSummary(form);
+      }
+
       function fillProductForm(form, product) {
         form.querySelector('[name="product_id"]').value = product.id || '';
         form.querySelector('[name="name"]').value = product.name || '';
         form.querySelector('[name="barcode"]').value = product.barcode || '';
+        form.querySelector('[name="unit"]').value = product.unit || '';
+        form.querySelector('[name="weight"]').value = product.weight || '';
         form.querySelector('[name="slug"]').value = product.slug || '';
         form.querySelector('[name="category"]').value = product.category || '';
         form.querySelector('[name="brand"]').value = product.brand || '';
         form.querySelector('[name="supplier_id"]').value = product.supplier_id || '';
         form.querySelector('[name="supplier_name"]').value = product.supplier_name || '';
-        form.querySelector('[name="supplier_branch"]').value = product.supplier_branch || '';
+        const supplierBranchField = form.querySelector('[name="supplier_branch"]');
+        if (supplierBranchField) supplierBranchField.value = product.supplier_branch || '';
         form.querySelector('[name="supplier_phone"]').value = product.supplier_phone || '';
         form.querySelector('[name="supplier_address"]').value = product.supplier_address || '';
         form.querySelector('[name="supplier_note"]').value = product.supplier_note || '';
         form.querySelector('[name="batch_code"]').value = product.batch_code || '';
         form.querySelector('[name="purchase_price"]').value = formatRupiahInput(product.purchase_price_value ?? '');
+        form.querySelector('[name="expedition_cost"]').value = formatRupiahInput(product.expedition_cost_value ?? '');
         form.querySelector('[name="selling_price"]').value = formatRupiahInput(product.selling_price_value ?? '');
         form.querySelector('[name="stock"]').value = product.stock ?? 0;
+        form.querySelector('[name="payment_type"]').value = product.payment_type || 'LUNAS';
+        form.querySelector('[name="credit_days"]').value = product.credit_days || '';
+        form.querySelector('[name="credit_due_date"]').value = product.credit_due_date || '';
+        const downPaymentField = form.querySelector('[name="down_payment_amount"]');
+        if (downPaymentField) {
+          downPaymentField.value = formatRupiahInput(product.down_payment_amount_value ?? product.down_payment_amount ?? '');
+        }
+        updateCreditDueHuman(form, dateFromIso(product.credit_due_date), product.credit_days || null);
+        const expiredAtField = form.querySelector('[name="expired_at"]');
+        if (expiredAtField) expiredAtField.value = product.expired_at || '';
+        syncBatchCreditFields(form);
         updatePurchaseTotal(form);
-        form.querySelector('[name="description"]').value = product.description || '';
+        const descriptionField = form.querySelector('[name="description"]');
+        if (descriptionField) descriptionField.value = product.description || '';
         form.querySelector('input[type="checkbox"][name="is_active"]').checked = Boolean(product.is_active);
         if (form.querySelector('[name="image"]')) form.querySelector('[name="image"]').value = '';
         setImagePreview(form, product.image_url || null);
@@ -891,11 +1069,13 @@
       }
       function updatePurchaseTotal(form) {
         const unitPrice = parseCurrencyToNumber(form.querySelector('[name="purchase_price"]')?.value || 0);
+        const expeditionCost = parseCurrencyToNumber(form.querySelector('[name="expedition_cost"]')?.value || 0);
         const quantity = Number(form.querySelector('[name="stock"]')?.value || 0);
         const totalInput = form.querySelector('[name="total_purchase_display"]');
         if (!totalInput) return;
-        const total = unitPrice * quantity;
+        const total = (unitPrice * quantity) + expeditionCost;
         totalInput.value = `Rp ${Number.isFinite(total) ? Math.round(total).toLocaleString('id-ID') : '0'}`;
+        updateCreditPaymentSummary(form, total);
       }
       function formatRupiahInput(value) {
         const digits = String(value ?? '').replace(/[^\d]/g, '');
@@ -907,14 +1087,16 @@
         return Number(digits || 0);
       }
       function bindCurrencyFormatter(form) {
-        ['purchase_price', 'selling_price'].forEach((fieldName) => {
+        ['purchase_price', 'expedition_cost', 'selling_price', 'down_payment_amount'].forEach((fieldName) => {
           const input = form.querySelector(`[name="${fieldName}"]`);
           if (!input) return;
           input.addEventListener('input', () => {
             const formatted = formatRupiahInput(input.value);
             input.value = formatted;
-            if (fieldName === 'purchase_price') {
+            if (fieldName === 'purchase_price' || fieldName === 'expedition_cost') {
               updatePurchaseTotal(form);
+            } else if (fieldName === 'down_payment_amount') {
+              updateCreditPaymentSummary(form);
             }
           });
         });
@@ -925,23 +1107,41 @@
         const alertBox = document.getElementById(alertId); if (alertBox) { alertBox.textContent = ''; alertBox.classList.add('hidden'); }
       }
       function buildFormPayload(form) {
+        syncCreditDueDateFromDays(form);
         const formData = new FormData();
         formData.append('name', form.querySelector('[name="name"]').value || '');
         formData.append('barcode', form.querySelector('[name="barcode"]').value || '');
+        formData.append('unit', form.querySelector('[name="unit"]').value || '');
+        formData.append('weight', form.querySelector('[name="weight"]').value || '');
         formData.append('slug', form.querySelector('[name="slug"]').value || '');
         formData.append('category', form.querySelector('[name="category"]').value || '');
         formData.append('brand', form.querySelector('[name="brand"]').value || '');
         formData.append('supplier_id', form.querySelector('[name="supplier_id"]').value || '');
         formData.append('supplier_name', form.querySelector('[name="supplier_name"]').value || '');
-        formData.append('supplier_branch', form.querySelector('[name="supplier_branch"]').value || '');
+        const supplierBranchField = form.querySelector('[name="supplier_branch"]');
+        if (supplierBranchField) {
+          formData.append('supplier_branch', supplierBranchField.value || '');
+        }
         formData.append('supplier_phone', form.querySelector('[name="supplier_phone"]').value || '');
         formData.append('supplier_address', form.querySelector('[name="supplier_address"]').value || '');
         formData.append('supplier_note', form.querySelector('[name="supplier_note"]').value || '');
         formData.append('batch_code', form.querySelector('[name="batch_code"]').value || '');
         formData.append('purchase_price', String(parseCurrencyToNumber(form.querySelector('[name="purchase_price"]').value || '')));
+        formData.append('expedition_cost', String(parseCurrencyToNumber(form.querySelector('[name="expedition_cost"]').value || '')));
         formData.append('selling_price', String(parseCurrencyToNumber(form.querySelector('[name="selling_price"]').value || '')));
         formData.append('stock', form.querySelector('[name="stock"]').value || 0);
-        formData.append('description', form.querySelector('[name="description"]').value || '');
+        formData.append('payment_type', form.querySelector('[name="payment_type"]').value || 'LUNAS');
+        formData.append('credit_days', form.querySelector('[name="credit_days"]').value || '');
+        formData.append('credit_due_date', form.querySelector('[name="credit_due_date"]').value || '');
+        formData.append('down_payment_amount', String(parseCurrencyToNumber(form.querySelector('[name="down_payment_amount"]')?.value || '')));
+        const expiredAtField = form.querySelector('[name="expired_at"]');
+        if (expiredAtField) {
+          formData.append('expired_at', expiredAtField.value || '');
+        }
+        const descriptionField = form.querySelector('[name="description"]');
+        if (descriptionField) {
+          formData.append('description', descriptionField.value || '');
+        }
         formData.append('is_active', form.querySelector('input[type="checkbox"][name="is_active"]').checked ? 1 : 0);
         const imageInput = form.querySelector('[name="image"]');
         if (imageInput?.files?.length) {
@@ -988,6 +1188,16 @@
         const lowStock = stock <= 5;
         const stockClass = lowStock ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700';
         const dotClass = lowStock ? 'bg-red-500' : 'bg-emerald-500';
+        const unit = String(product.unit || '').trim() || '-';
+        const stockUnit = unit !== '-' ? unit : 'Unit';
+        const weightValue = product.weight ?? '';
+        const weightNumber = Number(weightValue);
+        const weightDisplay = weightValue !== '' && weightValue !== null && Number.isFinite(weightNumber)
+          ? `${weightNumber.toLocaleString('id-ID', { maximumFractionDigits: 2 })} Kg`
+          : '-';
+        const expeditionValue = product.expedition_cost_value ?? product.expedition_cost ?? product.shipping_cost ?? 0;
+        const expeditionNumber = parseCurrencyToNumber(expeditionValue);
+        const expeditionCost = `Rp ${Number.isFinite(expeditionNumber) ? Math.round(expeditionNumber).toLocaleString('id-ID') : '0'}`;
         const encodedProduct = encodeURIComponent(JSON.stringify(product));
         return `
           <tr class="hover:bg-surface-container-low transition-colors group" data-product-id="${product.id}">
@@ -1004,9 +1214,12 @@
             </td>
             <td class="px-6 py-4 text-body-md">${escapeHtml(product.category || '-')}</td>
             <td class="px-6 py-4 text-body-md">${escapeHtml(product.brand || '-')}</td>
-            <td class="px-6 py-4"><span class="px-3 py-1 rounded-full ${stockClass} text-label-sm font-semibold inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full ${dotClass}"></span>${stock} Unit</span></td>
+            <td class="px-6 py-4 text-body-md">${escapeHtml(weightDisplay)}</td>
+            <td class="px-6 py-4 text-body-md">${escapeHtml(unit)}</td>
+            <td class="px-6 py-4"><span class="px-3 py-1 rounded-full ${stockClass} text-label-sm font-semibold inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full ${dotClass}"></span>${stock} ${escapeHtml(stockUnit)}</span></td>
             <td class="px-6 py-4 text-body-md">${escapeHtml(product.purchase_price || 'Rp 0')}</td>
             <td class="px-6 py-4 text-body-md">${escapeHtml(product.selling_price || 'Rp 0')}</td>
+            <td class="px-6 py-4 text-body-md">${escapeHtml(expeditionCost)}</td>
             <td class="px-6 py-4 text-right"><div class="flex justify-end gap-2"><button type="button" class="p-1 hover:bg-surface-container rounded-lg text-primary transition-colors" onclick='openEditModal(JSON.parse(decodeURIComponent("${encodedProduct}")))'><span class="material-symbols-outlined">edit</span></button><button type="button" class="p-1 hover:bg-error-container/20 rounded-lg text-error transition-colors" onclick='deleteProduct(${product.id}, ${JSON.stringify(product.name || "-")})'><span class="material-symbols-outlined">delete</span></button></div></td>
           </tr>
         `;
@@ -1039,6 +1252,12 @@
       editForm.addEventListener('submit', async function (event) { event.preventDefault(); const productId = editForm.querySelector('[name="product_id"]').value; const payload = await submitProductForm(editForm, `${updateUrlBase}/${productId}`, 'PUT', 'editFormAlert'); if (!payload) return; upsertProductRow(payload.product, 'update'); closeEditModal(); showToast(payload.message || 'Barang berhasil diperbarui.'); });
       createForm.querySelector('[name="stock"]')?.addEventListener('input', () => updatePurchaseTotal(createForm));
       editForm.querySelector('[name="stock"]')?.addEventListener('input', () => updatePurchaseTotal(editForm));
+      createForm.querySelector('[name="payment_type"]')?.addEventListener('change', () => syncBatchCreditFields(createForm));
+      editForm.querySelector('[name="payment_type"]')?.addEventListener('change', () => syncBatchCreditFields(editForm));
+      createForm.querySelector('[name="credit_days"]')?.addEventListener('input', () => syncCreditDueDateFromDays(createForm));
+      editForm.querySelector('[name="credit_days"]')?.addEventListener('input', () => syncCreditDueDateFromDays(editForm));
+      createForm.querySelector('[name="credit_due_date"]')?.addEventListener('change', () => updateCreditDueHuman(createForm, dateFromIso(createForm.querySelector('[name="credit_due_date"]')?.value), createForm.querySelector('[name="credit_days"]')?.value || null));
+      editForm.querySelector('[name="credit_due_date"]')?.addEventListener('change', () => updateCreditDueHuman(editForm, dateFromIso(editForm.querySelector('[name="credit_due_date"]')?.value), editForm.querySelector('[name="credit_days"]')?.value || null));
       createForm.querySelector('[name="image"]')?.addEventListener('change', (event) => {
         const file = event.target.files?.[0];
         setImagePreview(createForm, file ? URL.createObjectURL(file) : null);
@@ -1051,5 +1270,7 @@
       updatePurchaseTotal(editForm);
       bindCurrencyFormatter(createForm);
       bindCurrencyFormatter(editForm);
+      syncBatchCreditFields(createForm);
+      syncBatchCreditFields(editForm);
     </script>
 </x-filament-panels::page>

@@ -13,7 +13,7 @@ class AdminSalesController extends Controller
 {
     public function receipt(Request $request, Sale $sale): View|Response
     {
-        $sale->loadMissing(['items', 'user:id,name']);
+        $sale->loadMissing(['items', 'user:id,name', 'returns']);
 
         if ($request->boolean('pdf')) {
             $pdf = Pdf::loadView('cashier.receipt', [

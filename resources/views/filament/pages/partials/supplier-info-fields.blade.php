@@ -7,16 +7,6 @@
       <p class="mt-1 text-xs text-error" data-error-for="supplier_name"></p>
     </div>
     <div>
-      <label class="mb-1 block text-sm font-medium text-on-surface">Tipe supplier</label>
-      <select name="supplier_branch" class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 focus:border-primary focus:outline-none">
-        <option value="">Pilih tipe supplier</option>
-        @foreach ($supplierTypeOptions as $supplierType)
-          <option value="{{ $supplierType }}">{{ $supplierType }}</option>
-        @endforeach
-      </select>
-      <p class="mt-1 text-xs text-error" data-error-for="supplier_branch"></p>
-    </div>
-    <div>
       <label class="mb-1 block text-sm font-medium text-on-surface">Nomor HP supplier</label>
       <input type="text" name="supplier_phone" class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 focus:border-primary focus:outline-none">
       <p class="mt-1 text-xs text-error" data-error-for="supplier_phone"></p>

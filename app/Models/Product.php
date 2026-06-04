@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -19,6 +20,8 @@ class Product extends Model
         'name',
         'slug',
         'barcode',
+        'unit',
+        'weight',
         'description',
         'image_path',
         'is_active',
@@ -32,7 +35,24 @@ class Product extends Model
     {
         return [
             'is_active' => 'boolean',
+            'weight' => 'decimal:2',
         ];
+    }
+
+    protected function barcode(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value) => $this->normalizeBarcode($value),
+            set: fn (?string $value) => $this->normalizeBarcode($value),
+        );
+    }
+
+    protected function unit(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value) => $this->normalizeUnit($value),
+            set: fn (?string $value) => $this->normalizeUnit($value),
+        );
     }
 
     protected static function booted(): void
@@ -93,5 +113,27 @@ class Product extends Model
         return (int) $this->batches()
             ->where('is_active', true)
             ->sum('stock');
+    }
+
+    private function normalizeBarcode(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $normalized = strtoupper(trim($value));
+
+        return $normalized === '' ? null : $normalized;
+    }
+
+    private function normalizeUnit(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $normalized = strtoupper(trim($value));
+
+        return $normalized === '' ? null : $normalized;
     }
 }

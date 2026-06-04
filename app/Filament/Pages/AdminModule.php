@@ -633,42 +633,14 @@ class AdminModule extends Page
 
     private function getPtCustomerGroups(): array
     {
-        if (! Schema::hasTable('sales')) {
+        $rows = $this->getPtCvRowsForAdmin();
+        if ($rows->isEmpty()) {
             return [];
         }
 
-        $hasSaleItems = Schema::hasTable('sale_items');
-        $base = DB::table('sales')
-            ->whereNotNull('customer_name')
-            ->whereRaw("TRIM(customer_name) <> ''")
-            ->where(function ($q) {
-                $q->whereRaw("UPPER(TRIM(customer_name)) LIKE 'PT %'")
-                    ->orWhereRaw("UPPER(TRIM(customer_name)) LIKE 'CV %'");
-            })
-            ->when(Schema::hasColumn('sales', 'deleted_at'), fn ($q) => $q->whereNull('deleted_at'));
-
-        $itemsAgg = [];
-        if ($hasSaleItems) {
-            $itemsAgg = DB::table('sale_items')
-                ->selectRaw('sale_id, COUNT(*) as items_count, COALESCE(SUM(qty),0) as total_qty')
-                ->groupBy('sale_id')
-                ->get()
-                ->keyBy('sale_id');
-        }
-
-        $rows = $base->orderByDesc('id')->get([
-            'id',
-            'customer_name',
-            'total',
-            'payment_method',
-            'credit_amount',
-            'credit_due_date',
-            'created_at',
-        ]);
-
         $grouped = [];
         foreach ($rows as $row) {
-            $name = strtoupper(trim((string) $row->customer_name));
+            $name = $this->normalizePtCvName((string) ($row->pt_name ?? ''));
             if (! isset($grouped[$name])) {
                 $grouped[$name] = [
                     'pt_name' => $name,
@@ -692,8 +664,8 @@ class AdminModule extends Page
             }
 
             $grouped[$name]['total_transaksi']++;
-            $grouped[$name]['total_qty'] += (int) ($itemsAgg[$row->id]->total_qty ?? 0);
-            $grouped[$name]['total_nilai_value'] += (float) ($row->total ?? 0);
+            $grouped[$name]['total_qty'] += (int) ($row->qty ?? 0);
+            $grouped[$name]['total_nilai_value'] += (float) ($row->sale_total ?? 0);
             if (in_array($status, ['BELUM LUNAS', 'JATUH TEMPO'], true)) {
                 $grouped[$name]['kredit']++;
             }
@@ -724,36 +696,21 @@ class AdminModule extends Page
 
     private function getPtCustomerDetail(string $ptName): array
     {
-        $ptName = strtoupper(trim($ptName));
-        if ($ptName === '' || ! Schema::hasTable('sales')) {
+        $rawPtName = trim($ptName);
+        if ($rawPtName === '') {
             return ['pt_name' => '', 'rows' => [], 'summary' => null];
         }
 
-        $rows = DB::table('sales')
-            ->whereRaw('UPPER(TRIM(customer_name)) = ?', [$ptName])
-            ->when(Schema::hasColumn('sales', 'deleted_at'), fn ($q) => $q->whereNull('deleted_at'))
-            ->orderByDesc('id')
-            ->get([
-                'id',
-                'invoice_number',
-                'customer_name',
-                'payment_method',
-                'total',
-                'credit_amount',
-                'credit_due_date',
-                'created_at',
-            ]);
-
-        $itemsQty = [];
-        if (Schema::hasTable('sale_items')) {
-            $itemsQty = DB::table('sale_items')
-                ->selectRaw('sale_id, COALESCE(SUM(qty),0) as total_qty')
-                ->groupBy('sale_id')
-                ->pluck('total_qty', 'sale_id')
-                ->toArray();
+        $ptName = $this->normalizePtCvName($rawPtName);
+        if ($ptName === 'TANPA PT/CV') {
+            return ['pt_name' => '', 'rows' => [], 'summary' => null];
         }
 
-        $mapped = collect($rows)->map(function ($row) use ($itemsQty) {
+        $mapped = $this->getPtCvRowsForAdmin()
+            ->filter(function (object $row) use ($ptName): bool {
+                return $this->normalizePtCvName((string) ($row->pt_name ?? '')) === $ptName;
+            })
+            ->map(function (object $row) {
             $method = strtoupper((string) ($row->payment_method ?? 'CASH'));
             $creditAmount = (float) ($row->credit_amount ?? 0);
             $dueDate = !empty($row->credit_due_date) ? Carbon::parse($row->credit_due_date) : null;
@@ -767,8 +724,9 @@ class AdminModule extends Page
                 'invoice' => (string) ($row->invoice_number ?: '-'),
                 'waktu' => !empty($row->created_at) ? Carbon::parse($row->created_at)->format('d M Y H:i') : '-',
                 'metode' => $method,
-                'qty' => (int) ($itemsQty[$row->id] ?? 0),
-                'total' => 'Rp ' . number_format((float) ($row->total ?? 0), 0, ',', '.'),
+                'qty' => (int) ($row->qty ?? 0),
+                'total' => 'Rp ' . number_format((float) ($row->sale_total ?? 0), 0, ',', '.'),
+                'total_value' => (float) ($row->sale_total ?? 0),
                 'kredit' => 'Rp ' . number_format($creditAmount, 0, ',', '.'),
                 'jatuh_tempo' => $dueDate ? $dueDate->format('d M Y') : '-',
                 'status' => $status,
@@ -781,8 +739,56 @@ class AdminModule extends Page
             'summary' => [
                 'total_transaksi' => $mapped->count(),
                 'total_qty' => $mapped->sum('qty'),
-                'total_nilai' => 'Rp ' . number_format((float) collect($rows)->sum('total'), 0, ',', '.'),
+                'total_nilai' => 'Rp ' . number_format((float) $mapped->sum('total_value'), 0, ',', '.'),
             ],
         ];
+    }
+
+    private function getPtCvRowsForAdmin()
+    {
+        if (! Schema::hasTable('sales')) {
+            return collect();
+        }
+
+        $itemsAgg = null;
+        if (Schema::hasTable('sale_items')) {
+            $itemsAgg = DB::table('sale_items')
+                ->selectRaw('sale_id, COUNT(*) as items_count, COALESCE(SUM(qty), 0) as qty, COALESCE(SUM(subtotal), 0) as subtotal')
+                ->groupBy('sale_id');
+        }
+
+        $query = DB::table('sales')
+            ->whereNotNull('customer_name')
+            ->whereRaw("TRIM(customer_name) <> ''")
+            ->when(Schema::hasColumn('sales', 'deleted_at'), fn ($q) => $q->whereNull('deleted_at'));
+
+        if ($itemsAgg !== null) {
+            $query->leftJoinSub($itemsAgg, 'sale_items_agg', function ($join): void {
+                $join->on('sale_items_agg.sale_id', '=', 'sales.id');
+            });
+        }
+
+        return $query
+            ->selectRaw('
+                sales.id,
+                sales.invoice_number,
+                sales.customer_name as pt_name,
+                sales.payment_method,
+                sales.total as sale_total,
+                sales.credit_amount,
+                sales.credit_due_date,
+                sales.created_at,
+                COALESCE(sale_items_agg.items_count, 0) as items_count,
+                COALESCE(sale_items_agg.qty, 0) as qty,
+                COALESCE(sale_items_agg.subtotal, 0) as subtotal
+            ')
+            ->orderByDesc('sales.id')
+            ->get();
+    }
+
+    private function normalizePtCvName(?string $name): string
+    {
+        $normalized = strtoupper(trim((string) $name));
+        return preg_replace('/\s+/', ' ', $normalized) ?: 'TANPA PT/CV';
     }
 }

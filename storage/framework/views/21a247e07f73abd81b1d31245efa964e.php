@@ -26,8 +26,8 @@
                 <span class="font-semibold">History</span>
             </a>
             <a href="<?php echo e(route('cashier.history.supplier')); ?>" class="flex items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-slate-100">
-                <span class="material-symbols-outlined">local_shipping</span>
-                <span class="font-semibold">Supplier</span>
+                <span class="material-symbols-outlined">account_tree</span>
+                <span class="font-semibold">PT/CV</span>
             </a>
             <a href="<?php echo e(route('cashier.drafts')); ?>" class="flex items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-slate-100">
                 <span class="material-symbols-outlined">draft</span>
@@ -35,7 +35,7 @@
             </a>
         </nav>
         <div class="p-4 border-t border-slate-200">
-            <form method="POST" action="<?php echo e(route('logout')); ?>" onsubmit="return confirm('Yakin ingin logout dari akun ini?')">
+            <form method="POST" action="<?php echo e(route('logout')); ?>" class="js-logout-form">
                 <?php echo csrf_field(); ?>
                 <button type="submit" class="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-red-50 hover:text-red-600">
                     <span class="material-symbols-outlined">lock_clock</span>
@@ -321,6 +321,7 @@
         </div>
     </main>
 </div>
+<?php echo $__env->make('cashier.partials.logout-modal', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 <script>
     document.querySelectorAll('.js-delete-sale-form').forEach((form) => {
         form.addEventListener('submit', (event) => {

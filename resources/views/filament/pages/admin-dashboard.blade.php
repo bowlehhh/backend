@@ -211,6 +211,28 @@
       .sf-modal-form { overflow-y: auto; -webkit-overflow-scrolling: touch; }
       .sf-modal-form::-webkit-scrollbar { width: 8px; }
       .sf-modal-form::-webkit-scrollbar-thumb { background: #bccac0; border-radius: 10px; }
+      .sf-mobile-sidebar-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.42);
+        z-index: 24;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .22s ease;
+      }
+      .sf-sidebar {
+        transition: transform .24s ease, opacity .24s ease, box-shadow .24s ease;
+      }
+      .sf-mobile-menu-open .sf-mobile-sidebar-backdrop {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .sf-mobile-menu-open .sf-sidebar {
+        transform: translateX(0);
+        opacity: 1;
+        pointer-events: auto;
+        box-shadow: 18px 0 40px rgba(0, 0, 0, .14);
+      }
       .sf-part-number {
         display: block;
         font-size: 18px;
@@ -271,11 +293,78 @@
         .sf-wrap .sf-modal-panel { max-height: calc(100vh - 1rem); border-radius: 1rem; }
         .sf-wrap .sf-modal-form { padding-left: 1rem; padding-right: 1rem; padding-bottom: 1rem; }
       }
-    </style>
+      @media (max-width: 1023px) {
+        html.sf-dashboard-page,
+        .sf-dashboard-page,
+        .sf-dashboard-page body,
+        .sf-dashboard-page .fi-body,
+        .sf-dashboard-page .fi-layout,
+        .sf-dashboard-page .fi-main,
+        .sf-dashboard-page .fi-main-ctn {
+          height: auto !important;
+          min-height: 100% !important;
+          overflow-x: hidden !important;
+          overflow-y: auto !important;
+        }
+        .sf-wrap {
+          min-height: 100vh;
+        }
+        .sf-sidebar {
+          width: min(84vw, 300px);
+          transform: translateX(-102%);
+          opacity: 0;
+          pointer-events: none;
+          z-index: 30;
+        }
+        .sf-content {
+          width: 100%;
+          margin-left: 0;
+          height: auto;
+          overflow: visible;
+        }
+        .sf-wrap header {
+          padding-left: 1rem !important;
+          padding-right: 1rem !important;
+          gap: .75rem;
+        }
+        .sf-wrap .sf-toolbar {
+          display: grid;
+          grid-template-columns: 1fr;
+        }
+        .sf-wrap .sf-toolbar .sf-export {
+          margin-left: 0 !important;
+          width: 100%;
+          align-items: flex-start !important;
+        }
+        .sf-wrap .sf-toolbar .sf-export > div {
+          width: 100%;
+          justify-content: flex-start;
+        }
+        .sf-wrap #productTable th,
+        .sf-wrap #productTable td {
+          padding: 10px 12px !important;
+          font-size: 13px !important;
+        }
+        .sf-wrap #productTable {
+          min-width: 1080px;
+          width: max-content;
+        }
+        .sf-wrap .sf-header-actions > div {
+          width: 32px !important;
+          height: 32px !important;
+        }
+        .sf-wrap .sf-header-actions .material-symbols-outlined {
+          font-size: 20px;
+        }
+      }
+      </style>
 
-    <div class="sf-wrap bg-background text-on-surface antialiased h-screen overflow-x-hidden overflow-y-hidden">
+    <div class="sf-wrap bg-background text-on-surface antialiased min-h-screen overflow-x-hidden">
       <header class="bg-surface-container-lowest text-primary border-b border-outline-variant shadow-sm flex justify-between items-center px-6 h-16 w-full sticky top-0 z-50">
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3 md:gap-4">
+          <button id="mobileSidebarBtn" type="button" class="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container" aria-label="Buka navigasi">
+            <span class="material-symbols-outlined">menu</span>
+          </button>
           <span class="font-display text-headline-md font-bold text-primary">Toko Pak Paul</span>
         </div>
         <div class="sf-header-actions relative flex items-center gap-4">
@@ -324,7 +413,8 @@
 
       <div class="sf-shell">
         <div class="sf-layout">
-          <aside class="sf-sidebar hidden lg:flex flex-col w-full p-4 bg-surface">
+          <div id="mobileSidebarBackdrop" class="sf-mobile-sidebar-backdrop lg:hidden"></div>
+          <aside class="sf-sidebar flex flex-col w-full p-4 bg-surface">
             <div class="mb-4 rounded-lg border border-outline-variant bg-surface-container-low p-3">
               <div class="flex items-center gap-2">
                 <div class="h-8 w-8 rounded-lg bg-primary text-on-primary flex items-center justify-center">
@@ -368,7 +458,7 @@
               </button>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6 mb-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 md:gap-6 mb-6">
               @foreach ($stats as $index => $stat)
                 @php
                   $variant = $stat['variant'] ?? 'secondary';
@@ -658,10 +748,28 @@
       const headerNotificationsBtn = document.getElementById('headerNotificationsBtn');
       const headerSettingsBtn = document.getElementById('headerSettingsBtn');
       const headerProfileBtn = document.getElementById('headerProfileBtn');
+      const mobileSidebarBtn = document.getElementById('mobileSidebarBtn');
+      const mobileSidebarBackdrop = document.getElementById('mobileSidebarBackdrop');
       const notificationsPopup = document.getElementById('notificationsPopup');
       const settingsPopup = document.getElementById('settingsPopup');
       const profilePopup = document.getElementById('profilePopup');
       const notificationsPopupList = document.getElementById('notificationsPopupList');
+
+      function closeMobileSidebar() {
+        document.body.classList.remove('sf-mobile-menu-open');
+      }
+
+      function openMobileSidebar() {
+        document.body.classList.add('sf-mobile-menu-open');
+      }
+
+      function toggleMobileSidebar() {
+        if (document.body.classList.contains('sf-mobile-menu-open')) {
+          closeMobileSidebar();
+        } else {
+          openMobileSidebar();
+        }
+      }
 
       function closeHeaderPopups() {
         [notificationsPopup, settingsPopup, profilePopup].forEach((el) => {
@@ -702,6 +810,13 @@
       headerNotificationsBtn?.addEventListener('click', showNotifications);
       headerSettingsBtn?.addEventListener('click', openAdminSettings);
       headerProfileBtn?.addEventListener('click', () => togglePopup(profilePopup));
+      mobileSidebarBtn?.addEventListener('click', toggleMobileSidebar);
+      mobileSidebarBackdrop?.addEventListener('click', closeMobileSidebar);
+      document.querySelectorAll('.sf-sidebar a').forEach((link) => {
+        link.addEventListener('click', () => {
+          if (window.innerWidth < 1024) closeMobileSidebar();
+        });
+      });
 
       document.querySelectorAll('[data-close-popup]').forEach((button) => {
         button.addEventListener('click', () => {
@@ -888,6 +1003,12 @@
       document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
           closeAllDashboardModals();
+          closeMobileSidebar();
+        }
+      });
+      window.addEventListener('resize', () => {
+        if (window.innerWidth >= 1024) {
+          closeMobileSidebar();
         }
       });
       function setCategoryBrandEditable(form, editable) {

@@ -215,4 +215,4 @@
 </script>
 </body>
 </html>
-<?php /**PATH C:\laragon\www\backend\resources\views\auth\login.blade.php ENDPATH**/ ?>
+<?php /**PATH C:\laragon\www\backend\resources\views/auth/login.blade.php ENDPATH**/ ?>

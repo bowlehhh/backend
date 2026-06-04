@@ -10,7 +10,19 @@ use App\Http\Controllers\Admin\AdminTaxonomyController;
 use App\Http\Controllers\Admin\AdminUserController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [WebLoginController::class, 'create'])->name('home');
+Route::get('/', function () {
+    if (auth()->check()) {
+        $user = auth()->user();
+
+        if ($user?->isCashier()) {
+            return redirect('/cashier/dashboard');
+        }
+
+        return redirect('/admin/admin-dashboard');
+    }
+
+    return redirect('/login');
+})->name('home');
 
 Route::middleware('guest')->group(function (): void {
     Route::get('/admin/login', fn () => redirect('/login'));

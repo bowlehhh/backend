@@ -31,7 +31,7 @@
             </a>
         </nav>
         <div class="p-4 border-t border-slate-200">
-            <form method="POST" action="<?php echo e(route('logout')); ?>" onsubmit="return confirm('Yakin ingin logout dari akun ini?')">
+            <form method="POST" action="<?php echo e(route('logout')); ?>" class="js-logout-form">
                 <?php echo csrf_field(); ?>
                 <button type="submit" class="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-red-50 hover:text-red-600">
                     <span class="material-symbols-outlined">lock_clock</span><span class="font-semibold">Close Shift</span>
@@ -127,6 +127,7 @@
         </section>
     </main>
 </div>
+<?php echo $__env->make('cashier.partials.logout-modal', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 </body>
 </html>
 <?php /**PATH C:\laragon\www\backend\resources\views\cashier\history-supplier-detail.blade.php ENDPATH**/ ?>

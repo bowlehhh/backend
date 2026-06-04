@@ -1416,4 +1416,4 @@
 <?php $component = $__componentOriginal166a02a7c5ef5a9331faf66fa665c256; ?>
 <?php unset($__componentOriginal166a02a7c5ef5a9331faf66fa665c256); ?>
 <?php endif; ?>
-<?php /**PATH C:\laragon\www\backend\resources\views\filament\pages\admin-dashboard.blade.php ENDPATH**/ ?>
+<?php /**PATH C:\laragon\www\backend\resources\views/filament/pages/admin-dashboard.blade.php ENDPATH**/ ?>

@@ -516,40 +516,39 @@ class CashierTransactionController extends Controller
     }
 
     /**
-     * Ambil data transaksi mentah untuk dikelompokkan per PT/CV.
+     * Ambil data transaksi PT/CV berdasarkan customer_name pada sales.
      */
     private function getPtCvRowsForCashier(int $userId)
     {
-        return DB::table('sale_items')
-            ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
-            ->leftJoin('product_batches', 'product_batches.id', '=', 'sale_items.product_batch_id')
-            ->leftJoin('suppliers', 'suppliers.id', '=', 'product_batches.supplier_id')
+        $itemsAgg = DB::table('sale_items')
+            ->selectRaw('sale_id, COUNT(*) as items_count, COALESCE(SUM(qty), 0) as qty, COALESCE(SUM(subtotal), 0) as subtotal')
+            ->groupBy('sale_id');
+
+        return DB::table('sales')
+            ->leftJoinSub($itemsAgg, 'sale_items_agg', function ($join): void {
+                $join->on('sale_items_agg.sale_id', '=', 'sales.id');
+            })
             ->where('sales.user_id', $userId)
+            ->whereNotNull('sales.customer_name')
+            ->whereRaw("TRIM(sales.customer_name) <> ''")
+            ->where(function ($query): void {
+                $query->whereRaw("UPPER(TRIM(sales.customer_name)) LIKE 'PT %'")
+                    ->orWhereRaw("UPPER(TRIM(sales.customer_name)) LIKE 'CV %'");
+            })
             ->whereNull('sales.deleted_at')
             ->selectRaw('
-                COALESCE(suppliers.id, 0) as supplier_id,
-                COALESCE(NULLIF(TRIM(suppliers.name), ""), "Tanpa PT/CV") as pt_name,
                 sales.id as sale_id,
                 sales.invoice_number,
+                sales.customer_name as pt_name,
                 sales.payment_method,
                 sales.total as sale_total,
                 sales.credit_amount,
                 sales.credit_due_date,
                 sales.created_at,
-                SUM(sale_items.qty) as qty,
-                SUM(sale_items.subtotal) as subtotal
+                COALESCE(sale_items_agg.items_count, 0) as items_count,
+                COALESCE(sale_items_agg.qty, 0) as qty,
+                COALESCE(sale_items_agg.subtotal, 0) as subtotal
             ')
-            ->groupBy(
-                'suppliers.id',
-                'suppliers.name',
-                'sales.id',
-                'sales.invoice_number',
-                'sales.payment_method',
-                'sales.total',
-                'sales.credit_amount',
-                'sales.credit_due_date',
-                'sales.created_at'
-            )
             ->orderByDesc('sales.id')
             ->get();
     }

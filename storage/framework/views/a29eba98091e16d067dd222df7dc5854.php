@@ -91,7 +91,7 @@
             </a>
           </nav>
           <div class="mt-4 pt-3 pb-5 border-t border-[#d4dbd7]">
-            <form method="POST" action="<?php echo e(route('logout')); ?>" onsubmit="return confirm('Yakin ingin logout dari akun ini?')">
+            <form method="POST" action="<?php echo e(route('logout')); ?>" class="js-admin-logout-form">
               <?php echo csrf_field(); ?>
               <button type="submit" class="sf-nav-item w-full flex items-center gap-3 text-[#ba1a1a] px-3 py-2 hover:bg-[#ffdad6] transition-all rounded-lg font-medium text-left">
                 <span class="material-symbols-outlined">logout</span>
@@ -165,6 +165,8 @@
       document.documentElement.classList.add('light', 'sf-dashboard-page');
       document.body.classList.add('sf-dashboard-page');
     </script>
+
+    <?php echo $__env->make('filament.partials.logout-modal', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
  <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginal166a02a7c5ef5a9331faf66fa665c256)): ?>

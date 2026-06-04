@@ -85,24 +85,37 @@
       html.sf-dashboard-page,
       .sf-dashboard-page,
       .sf-dashboard-page body,
-      .sf-dashboard-page .fi-body { min-height: 100% !important; overflow-x: hidden !important; overflow-y: auto !important; }
+      .sf-dashboard-page .fi-body {
+        min-height: 100% !important;
+        overflow: hidden !important;
+      }
       .sf-layout {
         display: grid;
         grid-template-columns: 240px minmax(0, 1fr);
         gap: 0;
-        min-height: calc(100vh - 64px);
+        height: calc(100vh - 64px);
+        overflow: hidden;
       }
       .sf-sidebar {
         position: sticky;
         top: 64px;
         height: calc(100vh - 64px);
         border-right: 1px solid #d4dbd7;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+      .sf-sidebar nav {
+        flex: 1 1 auto;
+        min-height: 0;
         overflow-y: auto;
       }
       .sf-main-scroll {
-        min-height: calc(100vh - 64px);
+        height: calc(100vh - 64px);
         min-width: 0;
-        overflow: visible;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
       }
       .sf-nav-item { font-size: 14px; }
       .sf-sidebar-collapsed .sf-layout { grid-template-columns: 76px minmax(0, 1fr); }
@@ -116,10 +129,50 @@
       .table-sort-link { display: inline-flex; align-items: center; gap: 6px; color: inherit; text-decoration: none; }
       .table-sort-link:hover { color: #006948; }
       .user-delete-modal-backdrop { background: rgba(15, 23, 42, 0.55); backdrop-filter: blur(2px); }
+      .sf-mobile-sidebar-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.42);
+        z-index: 24;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .22s ease;
+      }
+      .sf-sidebar {
+        transition: transform .24s ease, opacity .24s ease, box-shadow .24s ease;
+      }
+      .sf-mobile-menu-open .sf-mobile-sidebar-backdrop {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .sf-mobile-menu-open .sf-sidebar {
+        transform: translateX(0);
+        opacity: 1;
+        pointer-events: auto;
+        box-shadow: 18px 0 40px rgba(0, 0, 0, .14);
+      }
       @media (max-width: 1279px) {
-        .sf-layout { grid-template-columns: 1fr; }
-        .sf-sidebar { display: none !important; }
-        .sf-main-scroll { height: auto; overflow: visible; }
+        .sf-layout {
+          grid-template-columns: 1fr;
+          height: auto;
+          overflow: visible;
+        }
+        .sf-sidebar {
+          position: fixed;
+          left: 0;
+          top: 64px;
+          width: min(84vw, 300px);
+          height: calc(100vh - 64px);
+          transform: translateX(-102%);
+          opacity: 0;
+          pointer-events: none;
+          z-index: 30;
+        }
+        .sf-main-scroll {
+          width: 100%;
+          height: auto;
+          overflow: visible;
+        }
         .sf-wrap header { height: 56px !important; padding-left: 14px !important; padding-right: 14px !important; }
         .sf-main-scroll { padding: 12px !important; }
         .sf-main-scroll h1 { font-size: 28px !important; line-height: 34px !important; }
@@ -127,12 +180,40 @@
         .sf-main-scroll .py-4 { padding-top: 10px !important; padding-bottom: 10px !important; }
         .sf-main-scroll table th,
         .sf-main-scroll table td { font-size: 13px !important; white-space: nowrap; }
+        .sf-wrap .sf-toolbar {
+          display: grid;
+          grid-template-columns: 1fr;
+        }
+        .sf-wrap .sf-toolbar .sf-export {
+          margin-left: 0 !important;
+          width: 100%;
+          align-items: flex-start !important;
+        }
+        .sf-wrap .sf-toolbar .sf-export > div {
+          width: 100%;
+          justify-content: flex-start;
+        }
+      }
+      @media (max-width: 767px) {
+        .sf-wrap header { padding-left: 12px !important; padding-right: 12px !important; }
+        .sf-wrap .sf-main-scroll { padding: 12px !important; }
+        .sf-wrap .sf-main-scroll h1 { font-size: 24px !important; line-height: 30px !important; }
+        .sf-wrap .sf-main-scroll .text-[40px] { font-size: 24px !important; line-height: 30px !important; }
+        .sf-wrap .sf-main-scroll .grid-cols-1.sm\\:grid-cols-2.xl\\:grid-cols-5 { gap: 12px !important; }
+        .sf-wrap .sf-header-actions { gap: 8px; }
+        .sf-wrap .sf-header-actions > div { width: 32px !important; height: 32px !important; }
+        .sf-wrap .sf-header-actions .material-symbols-outlined { font-size: 20px; }
       }
     </style>
 
-    <div class="sf-wrap bg-[#f7f9fb] text-[#191c1e] antialiased min-h-screen w-screen max-w-none ml-[calc(50%-50vw)] mr-[calc(50%-50vw)] overflow-x-hidden">
+    <div class="sf-wrap bg-[#f7f9fb] text-[#191c1e] antialiased h-screen w-screen max-w-none ml-[calc(50%-50vw)] mr-[calc(50%-50vw)] overflow-hidden">
       <header class="bg-white border-b border-[#d4dbd7] shadow-sm flex justify-between items-center px-6 h-16 w-full sticky top-0 z-20">
-        <div class="flex items-center gap-4"><span class="text-xl font-bold text-[#006948]">Toko Pak Paul</span></div>
+        <div class="flex items-center gap-3">
+          <button id="mobileSidebarBtn" type="button" class="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#bccac0] bg-white text-[#3d4a42] hover:bg-[#f1f4f2]" aria-label="Buka navigasi">
+            <span class="material-symbols-outlined">menu</span>
+          </button>
+          <div class="flex items-center gap-4"><span class="text-xl font-bold text-[#006948]">Toko Pak Paul</span></div>
+        </div>
         <button id="toggleSidebarBtn" type="button" class="hidden lg:inline-flex items-center gap-1 rounded-lg border border-[#bccac0] px-3 py-2 text-sm text-[#3d4a42] hover:bg-[#f1f4f2]">
           <span class="material-symbols-outlined text-base">left_panel_close</span>
           <span>Sidebar</span>
@@ -140,7 +221,8 @@
       </header>
 
       <div class="sf-layout">
-        <aside class="sf-sidebar hidden lg:flex flex-col w-full p-4 pb-6 bg-white">
+        <div id="mobileSidebarBackdrop" class="sf-mobile-sidebar-backdrop lg:hidden"></div>
+        <aside class="sf-sidebar flex flex-col w-full p-4 pb-6 bg-white">
           <div class="admin-panel-card mb-4 rounded-lg border border-[#d4dbd7] bg-[#f2f4f6] p-3">
             <div class="flex items-center gap-2">
               <div class="h-8 w-8 rounded-lg bg-[#006948] text-white flex items-center justify-center"><span class="material-symbols-outlined text-sm">inventory</span></div>
@@ -152,7 +234,7 @@
           </div>
           <nav class="flex-1 min-h-0 space-y-1 overflow-y-auto">
             <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] rounded-lg font-medium" href="<?php echo e(url('/admin/products')); ?>"><span class="material-symbols-outlined">inventory_2</span><span class="nav-label">Barang</span></a>
-            <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] rounded-lg font-medium" href="<?php echo e(url('/admin/suppliers')); ?>"><span class="material-symbols-outlined">local_shipping</span><span class="nav-label">PT/CV</span></a>
+            <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] rounded-lg font-medium" href="<?php echo e(url('/admin/suppliers')); ?>"><span class="material-symbols-outlined">local_shipping</span><span class="nav-label">Supplier</span></a>
             <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium <?php echo e($type === 'credits' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]'); ?>" href="<?php echo e(url('/admin/admin-module?type=credits')); ?>"><span class="material-symbols-outlined">credit_card</span><span class="nav-label">Kredit</span></a>
             <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium <?php echo e($type === 'supplier-transactions' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]'); ?>" href="<?php echo e(url('/admin/admin-module?type=supplier-transactions')); ?>"><span class="material-symbols-outlined">account_tree</span><span class="nav-label">Transaksi PT/CV</span></a>
             <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium <?php echo e($type === 'batches' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]'); ?>" href="<?php echo e(url('/admin/admin-module?type=batches')); ?>"><span class="material-symbols-outlined">layers</span><span class="nav-label">Batch Barang</span></a>
@@ -161,7 +243,7 @@
             <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium <?php echo e($type === 'users' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]'); ?>" href="<?php echo e(url('/admin/admin-module?type=users')); ?>"><span class="material-symbols-outlined">group</span><span class="nav-label">User</span></a>
           </nav>
           <div class="mt-4 pt-3 pb-5 border-t border-[#d4dbd7]">
-            <form method="POST" action="<?php echo e(route('logout')); ?>" onsubmit="return confirm('Yakin ingin logout dari akun ini?')">
+            <form method="POST" action="<?php echo e(route('logout')); ?>" class="js-admin-logout-form">
               <?php echo csrf_field(); ?>
               <button type="submit" class="sf-nav-item w-full flex items-center gap-3 text-[#ba1a1a] px-3 py-2 hover:bg-[#ffdad6] rounded-lg font-medium text-left">
                 <span class="material-symbols-outlined">logout</span>
@@ -291,7 +373,7 @@
                         </td>
                       </tr>
                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
-                      <tr><td colspan="9" class="px-6 py-10 text-center text-[#52615a]">Belum ada data kelompok PT.</td></tr>
+                      <tr><td colspan="9" class="px-6 py-10 text-center text-[#52615a]">Belum ada data kelompok PT/CV.</td></tr>
                     <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                   </tbody>
                 </table>
@@ -347,7 +429,7 @@
             <div class="bg-white border border-[#d4dbd7] rounded-xl overflow-hidden custom-shadow">
               <div class="px-6 py-4 border-b border-[#d4dbd7]">
                 <h2 class="text-lg font-semibold text-[#191c1e]">Kelompok Transaksi PT/CV (Kredit & Lunas)</h2>
-                <p class="text-sm text-[#52615a]">Data ini khusus dari transaksi kasir ke customer PT/CV.</p>
+                <p class="text-sm text-[#52615a]">Data ini diambil langsung dari transaksi kasir berdasarkan nama customer yang diisi.</p>
               </div>
               <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
@@ -380,7 +462,7 @@
                         </td>
                       </tr>
                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
-                      <tr><td colspan="9" class="px-6 py-10 text-center text-[#52615a]">Belum ada data kelompok PT.</td></tr>
+                      <tr><td colspan="9" class="px-6 py-10 text-center text-[#52615a]">Belum ada data kelompok PT/CV.</td></tr>
                     <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                   </tbody>
                 </table>
@@ -389,10 +471,10 @@
 
             <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!empty($ptCustomerDetail['pt_name'])): ?>
               <div class="mt-6 bg-white border border-[#d4dbd7] rounded-xl overflow-hidden custom-shadow">
-                <div class="px-6 py-4 border-b border-[#d4dbd7]">
-                  <h2 class="text-lg font-semibold text-[#191c1e]">Detail Riwayat PT: <?php echo e($ptCustomerDetail['pt_name']); ?></h2>
-                  <p class="text-sm text-[#52615a]">Riwayat pembelian PT/CV ini dari transaksi kasir, lengkap dengan nota.</p>
-                </div>
+              <div class="px-6 py-4 border-b border-[#d4dbd7]">
+                <h2 class="text-lg font-semibold text-[#191c1e]">Detail Riwayat PT/CV: <?php echo e($ptCustomerDetail['pt_name']); ?></h2>
+                  <p class="text-sm text-[#52615a]">Riwayat transaksi dari kasir, lengkap dengan nota penjualan.</p>
+              </div>
                 <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!empty($ptCustomerDetail['summary'])): ?>
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-3 px-6 py-4 border-b border-[#d4dbd7] bg-[#f8faf9]">
                     <div><p class="text-xs uppercase text-[#52615a]">Total Transaksi</p><p class="text-xl font-semibold text-[#191c1e]"><?php echo e(number_format((int) $ptCustomerDetail['summary']['total_transaksi'], 0, ',', '.')); ?> kali</p></div>
@@ -932,8 +1014,28 @@
 
       const wrap = document.querySelector('.sf-wrap');
       const sidebarToggleBtn = document.getElementById('toggleSidebarBtn');
+      const mobileSidebarBtn = document.getElementById('mobileSidebarBtn');
+      const mobileSidebarBackdrop = document.getElementById('mobileSidebarBackdrop');
       sidebarToggleBtn?.addEventListener('click', () => {
         wrap?.classList.toggle('sf-sidebar-collapsed');
+      });
+      mobileSidebarBtn?.addEventListener('click', () => {
+        document.body.classList.toggle('sf-mobile-menu-open');
+      });
+      mobileSidebarBackdrop?.addEventListener('click', () => {
+        document.body.classList.remove('sf-mobile-menu-open');
+      });
+      document.querySelectorAll('.sf-sidebar a').forEach((link) => {
+        link.addEventListener('click', () => {
+          if (window.innerWidth < 1024) {
+            document.body.classList.remove('sf-mobile-menu-open');
+          }
+        });
+      });
+      window.addEventListener('resize', () => {
+        if (window.innerWidth >= 1024) {
+          document.body.classList.remove('sf-mobile-menu-open');
+        }
       });
 
       <?php if($type === 'credits'): ?>
@@ -1081,6 +1183,8 @@
       });
       <?php endif; ?>
     </script>
+
+    <?php echo $__env->make('filament.partials.logout-modal', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
  <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginal166a02a7c5ef5a9331faf66fa665c256)): ?>

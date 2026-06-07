@@ -332,7 +332,7 @@
         </tr>
     </table>
 
-    @if(! request()->boolean('pdf'))
+    @if(! (($pdf ?? false) || request()->boolean('pdf')))
         <div class="actions">
             <button type="button" class="btn" onclick="window.print()">Print Nota</button>
             <a href="{{ $historyUrl ?? route('cashier.history') }}" class="btn secondary">{{ $historyLabel ?? 'Kembali ke History' }}</a>

@@ -81,13 +81,15 @@
             </div>
         </div>
 
-        <div class="mt-6 flex flex-wrap gap-2">
-            <button type="button" class="rounded-xl bg-emerald-700 px-4 py-2 text-sm font-bold text-white" onclick="window.print()">Print Nota</button>
-            <a href="{{ $historyUrl ?? route('cashier.history') }}" class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">Kembali ke History</a>
-        </div>
+        @if(! ($pdf ?? false))
+            <div class="mt-6 flex flex-wrap gap-2">
+                <button type="button" class="rounded-xl bg-emerald-700 px-4 py-2 text-sm font-bold text-white" onclick="window.print()">Print Nota</button>
+                <a href="{{ $historyUrl ?? route('cashier.history') }}" class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">Kembali ke History</a>
+            </div>
+        @endif
     </div>
 </main>
-@if(session('last_installment_change', 0) > 0)
+@if(! ($pdf ?? false) && session('last_installment_change', 0) > 0)
 <div style="margin-top:12px;padding:8px 10px;border:1px solid #fde68a;background:#fffbeb;color:#92400e;font-size:12px;font-weight:600;">
     Uang sisa / kembalian: Rp {{ number_format((float) session('last_installment_change', 0), 0, ',', '.') }}
 </div>

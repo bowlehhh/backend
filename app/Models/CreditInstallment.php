@@ -13,6 +13,7 @@ class CreditInstallment extends Model
     protected $fillable = [
         'product_batch_id',
         'user_id',
+        'processed_by',
         'amount',
         'paid_at',
         'note',
@@ -36,4 +37,3 @@ class CreditInstallment extends Model
         return $this->belongsTo(User::class);
     }
 }
-

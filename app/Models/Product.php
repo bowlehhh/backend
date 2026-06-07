@@ -22,6 +22,7 @@ class Product extends Model
         'barcode',
         'unit',
         'weight',
+        'weight_unit',
         'description',
         'image_path',
         'is_active',
@@ -52,6 +53,14 @@ class Product extends Model
         return Attribute::make(
             get: fn (?string $value) => $this->normalizeUnit($value),
             set: fn (?string $value) => $this->normalizeUnit($value),
+        );
+    }
+
+    protected function weightUnit(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value) => $this->normalizeWeightUnit($value),
+            set: fn (?string $value) => $this->normalizeWeightUnit($value),
         );
     }
 
@@ -133,6 +142,17 @@ class Product extends Model
         }
 
         $normalized = strtoupper(trim($value));
+
+        return $normalized === '' ? null : $normalized;
+    }
+
+    private function normalizeWeightUnit(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $normalized = strtolower(trim($value));
 
         return $normalized === '' ? null : $normalized;
     }

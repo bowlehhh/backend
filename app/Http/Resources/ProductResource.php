@@ -25,6 +25,7 @@ class ProductResource extends JsonResource
                 ->map(fn ($batch) => [
                     'id' => $batch->id,
                     'batch_code' => $batch->batch_code,
+                    'condition' => $batch->condition,
                     'selling_price' => (float) $batch->selling_price,
                     'stock' => $batch->stock,
                     'expired_at' => $batch->expired_at?->toDateString(),

@@ -49,7 +49,7 @@
             <p class="sub"><strong>Tanggal Bayar:</strong> {{ optional($installment->paid_at)->format('d M Y') ?? '-' }}</p>
             <p class="sub"><strong>Jatuh Tempo:</strong> {{ $dueDateDisplay }}</p>
             <p class="sub"><strong>Jam Input:</strong> {{ optional($installment->created_at)->format('H:i:s') ?? '-' }}</p>
-            <p class="sub"><strong>Kasir:</strong> {{ $installment->user?->name ?? '-' }}</p>
+            <p class="sub"><strong>Diproses Oleh:</strong> {{ $installment->processed_by ?? $installment->user?->name ?? '-' }}</p>
         </div>
     </div>
 
@@ -74,7 +74,7 @@
                 <th>Tanggal</th>
                 <th>Jam</th>
                 <th>Nominal</th>
-                <th>Kasir</th>
+                <th>Diproses Oleh</th>
                 <th>Catatan</th>
             </tr>
         </thead>
@@ -93,7 +93,7 @@
                     <td>{{ $payment['date'] ?? '-' }}</td>
                     <td>{{ $payment['time'] ?? '-' }}</td>
                     <td class="num">Rp {{ number_format((float) ($payment['amount'] ?? 0), 0, ',', '.') }}</td>
-                    <td>{{ $payment['user'] ?? '-' }}</td>
+                    <td>{{ $payment['processed_by'] ?? $payment['user'] ?? '-' }}</td>
                     <td>{{ $payment['note'] ?? '-' }}</td>
                 </tr>
             @empty
@@ -104,11 +104,13 @@
         </tbody>
     </table>
 
-    <div class="actions">
-        <button class="btn fill" onclick="window.print()">Print Nota</button>
-        <a class="btn" href="{{ route('admin.credits.installment.receipt', ['batch' => $batch->id, 'installment' => $installment->id, 'pdf' => 1]) }}">Download PDF</a>
-        <a class="btn" href="{{ route('admin.credits.detail', ['batch' => $batch->id]) }}">Kembali</a>
-    </div>
+    @if(! ($pdf ?? false))
+        <div class="actions">
+            <button class="btn fill" onclick="window.print()">Print Nota</button>
+            <a class="btn" href="{{ route('admin.credits.installment.receipt', ['batch' => $batch->id, 'installment' => $installment->id, 'pdf' => 1]) }}">Download PDF</a>
+            <a class="btn" href="{{ url('/admin/products') }}">Kembali ke Barang</a>
+        </div>
+    @endif
 </div>
 </body>
 </html>

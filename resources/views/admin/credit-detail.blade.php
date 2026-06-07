@@ -42,7 +42,7 @@
                 <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">Detail Kredit</h1>
                 <p class="mt-1 text-[#52615a]">Pantau cicilan kredit, status pembayaran, dan cetak nota cicilan per transaksi.</p>
             </div>
-            <a href="{{ url('/admin/admin-module?type=credits') }}" class="rounded-xl border border-[#bccac0] bg-white px-4 py-2 text-sm font-semibold text-[#006948] hover:bg-[#eef7f3]">Kembali ke Kredit</a>
+            <a href="{{ url('/admin/products') }}" class="rounded-xl border border-[#bccac0] bg-white px-4 py-2 text-sm font-semibold text-[#006948] hover:bg-[#eef7f3]">Kembali ke Barang</a>
         </div>
     </div>
 
@@ -72,7 +72,7 @@
         </div>
     </section>
 
-    <section class="mb-4 rounded-2xl border border-[#d4dbd7] bg-white p-5 card-shadow">
+    <section id="input-cicilan" class="mb-4 rounded-2xl border border-[#d4dbd7] bg-white p-5 card-shadow">
         <div class="mb-4 flex items-start justify-between gap-3">
             <div>
                 <h2 class="text-2xl font-bold">Input Cicilan</h2>
@@ -91,21 +91,34 @@
             </div>
             <div class="md:col-span-3">
                 <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#52615a]">Tanggal Bayar</label>
-                <input type="date" name="paid_at" value="{{ now()->toDateString() }}" class="credit-input">
+                <input
+                    type="date"
+                    name="paid_at"
+                    value="{{ now()->toDateString() }}"
+                    class="credit-input"
+                    @if($batch->credit_due_date) max="{{ $batch->credit_due_date->format('Y-m-d') }}" @endif
+                >
             </div>
             <div class="md:col-span-5">
                 <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#52615a]">Catatan</label>
                 <input type="text" name="note" placeholder="Opsional" class="credit-input">
             </div>
-            <button type="submit" class="rounded-xl bg-[#006948] px-4 py-2.5 text-white font-semibold hover:bg-[#00563b] md:col-span-3">Simpan Cicilan</button>
-            @if($remainingCredit > 0)
-                <button type="submit" form="settleForm" class="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2.5 text-emerald-700 font-semibold hover:bg-emerald-100 md:col-span-3">Lunaskan Sekarang</button>
-            @endif
+            <div class="md:col-span-4">
+                <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#52615a]">Diproses Oleh</label>
+                <input type="text" name="processed_by" value="{{ auth()->user()?->name ?? 'Admin POS' }}" class="credit-input">
+            </div>
+            <div class="md:col-span-12 flex flex-wrap gap-3 pt-1">
+                <button type="submit" class="rounded-xl bg-[#006948] px-4 py-2.5 text-white font-semibold hover:bg-[#00563b]">Simpan Cicilan</button>
+                @if($remainingCredit > 0)
+                    <button type="submit" form="settleForm" class="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2.5 text-emerald-700 font-semibold hover:bg-emerald-100">Lunaskan Sekarang</button>
+                @endif
+            </div>
         </form>
         @if($remainingCredit > 0)
             <form id="settleForm" method="POST" action="{{ route('admin.credits.settle', ['batch' => $batch->id]) }}" class="hidden">
                 @csrf
                 <input type="hidden" name="redirect_to" value="detail">
+                <input type="hidden" name="processed_by" value="{{ auth()->user()?->name ?? 'Admin POS' }}">
                 <button type="submit" onclick="return confirm('Lunaskan semua sisa kredit sekarang?')"></button>
             </form>
         @endif
@@ -127,7 +140,7 @@
                         <th class="px-4 py-3 text-left">Tanggal</th>
                         <th class="px-4 py-3 text-left">Jam</th>
                         <th class="px-4 py-3 text-left">Nominal</th>
-                        <th class="px-4 py-3 text-left">Kasir</th>
+                        <th class="px-4 py-3 text-left">Diproses Oleh</th>
                         <th class="px-4 py-3 text-left">Catatan</th>
                         <th class="px-4 py-3 text-right">Aksi</th>
                     </tr>
@@ -139,7 +152,7 @@
                             <td class="px-4 py-3">{{ $payment['date'] ?? '-' }}</td>
                             <td class="px-4 py-3">{{ $payment['time'] ?? '-' }}</td>
                             <td class="px-4 py-3 font-semibold">Rp {{ number_format((float) ($payment['amount'] ?? 0), 0, ',', '.') }}</td>
-                            <td class="px-4 py-3">{{ $payment['user'] ?? '-' }}</td>
+                            <td class="px-4 py-3">{{ $payment['processed_by'] ?? $payment['user'] ?? '-' }}</td>
                             <td class="px-4 py-3">{{ $payment['note'] ?? '-' }}</td>
                             <td class="px-4 py-3 text-right">
                                 @if(!empty($payment['receipt_url']))

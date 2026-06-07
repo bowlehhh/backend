@@ -56,12 +56,21 @@ class AdminCreditController extends Controller
             'amount' => ['required', 'string'],
             'paid_at' => ['nullable', 'date'],
             'note' => ['nullable', 'string', 'max:255'],
+            'processed_by' => ['nullable', 'string', 'max:255'],
             'redirect_to' => ['nullable', 'in:list,detail'],
         ]);
 
         $amount = $this->parseCurrency($validated['amount'] ?? '0');
         if ($amount <= 0) {
             return back()->withErrors(['credit' => 'Nominal cicilan harus lebih dari 0.']);
+        }
+
+        $dueDate = $batch->credit_due_date ? Carbon::parse($batch->credit_due_date)->startOfDay() : null;
+        $paidAt = ! empty($validated['paid_at'])
+            ? Carbon::parse($validated['paid_at'])->startOfDay()
+            : now()->startOfDay();
+        if ($dueDate && $paidAt->gt($dueDate)) {
+            return back()->withErrors(['paid_at' => 'Tanggal bayar tidak boleh melebihi jatuh tempo.']);
         }
 
         [$totalCredit, $downPayment, $installmentPaid, $paid, $remaining] = $this->creditSummary($batch);
@@ -73,13 +82,19 @@ class AdminCreditController extends Controller
         }
 
         DB::transaction(function () use ($batch, $request, $validated, $amount): void {
-            CreditInstallment::create([
+            $installmentData = [
                 'product_batch_id' => $batch->id,
                 'user_id' => $request->user()?->id,
                 'amount' => $amount,
                 'paid_at' => ! empty($validated['paid_at']) ? Carbon::parse($validated['paid_at'])->toDateString() : now()->toDateString(),
                 'note' => $validated['note'] ?? null,
-            ]);
+            ];
+
+            if (Schema::hasColumn('credit_installments', 'processed_by')) {
+                $installmentData['processed_by'] = $this->resolveProcessedBy($validated, $request->user()?->name);
+            }
+
+            CreditInstallment::create($installmentData);
 
             $freshRemaining = $this->creditSummary($batch)[4];
             if ($freshRemaining <= 0) {
@@ -106,6 +121,7 @@ class AdminCreditController extends Controller
         $validated = $request->validate([
             'paid_at' => ['nullable', 'date'],
             'note' => ['nullable', 'string', 'max:255'],
+            'processed_by' => ['nullable', 'string', 'max:255'],
             'redirect_to' => ['nullable', 'in:list,detail'],
         ]);
 
@@ -114,14 +130,28 @@ class AdminCreditController extends Controller
             return back()->withErrors(['credit' => 'Kredit batch ini sudah lunas.']);
         }
 
+        $dueDate = $batch->credit_due_date ? Carbon::parse($batch->credit_due_date)->startOfDay() : null;
+        $paidAt = ! empty($validated['paid_at'])
+            ? Carbon::parse($validated['paid_at'])->startOfDay()
+            : now()->startOfDay();
+        if ($dueDate && $paidAt->gt($dueDate)) {
+            return back()->withErrors(['paid_at' => 'Tanggal bayar tidak boleh melebihi jatuh tempo.']);
+        }
+
         DB::transaction(function () use ($batch, $request, $validated, $remaining): void {
-            CreditInstallment::create([
+            $installmentData = [
                 'product_batch_id' => $batch->id,
                 'user_id' => $request->user()?->id,
                 'amount' => $remaining,
                 'paid_at' => ! empty($validated['paid_at']) ? Carbon::parse($validated['paid_at'])->toDateString() : now()->toDateString(),
                 'note' => $validated['note'] ?? 'Pelunasan kredit',
-            ]);
+            ];
+
+            if (Schema::hasColumn('credit_installments', 'processed_by')) {
+                $installmentData['processed_by'] = $this->resolveProcessedBy($validated, $request->user()?->name);
+            }
+
+            CreditInstallment::create($installmentData);
 
             $batch->forceFill([
                 'payment_type' => 'LUNAS',
@@ -217,15 +247,27 @@ class AdminCreditController extends Controller
         $qty = (int) ($batch->stock ?? 0);
         $expeditionCost = (float) ($batch->expedition_cost ?? 0);
         $totalCredit = max(0, ($qty * (float) ($batch->purchase_price ?? 0)) + $expeditionCost);
+        $paymentType = strtoupper((string) ($batch->payment_type ?? 'LUNAS'));
         $downPayment = max(0, (float) ($batch->down_payment_amount ?? 0));
         $installmentPaid = 0.0;
+        $hasInstallmentHistory = false;
         if (Schema::hasTable('credit_installments')) {
-            $installmentPaid = (float) CreditInstallment::query()
-                ->where('product_batch_id', $batch->id)
-                ->sum('amount');
+            $installmentQuery = CreditInstallment::query()
+                ->where('product_batch_id', $batch->id);
+            $installmentPaid = (float) $installmentQuery->sum('amount');
+            $hasInstallmentHistory = $installmentQuery->exists();
         }
-        $paid = min($totalCredit, $downPayment + $installmentPaid);
-        $remaining = max(0, $totalCredit - $paid);
+        $hasCreditHistory = $downPayment > 0 || $hasInstallmentHistory;
+
+        if ($paymentType !== 'KREDIT' && ! $hasCreditHistory) {
+            $downPayment = 0.0;
+            $installmentPaid = 0.0;
+            $paid = $totalCredit;
+            $remaining = 0.0;
+        } else {
+            $paid = min($totalCredit, $downPayment + $installmentPaid);
+            $remaining = max(0, $totalCredit - $paid);
+        }
 
         return [$totalCredit, $downPayment, $installmentPaid, $paid, $remaining];
     }
@@ -237,6 +279,25 @@ class AdminCreditController extends Controller
     private function buildPaymentHistory(ProductBatch $batch, iterable $installments, float $downPayment): array
     {
         $history = [];
+        $installmentList = collect($installments)->values();
+        $paymentType = strtoupper((string) ($batch->payment_type ?? 'LUNAS'));
+        $hasCreditHistory = $downPayment > 0 || $installmentList->isNotEmpty();
+
+        if (! $hasCreditHistory) {
+            $createdAt = $batch->created_at;
+            $history[] = [
+                'type' => 'Lunas',
+                'date' => $createdAt?->format('d M Y') ?? '-',
+                'time' => $createdAt?->format('H:i:s') ?? '-',
+                'amount' => (float) ($batch->purchase_price ?? 0) * (int) ($batch->stock ?? 0) + (float) ($batch->expedition_cost ?? 0),
+                'user' => '-',
+                'processed_by' => trim((string) ($batch->processed_by ?? '')) ?: '-',
+                'note' => 'Pembelian lunas',
+                'receipt_url' => null,
+            ];
+
+            return $history;
+        }
 
         if ($downPayment > 0) {
             $createdAt = $batch->created_at;
@@ -246,18 +307,20 @@ class AdminCreditController extends Controller
                 'time' => $createdAt?->format('H:i:s') ?? '-',
                 'amount' => $downPayment,
                 'user' => '-',
+                'processed_by' => trim((string) ($batch->processed_by ?? '')) ?: '-',
                 'note' => 'DP awal pembelian',
                 'receipt_url' => null,
             ];
         }
 
-        foreach ($installments as $installment) {
+        foreach ($installmentList as $installment) {
             $history[] = [
                 'type' => 'Cicilan',
                 'date' => $installment->paid_at?->format('d M Y') ?? '-',
                 'time' => $installment->created_at?->format('H:i:s') ?? '-',
                 'amount' => (float) $installment->amount,
                 'user' => $installment->user?->name ?? '-',
+                'processed_by' => trim((string) ($installment->processed_by ?? '')) ?: ($installment->user?->name ?? '-'),
                 'note' => $installment->note ?: '-',
                 'receipt_url' => route('admin.credits.installment.receipt', ['batch' => $batch->id, 'installment' => $installment->id]),
             ];
@@ -270,5 +333,16 @@ class AdminCreditController extends Controller
     {
         $digits = preg_replace('/[^\d]/', '', $value);
         return (float) ($digits ?: 0);
+    }
+
+    private function resolveProcessedBy(array $validated, ?string $fallbackName = null): string
+    {
+        $name = trim((string) ($validated['processed_by'] ?? ''));
+        if ($name !== '') {
+            return $name;
+        }
+
+        $fallback = trim((string) ($fallbackName ?? ''));
+        return $fallback !== '' ? $fallback : 'Admin POS';
     }
 }

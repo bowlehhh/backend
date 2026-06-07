@@ -35,6 +35,7 @@ class AdminDashboardProductController extends Controller
                 'barcode' => ($payload['barcode'] ?? '') ?: null,
                 'unit' => ($payload['unit'] ?? '') ?: null,
                 'weight' => ($payload['weight'] ?? null) !== null ? (float) $payload['weight'] : null,
+                'weight_unit' => Schema::hasColumn('products', 'weight_unit') ? $this->resolveWeightUnit($payload) : null,
                 'description' => ($payload['description'] ?? '') ?: null,
                 'image_path' => $this->storeProductImage($request),
                 'is_active' => (bool) $payload['is_active'],
@@ -56,6 +57,10 @@ class AdminDashboardProductController extends Controller
                 'product_id' => $product->id,
                 'supplier_id' => $supplier->id,
                 'batch_code' => ($payload['batch_code'] ?? '') ?: $this->generateBatchCode($product),
+                'condition' => ($payload['condition'] ?? '') ?: null,
+                'processed_by' => Schema::hasColumn('product_batches', 'processed_by')
+                    ? ($this->resolveProcessedBy($payload, $request->user()?->name) ?: null)
+                    : null,
                 'purchase_price' => $payload['purchase_price'],
                 'expedition_cost' => $payload['expedition_cost'] ?? 0,
                 'down_payment_amount' => $downPaymentAmount,
@@ -107,6 +112,7 @@ class AdminDashboardProductController extends Controller
                 'barcode' => ($payload['barcode'] ?? '') ?: null,
                 'unit' => ($payload['unit'] ?? '') ?: null,
                 'weight' => ($payload['weight'] ?? null) !== null ? (float) $payload['weight'] : null,
+                'weight_unit' => Schema::hasColumn('products', 'weight_unit') ? $this->resolveWeightUnit($payload) : null,
                 'description' => ($payload['description'] ?? '') ?: null,
                 'is_active' => (bool) $payload['is_active'],
             ]);
@@ -149,6 +155,10 @@ class AdminDashboardProductController extends Controller
             $batch->fill([
                 'supplier_id' => $supplier->id,
                 'batch_code' => ($payload['batch_code'] ?? '') ?: ($batch->batch_code ?: $this->generateBatchCode($product)),
+                'condition' => ($payload['condition'] ?? '') ?: null,
+                'processed_by' => Schema::hasColumn('product_batches', 'processed_by')
+                    ? ($this->resolveProcessedBy($payload, $request->user()?->name) ?: null)
+                    : null,
                 'purchase_price' => $payload['purchase_price'],
                 'expedition_cost' => $payload['expedition_cost'] ?? 0,
                 'down_payment_amount' => $downPaymentAmount,
@@ -218,10 +228,12 @@ class AdminDashboardProductController extends Controller
             'id' => $product->id,
             'name' => $product->name,
             'slug' => $product->slug,
+            'created_at' => $product->created_at?->format('d M Y H:i'),
             'sku' => $product->barcode ?: 'SKU-' . str_pad((string) $product->id, 4, '0', STR_PAD_LEFT),
             'barcode' => $product->barcode,
             'unit' => $product->unit,
             'weight' => $product->weight,
+            'weight_unit' => $product->weight_unit ?: 'kg',
             'description' => $product->description,
             'image_url' => $product->image_path ? '/storage/' . ltrim($product->image_path, '/') : null,
             'category' => $product->category?->name ?? '-',
@@ -245,6 +257,8 @@ class AdminDashboardProductController extends Controller
             'supplier_note' => $batch?->supplier?->note,
             'batch_id' => $batch?->id,
             'batch_code' => $batch?->batch_code,
+            'condition' => $batch?->condition,
+            'processed_by' => $batch?->processed_by,
             'payment_type' => $batch?->payment_type ?? 'LUNAS',
             'credit_days' => $batch?->credit_days,
             'credit_due_date' => $batch?->credit_due_date?->toDateString(),
@@ -256,6 +270,34 @@ class AdminDashboardProductController extends Controller
     private function formatRupiah(int|float|string|null $value): string
     {
         return 'Rp ' . number_format((float) $value, 0, ',', '.');
+    }
+
+    private function resolveWeightUnit(array $payload): ?string
+    {
+        $unit = strtolower(trim((string) ($payload['weight_unit'] ?? 'kg')));
+
+        if ($unit === '' || $unit === 'kg' || $unit === 'gram' || $unit === 'ton' || $unit === 'lb' || $unit === 'oz') {
+            return $unit === '' ? 'kg' : $unit;
+        }
+
+        if ($unit === 'other') {
+            $custom = strtolower(trim((string) ($payload['weight_unit_custom'] ?? '')));
+
+            return $custom !== '' ? $custom : 'kg';
+        }
+
+        return $unit;
+    }
+
+    private function resolveProcessedBy(array $payload, ?string $fallbackName = null): string
+    {
+        $name = trim((string) ($payload['processed_by'] ?? ''));
+
+        if ($name === '') {
+            $name = trim((string) ($fallbackName ?? ''));
+        }
+
+        return $name !== '' ? $name : 'Admin POS';
     }
 
     private function storeProductImage(StoreDashboardProductRequest|UpdateDashboardProductRequest $request): ?string
@@ -300,8 +342,8 @@ class AdminDashboardProductController extends Controller
         if (! $supplier) {
             $supplier = Supplier::query()
                 ->withTrashed()
-                ->whereRaw("REPLACE(REPLACE(REPLACE(LOWER(name), ' ', ''), '.', ''), ',', '') = ?", [$normalized])
-                ->first();
+                ->get()
+                ->first(fn (Supplier $candidate) => $this->normalizeSupplierKey((string) $candidate->name) === $normalized);
         }
 
         if ($supplier) {
@@ -346,7 +388,7 @@ class AdminDashboardProductController extends Controller
     {
         return Str::of($value)
             ->lower()
-            ->replaceMatches('/[\s\.,]+/', '')
+            ->replaceMatches('/[^a-z0-9]+/', '')
             ->value();
     }
 

@@ -195,11 +195,13 @@
         </div>
     @endif
 
-    <div class="actions">
-        <button type="button" class="btn" onclick="window.print()">Print Nota Retur</button>
-        <a href="{{ $saleUrl }}?from=return" class="btn secondary">Lihat Nota Penjualan</a>
-        <a href="{{ $historyUrl }}" class="btn secondary">Kembali ke History</a>
-    </div>
+    @if(! ($pdf ?? false))
+        <div class="actions">
+            <button type="button" class="btn" onclick="window.print()">Print Nota Retur</button>
+            <a href="{{ $saleUrl }}?from=return" class="btn secondary">Lihat Nota Penjualan</a>
+            <a href="{{ $historyUrl }}" class="btn secondary">Kembali ke History</a>
+        </div>
+    @endif
 </div>
 </body>
 </html>

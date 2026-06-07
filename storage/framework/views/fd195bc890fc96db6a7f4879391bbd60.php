@@ -5,7 +5,7 @@
     $products = $viewData['products'] ?? [];
     $categories = $viewData['categories'] ?? [];
     $brands = $viewData['brands'] ?? [];
-    $categoryOptions = $viewData['categoryOptions'] ?? 
+    $categoryOptions = $viewData['categoryOptions'] ?? [];
     $brandOptions = $viewData['brandOptions'] ?? [];
     $supplierOptions = $viewData['supplierOptions'] ?? [];
     $lowStockProducts = $viewData['lowStockProducts'] ?? [];
@@ -437,18 +437,17 @@
                 </div>
               </div>
             </div>
-            <nav class="flex-1 space-y-1 overflow-y-auto pr-1">
+            <nav class="flex-1 flex flex-col space-y-1 overflow-y-auto pr-1">
               <a class="sf-nav-item flex items-center gap-3 bg-primary text-on-primary rounded-lg px-3 py-2 font-medium" href="<?php echo e(url('/admin/products')); ?>">
                 <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">inventory_2</span>
                 <span>Barang</span>
               </a>
               <a class="sf-nav-item w-full flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="<?php echo e(url('/admin/suppliers')); ?>"><span class="material-symbols-outlined">local_shipping</span><span>Supplier</span></a>
-              <a class="sf-nav-item w-full flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="<?php echo e(url('/admin/admin-module?type=credits')); ?>"><span class="material-symbols-outlined">credit_card</span><span>Kredit</span></a>
+              <a class="sf-nav-item w-full flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="<?php echo e(url('/admin/admin-module?type=credits')); ?>"><span class="material-symbols-outlined">credit_card</span><span>Kredit &amp; Utang Saya</span></a>
               <a class="sf-nav-item w-full flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="<?php echo e(url('/admin/admin-module?type=supplier-transactions')); ?>"><span class="material-symbols-outlined">account_tree</span><span>Transaksi PT</span></a>
-              <a class="sf-nav-item w-full flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="<?php echo e(url('/admin/admin-module?type=batches')); ?>"><span class="material-symbols-outlined">layers</span><span>Batch Barang</span></a>
-              <a class="sf-nav-item w-full flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="<?php echo e(url('/admin/admin-module?type=taxonomy')); ?>"><span class="material-symbols-outlined">category</span><span>Kategori & Merek</span></a>
               <a class="sf-nav-item w-full flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="<?php echo e(url('/admin/admin-module?type=reports')); ?>"><span class="material-symbols-outlined">analytics</span><span>Laporan</span></a>
               <a class="sf-nav-item w-full flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="<?php echo e(url('/admin/admin-module?type=users')); ?>"><span class="material-symbols-outlined">group</span><span>User</span></a>
+              <a class="sf-nav-item w-full mt-auto flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="<?php echo e(url('/admin/admin-module?type=product-groups')); ?>"><span class="material-symbols-outlined">inventory_2</span><span>Kelompok Barang</span></a>
             </nav>
             <div class="pt-3 border-t border-outline-variant">
               <button type="button" onclick="confirmLogout()" class="sf-nav-item w-full flex items-center gap-3 text-error px-3 py-2 hover:bg-error-container/20 transition-all rounded-lg font-medium text-left">
@@ -464,9 +463,17 @@
                 <h1 class="sf-title font-display text-headline-lg text-on-surface mb-1">Daftar Barang</h1>
                 <p class="text-on-surface-variant text-body-md">Kelola seluruh stok inventaris Anda di satu tempat.</p>
               </div>
-              <button type="button" onclick="openCreateModal()" class="w-full md:w-auto bg-primary text-on-primary px-5 md:px-8 py-3 rounded-xl font-medium flex items-center justify-center gap-2 hover:brightness-90 transition-all active:scale-95">
-                <span class="material-symbols-outlined">add</span>Tambah Barang
-              </button>
+              <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                <button type="button" wire:click="createOfflineBackup" wire:loading.attr="disabled" class="w-full md:w-auto bg-surface text-primary border border-outline-variant px-5 md:px-7 py-3 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-surface-container-high transition-all active:scale-95">
+                  <span wire:loading.remove wire:target="createOfflineBackup" class="material-symbols-outlined">folder_zip</span>
+                  <span wire:loading wire:target="createOfflineBackup" class="material-symbols-outlined animate-spin">sync</span>
+                  <span wire:loading.remove wire:target="createOfflineBackup">Backup Excel</span>
+                  <span wire:loading wire:target="createOfflineBackup">Membuat Backup...</span>
+                </button>
+                <button type="button" onclick="openCreateModal()" class="w-full md:w-auto bg-primary text-on-primary px-5 md:px-8 py-3 rounded-xl font-medium flex items-center justify-center gap-2 hover:brightness-90 transition-all active:scale-95">
+                  <span class="material-symbols-outlined">add</span>Tambah Barang
+                </button>
+              </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 md:gap-6 mb-6">
@@ -499,7 +506,7 @@
             <div class="sf-toolbar bg-surface-container-lowest p-3 md:p-4 rounded-t-xl border-x border-t border-outline-variant flex flex-wrap items-center gap-3 md:gap-4">
               <div class="flex flex-col gap-1 min-w-0 flex-1">
                 <label class="text-[11px] font-bold text-on-surface-variant uppercase ml-1">Search</label>
-                <input id="globalSearchInput" type="text" value="<?php echo e($viewData['search'] ?? ''); ?>" placeholder="Cari part number, nama barang, kategori, brand, barcode..." class="bg-surface border border-outline-variant rounded-lg px-4 py-2 text-label-md focus:ring-primary focus:border-primary" oninput="clearTimeout(deleteTimeout); deleteTimeout = setTimeout(applyFilters, 500)">
+                <input id="globalSearchInput" type="text" value="<?php echo e($viewData['search'] ?? ''); ?>" placeholder="Cari part number, nama barang, kategori, merek, barcode..." class="bg-surface border border-outline-variant rounded-lg px-4 py-2 text-label-md focus:ring-primary focus:border-primary" autocomplete="off" spellcheck="false">
               </div>
               <div class="sf-export flex flex-col gap-1 ml-auto">
                 <label class="text-[11px] font-bold text-on-surface-variant uppercase text-right mr-1">Export</label>
@@ -516,6 +523,8 @@
                   <thead>
                     <tr class="bg-surface-container text-on-surface-variant border-b border-outline-variant">
                       <th class="px-6 py-4 font-medium uppercase tracking-wider">Part Number</th>
+                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Kondisi</th>
+                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Waktu Input</th>
                       <th class="px-6 py-4 font-medium uppercase tracking-wider">Kategori</th>
                       <th class="px-6 py-4 font-medium uppercase tracking-wider">Merek</th>
                       <th class="px-6 py-4 font-medium uppercase tracking-wider">Berat</th>
@@ -535,9 +544,11 @@
                         $unit = trim((string) ($product['unit'] ?? '')) ?: '-';
                         $stockUnit = $unit !== '-' ? $unit : 'Unit';
                         $weight = $product['weight'] ?? null;
+                        $weightUnit = trim((string) ($product['weight_unit'] ?? 'kg')) ?: 'kg';
                         $weightDisplay = ($weight !== null && $weight !== '')
-                            ? rtrim(rtrim(number_format((float) $weight, 2, ',', '.'), '0'), ',') . ' Kg'
+                            ? rtrim(rtrim(number_format((float) $weight, 2, ',', '.'), '0'), ',') . ' ' . $weightUnit
                             : '-';
+                        $condition = trim((string) ($product['condition'] ?? ''));
                         $expeditionCost = $product['expedition_cost_value'] ?? $product['expedition_cost'] ?? $product['shipping_cost'] ?? null;
                         $expeditionCostDisplay = ($expeditionCost !== null && $expeditionCost !== '')
                             ? 'Rp ' . number_format((float) $expeditionCost, 0, ',', '.')
@@ -561,6 +572,8 @@
                             </div>
                           </div>
                         </td>
+                        <td class="px-6 py-4 text-body-md"><?php echo e($condition !== '' ? $condition : '-'); ?></td>
+                        <td class="px-6 py-4 text-body-md"><?php echo e($product['created_at'] ?? '-'); ?></td>
                         <td class="px-6 py-4 text-body-md"><?php echo e($product['category'] ?? '-'); ?></td>
                         <td class="px-6 py-4 text-body-md"><?php echo e($product['brand'] ?? '-'); ?></td>
                         <td class="px-6 py-4 text-body-md"><?php echo e($weightDisplay); ?></td>
@@ -583,7 +596,7 @@
                       </tr>
                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                       <tr id="emptyProductRow">
-                        <td colspan="10" class="px-6 py-10 text-center text-on-surface-variant">Belum ada barang.</td>
+                        <td colspan="12" class="px-6 py-10 text-center text-on-surface-variant">Belum ada barang.</td>
                       </tr>
                     <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                   </tbody>
@@ -722,7 +735,8 @@
       document.documentElement.classList.remove('dark');
       document.documentElement.classList.add('light', 'sf-dashboard-page');
       document.body.classList.add('sf-dashboard-page');
-      let deleteTimeout;
+      let searchDebounceTimer;
+      let searchLoadingTimer;
       const tableBody = document.getElementById('productTableBody');
       const countText = document.getElementById('productCountText');
       const createModal = document.getElementById('createProductModal');
@@ -748,6 +762,31 @@
       const productsForNotification = <?php echo e(Illuminate\Support\Js::from($products)); ?>;
       const lowStockProducts = <?php echo e(Illuminate\Support\Js::from($lowStockProducts)); ?>;
       const globalSearchInput = document.getElementById('globalSearchInput');
+      globalSearchInput?.addEventListener('input', () => {
+        if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+        if (searchLoadingTimer) clearTimeout(searchLoadingTimer);
+
+        const query = (globalSearchInput.value || '').trim();
+        if (!query) {
+          closeLoading();
+          searchDebounceTimer = setTimeout(() => {
+            applyFilters();
+          }, 250);
+          return;
+        }
+
+        searchLoadingTimer = setTimeout(() => {
+          openLoading(`Mencari keyword "${query}"...`);
+        }, 250);
+
+        searchDebounceTimer = setTimeout(() => {
+          openLoading(`Mencari keyword "${query}"...`);
+          setTimeout(() => {
+            applyFilters();
+          }, 80);
+        }, 700);
+      });
+
       function applyFilters() {
         const searchInput = document.getElementById('globalSearchInput')?.value || '';
         const params = new URLSearchParams();
@@ -993,6 +1032,7 @@
         createForm.reset();
         setImagePreview(createForm, null);
         createForm.querySelector('input[type="checkbox"][name="is_active"]').checked = true;
+        setWeightUnitFields(createForm, 'kg');
         createForm.querySelector('[name="payment_type"]').value = 'LUNAS';
         syncBatchCreditFields(createForm);
         setCategoryBrandEditable(createForm, true);
@@ -1028,14 +1068,9 @@
         const brandInput = form.querySelector('[name="brand"]');
         [categoryInput, brandInput].forEach((input) => {
           if (!input) return;
-          input.readOnly = !editable;
-          input.classList.toggle('bg-surface-container-low', !editable);
-          input.classList.toggle('cursor-not-allowed', !editable);
-          if (!editable) {
-            input.title = 'Kategori dan brand hanya bisa diubah dari menu Kategori & Brand.';
-          } else {
-            input.removeAttribute('title');
-          }
+          input.disabled = false;
+          input.classList.remove('bg-surface-container-low', 'cursor-not-allowed');
+          input.removeAttribute('title');
         });
       }
 
@@ -1065,6 +1100,53 @@
         }
         syncCreditDueDateFromDays(form);
         updateCreditPaymentSummary(form);
+      }
+
+      function syncWeightUnitFields(form) {
+        const weightUnitSelect = form.querySelector('[name="weight_unit"]');
+        const customWrap = form.querySelector('[data-weight-unit-custom-wrap]');
+        const customInput = form.querySelector('[name="weight_unit_custom"]');
+        if (!weightUnitSelect || !customWrap) return;
+        const isCustom = weightUnitSelect.value === 'other';
+        customWrap.classList.toggle('hidden', !isCustom);
+        if (!isCustom && customInput) {
+          customInput.value = '';
+        }
+      }
+
+      function setWeightUnitFields(form, unit = 'kg', customValue = '') {
+        const weightUnitSelect = form.querySelector('[name="weight_unit"]');
+        const customInput = form.querySelector('[name="weight_unit_custom"]');
+        if (weightUnitSelect) {
+          const normalizedUnit = String(unit || 'kg').trim().toLowerCase();
+          const knownUnits = ['kg', 'gram', 'ton', 'lb', 'oz'];
+          if (knownUnits.includes(normalizedUnit)) {
+            weightUnitSelect.value = normalizedUnit;
+          } else {
+            weightUnitSelect.value = 'other';
+            if (customInput) {
+              customInput.value = customValue || normalizedUnit || '';
+            }
+          }
+        }
+        syncWeightUnitFields(form);
+      }
+
+      function getWeightUnitValue(form) {
+        const weightUnitSelect = form.querySelector('[name="weight_unit"]');
+        const customInput = form.querySelector('[name="weight_unit_custom"]');
+        const selected = String(weightUnitSelect?.value || 'kg').trim().toLowerCase();
+        if (selected === 'other') {
+          return String(customInput?.value || '').trim().toLowerCase();
+        }
+        return selected || 'kg';
+      }
+
+      function formatWeightDisplay(weightValue, weightUnit) {
+        const numericWeight = Number(weightValue);
+        const unit = String(weightUnit || 'kg').trim().toLowerCase();
+        if (!Number.isFinite(numericWeight)) return '-';
+        return `${numericWeight.toLocaleString('id-ID', { maximumFractionDigits: 2 })} ${unit}`;
       }
 
       function toIsoDate(date) {
@@ -1155,8 +1237,9 @@
         form.querySelector('[name="barcode"]').value = product.barcode || '';
         form.querySelector('[name="unit"]').value = product.unit || '';
         form.querySelector('[name="weight"]').value = product.weight || '';
+        setWeightUnitFields(form, product.weight_unit || 'kg');
         form.querySelector('[name="slug"]').value = product.slug || '';
-        form.querySelector('[name="category"]').value = product.category || '';
+        form.querySelector('[name="category"]').value = 'Alat Berat';
         form.querySelector('[name="brand"]').value = product.brand || '';
         form.querySelector('[name="supplier_id"]').value = product.supplier_id || '';
         form.querySelector('[name="supplier_name"]').value = product.supplier_name || '';
@@ -1166,6 +1249,9 @@
         form.querySelector('[name="supplier_address"]').value = product.supplier_address || '';
         form.querySelector('[name="supplier_note"]').value = product.supplier_note || '';
         form.querySelector('[name="batch_code"]').value = product.batch_code || '';
+        form.querySelector('[name="condition"]').value = product.condition || '';
+        const processedByField = form.querySelector('[name="processed_by"]');
+        if (processedByField) processedByField.value = product.processed_by || '';
         form.querySelector('[name="purchase_price"]').value = formatRupiahInput(product.purchase_price_value ?? '');
         form.querySelector('[name="expedition_cost"]').value = formatRupiahInput(product.expedition_cost_value ?? '');
         form.querySelector('[name="selling_price"]').value = formatRupiahInput(product.selling_price_value ?? '');
@@ -1187,7 +1273,7 @@
         form.querySelector('input[type="checkbox"][name="is_active"]').checked = Boolean(product.is_active);
         if (form.querySelector('[name="image"]')) form.querySelector('[name="image"]').value = '';
         setImagePreview(form, product.image_url || null);
-        setCategoryBrandEditable(form, false);
+        setCategoryBrandEditable(form, true);
       }
       function setImagePreview(form, imageUrl) {
         const preview = form.querySelector('[data-image-preview]');
@@ -1246,6 +1332,8 @@
         formData.append('barcode', form.querySelector('[name="barcode"]').value || '');
         formData.append('unit', form.querySelector('[name="unit"]').value || '');
         formData.append('weight', form.querySelector('[name="weight"]').value || '');
+        formData.append('weight_unit', getWeightUnitValue(form));
+        formData.append('weight_unit_custom', form.querySelector('[name="weight_unit_custom"]')?.value || '');
         formData.append('slug', form.querySelector('[name="slug"]').value || '');
         formData.append('category', form.querySelector('[name="category"]').value || '');
         formData.append('brand', form.querySelector('[name="brand"]').value || '');
@@ -1259,6 +1347,8 @@
         formData.append('supplier_address', form.querySelector('[name="supplier_address"]').value || '');
         formData.append('supplier_note', form.querySelector('[name="supplier_note"]').value || '');
         formData.append('batch_code', form.querySelector('[name="batch_code"]').value || '');
+        formData.append('condition', form.querySelector('[name="condition"]').value || '');
+        formData.append('processed_by', form.querySelector('[name="processed_by"]')?.value || '');
         formData.append('purchase_price', String(parseCurrencyToNumber(form.querySelector('[name="purchase_price"]').value || '')));
         formData.append('expedition_cost', String(parseCurrencyToNumber(form.querySelector('[name="expedition_cost"]').value || '')));
         formData.append('selling_price', String(parseCurrencyToNumber(form.querySelector('[name="selling_price"]').value || '')));
@@ -1324,10 +1414,11 @@
         const unit = String(product.unit || '').trim() || '-';
         const stockUnit = unit !== '-' ? unit : 'Unit';
         const weightValue = product.weight ?? '';
-        const weightNumber = Number(weightValue);
-        const weightDisplay = weightValue !== '' && weightValue !== null && Number.isFinite(weightNumber)
-          ? `${weightNumber.toLocaleString('id-ID', { maximumFractionDigits: 2 })} Kg`
+        const weightDisplay = weightValue !== '' && weightValue !== null
+          ? formatWeightDisplay(weightValue, product.weight_unit || 'kg')
           : '-';
+        const conditionLabel = String(product.condition || '').trim();
+        const createdAtLabel = String(product.created_at || '').trim() || '-';
         const expeditionValue = product.expedition_cost_value ?? product.expedition_cost ?? product.shipping_cost ?? 0;
         const expeditionNumber = parseCurrencyToNumber(expeditionValue);
         const expeditionCost = `Rp ${Number.isFinite(expeditionNumber) ? Math.round(expeditionNumber).toLocaleString('id-ID') : '0'}`;
@@ -1345,6 +1436,8 @@
                 </div>
               </div>
             </td>
+            <td class="px-6 py-4 text-body-md">${conditionLabel ? escapeHtml(conditionLabel) : '-'}</td>
+            <td class="px-6 py-4 text-body-md">${escapeHtml(createdAtLabel)}</td>
             <td class="px-6 py-4 text-body-md">${escapeHtml(product.category || '-')}</td>
             <td class="px-6 py-4 text-body-md">${escapeHtml(product.brand || '-')}</td>
             <td class="px-6 py-4 text-body-md">${escapeHtml(weightDisplay)}</td>
@@ -1387,6 +1480,8 @@
       editForm.querySelector('[name="stock"]')?.addEventListener('input', () => updatePurchaseTotal(editForm));
       createForm.querySelector('[name="payment_type"]')?.addEventListener('change', () => syncBatchCreditFields(createForm));
       editForm.querySelector('[name="payment_type"]')?.addEventListener('change', () => syncBatchCreditFields(editForm));
+      createForm.querySelector('[name="weight_unit"]')?.addEventListener('change', () => syncWeightUnitFields(createForm));
+      editForm.querySelector('[name="weight_unit"]')?.addEventListener('change', () => syncWeightUnitFields(editForm));
       createForm.querySelector('[name="credit_days"]')?.addEventListener('input', () => syncCreditDueDateFromDays(createForm));
       editForm.querySelector('[name="credit_days"]')?.addEventListener('input', () => syncCreditDueDateFromDays(editForm));
       createForm.querySelector('[name="credit_due_date"]')?.addEventListener('change', () => updateCreditDueHuman(createForm, dateFromIso(createForm.querySelector('[name="credit_due_date"]')?.value), createForm.querySelector('[name="credit_days"]')?.value || null));
@@ -1403,6 +1498,8 @@
       updatePurchaseTotal(editForm);
       bindCurrencyFormatter(createForm);
       bindCurrencyFormatter(editForm);
+      syncWeightUnitFields(createForm);
+      syncWeightUnitFields(editForm);
       syncBatchCreditFields(createForm);
       syncBatchCreditFields(editForm);
     </script>

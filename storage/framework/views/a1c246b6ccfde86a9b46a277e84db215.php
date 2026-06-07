@@ -1,12 +1,23 @@
-@php
+<?php
     $viewData = $this->getViewData();
     $supplier = $viewData['supplier'];
     $summary = $viewData['summary'] ?? [];
     $rows = $viewData['purchaseRows'] ?? [];
     $focusBatchId = (int) ($viewData['focusBatchId'] ?? 0);
-@endphp
+?>
 
-<x-filament-panels::page>
+<?php if (isset($component)) { $__componentOriginal166a02a7c5ef5a9331faf66fa665c256 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal166a02a7c5ef5a9331faf66fa665c256 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'filament-panels::components.page.index','data' => []] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('filament-panels::page'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
@@ -100,31 +111,31 @@
             </div>
           </div>
           <nav class="flex-1 flex flex-col space-y-1 overflow-y-auto pr-1">
-            <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-2.5 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium" href="{{ url('/admin/products') }}">
+            <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-2.5 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium" href="<?php echo e(url('/admin/products')); ?>">
               <span class="material-symbols-outlined">inventory_2</span><span>Barang</span>
             </a>
-            <a class="sf-nav-item flex items-center gap-3 bg-[#006948] text-white rounded-lg px-2.5 py-2 font-medium" href="{{ url('/admin/suppliers') }}">
+            <a class="sf-nav-item flex items-center gap-3 bg-[#006948] text-white rounded-lg px-2.5 py-2 font-medium" href="<?php echo e(url('/admin/suppliers')); ?>">
               <span class="material-symbols-outlined">local_shipping</span><span>Supplier</span>
             </a>
-            <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-2.5 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium" href="{{ url('/admin/admin-module?type=credits') }}">
+            <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-2.5 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium" href="<?php echo e(url('/admin/admin-module?type=credits')); ?>">
               <span class="material-symbols-outlined">credit_card</span><span>Kredit</span>
             </a>
-            <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-2.5 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium" href="{{ url('/admin/admin-module?type=supplier-transactions') }}">
+            <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-2.5 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium" href="<?php echo e(url('/admin/admin-module?type=supplier-transactions')); ?>">
               <span class="material-symbols-outlined">account_tree</span><span>Transaksi PT</span>
             </a>
-            <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-2.5 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium" href="{{ url('/admin/admin-module?type=reports') }}">
+            <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-2.5 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium" href="<?php echo e(url('/admin/admin-module?type=reports')); ?>">
               <span class="material-symbols-outlined">analytics</span><span>Laporan</span>
             </a>
-            <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-2.5 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium" href="{{ url('/admin/admin-module?type=users') }}">
+            <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-2.5 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium" href="<?php echo e(url('/admin/admin-module?type=users')); ?>">
               <span class="material-symbols-outlined">group</span><span>User</span>
             </a>
-            <a class="sf-nav-item mt-auto flex items-center gap-3 text-[#47534d] px-2.5 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium" href="{{ url('/admin/admin-module?type=product-groups') }}">
+            <a class="sf-nav-item mt-auto flex items-center gap-3 text-[#47534d] px-2.5 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium" href="<?php echo e(url('/admin/admin-module?type=product-groups')); ?>">
               <span class="material-symbols-outlined">inventory_2</span><span>Kelompok Barang</span>
             </a>
           </nav>
           <div class="pt-3 border-t border-[#d4dbd7]">
-            <form method="POST" action="{{ route('logout') }}" class="js-admin-logout-form">
-              @csrf
+            <form method="POST" action="<?php echo e(route('logout')); ?>" class="js-admin-logout-form">
+              <?php echo csrf_field(); ?>
               <button type="submit" class="sf-nav-item w-full flex items-center gap-3 text-[#ba1a1a] px-2.5 py-2 hover:bg-[#ffdad6] transition-all rounded-lg font-medium text-left">
                 <span class="material-symbols-outlined">logout</span><span>Logout</span>
               </button>
@@ -134,19 +145,19 @@
 
         <main class="sf-content min-h-screen p-3 md:p-4 space-y-4">
           <div class="rounded-xl border border-[#d4dbd7] bg-white p-4">
-            <h1 class="text-[28px] leading-tight font-semibold text-[#191c1e]">{{ $supplier->name }}</h1>
+            <h1 class="text-[28px] leading-tight font-semibold text-[#191c1e]"><?php echo e($supplier->name); ?></h1>
             <p class="mt-1 text-sm text-[#52615a]">Detail supplier dan seluruh riwayat pembelian (kredit + lunas).</p>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div class="rounded-xl border border-[#d4dbd7] bg-white p-4">
               <p class="text-xs uppercase tracking-wide text-[#52615a]">Barang Kredit</p>
-              <p class="mt-1 text-2xl font-semibold text-[#1e40af]">{{ number_format((int) ($summary['kredit_count'] ?? 0), 0, ',', '.') }}</p>
+              <p class="mt-1 text-2xl font-semibold text-[#1e40af]"><?php echo e(number_format((int) ($summary['kredit_count'] ?? 0), 0, ',', '.')); ?></p>
               <p class="text-xs text-[#52615a]">Belum lunas</p>
             </div>
             <div class="rounded-xl border border-[#f1d4d4] bg-[#fff6f6] p-4">
               <p class="text-xs uppercase tracking-wide text-[#8a1c1c]">Warning Jatuh Tempo</p>
-              <p class="mt-1 text-2xl font-semibold text-[#ba1a1a]">{{ number_format((int) ($summary['warning_count'] ?? 0), 0, ',', '.') }}</p>
+              <p class="mt-1 text-2xl font-semibold text-[#ba1a1a]"><?php echo e(number_format((int) ($summary['warning_count'] ?? 0), 0, ',', '.')); ?></p>
               <p class="text-xs text-[#8a1c1c]">Jatuh tempo / <= 3 hari</p>
             </div>
           </div>
@@ -171,13 +182,13 @@
                 </thead>
                 <tbody>
                   <tr class="border-b border-[#e4e8e6]">
-                    <td class="px-4 py-2.5 font-semibold">{{ (int) ($summary['total_transactions'] ?? 0) }} kali</td>
-                    <td class="px-4 py-2.5 font-semibold">{{ (int) ($summary['total_products'] ?? 0) }} item</td>
-                    <td class="px-4 py-2.5 font-semibold">{{ number_format((int) ($summary['total_qty'] ?? 0), 0, ',', '.') }}</td>
-                    <td class="px-4 py-2.5 font-semibold">{{ $summary['total_modal'] ?? 'Rp 0' }}</td>
-                    <td class="px-4 py-2.5">{{ $summary['last_purchase_at'] ?? '-' }}</td>
-                    <td class="px-4 py-2.5">{{ (int) ($summary['kredit_count'] ?? 0) }}</td>
-                    <td class="px-4 py-2.5">{{ (int) ($summary['lunas_count'] ?? 0) }}</td>
+                    <td class="px-4 py-2.5 font-semibold"><?php echo e((int) ($summary['total_transactions'] ?? 0)); ?> kali</td>
+                    <td class="px-4 py-2.5 font-semibold"><?php echo e((int) ($summary['total_products'] ?? 0)); ?> item</td>
+                    <td class="px-4 py-2.5 font-semibold"><?php echo e(number_format((int) ($summary['total_qty'] ?? 0), 0, ',', '.')); ?></td>
+                    <td class="px-4 py-2.5 font-semibold"><?php echo e($summary['total_modal'] ?? 'Rp 0'); ?></td>
+                    <td class="px-4 py-2.5"><?php echo e($summary['last_purchase_at'] ?? '-'); ?></td>
+                    <td class="px-4 py-2.5"><?php echo e((int) ($summary['kredit_count'] ?? 0)); ?></td>
+                    <td class="px-4 py-2.5"><?php echo e((int) ($summary['lunas_count'] ?? 0)); ?></td>
                   </tr>
                 </tbody>
               </table>
@@ -215,46 +226,46 @@
                   </tr>
                 </thead>
                 <tbody>
-                  @forelse($rows as $row)
-                    @php
+                  <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $rows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                    <?php
                       $statusClass = ($row['status'] ?? '') === 'LUNAS'
                         ? 'bg-emerald-100 text-emerald-700'
                         : ((($row['status'] ?? '') === 'JATUH TEMPO') ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700');
-                    @endphp
-                    <tr id="batch-{{ $row['batch_id'] }}" class="border-b border-[#e4e8e6] {{ $focusBatchId === (int) ($row['batch_id'] ?? 0) ? 'bg-amber-50 ring-2 ring-amber-300 ring-inset' : '' }}">
-                      <td class="px-4 py-2.5">{{ $row['waktu'] }}</td>
-                      <td class="px-4 py-2.5 font-semibold">{{ $row['part_number'] }}</td>
-                      <td class="px-4 py-2.5 font-semibold">{{ $row['part_name'] }}</td>
-                      <td class="px-4 py-2.5">{{ $row['processed_by'] ?? '-' }}</td>
-                      <td class="px-4 py-2.5">{{ $row['condition'] ?? '-' }}</td>
-                      <td class="px-4 py-2.5">{{ $row['merek'] }}</td>
-                      <td class="px-4 py-2.5">{{ $row['kategori'] }}</td>
-                      <td class="px-4 py-2.5">{{ $row['unit'] }}</td>
-                      <td class="px-4 py-2.5">{{ $row['berat'] }}</td>
-                      <td class="px-4 py-2.5">{{ number_format((int) $row['qty'], 0, ',', '.') }}</td>
-                      <td class="px-4 py-2.5">{{ number_format((int) $row['stok'], 0, ',', '.') }}</td>
-                      <td class="px-4 py-2.5">{{ $row['harga_beli'] }}</td>
-                      <td class="px-4 py-2.5 font-semibold">{{ $row['subtotal'] }}</td>
-                      <td class="px-4 py-2.5">{{ $row['payment_type'] }}</td>
-                      <td class="px-4 py-2.5">{{ $row['down_payment'] ?? '-' }}</td>
-                      <td class="px-4 py-2.5">{{ $row['total_dibayar'] ?? $row['sudah_dibayar'] ?? '-' }}</td>
-                      <td class="px-4 py-2.5">{{ $row['payment_type'] === 'KREDIT' ? ($row['credit_days'] . ' hari (' . $row['credit_due_date'] . ')') : '-' }}</td>
-                      <td class="px-4 py-2.5"><span class="inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold {{ $statusClass }}">{{ $row['status'] }}</span></td>
+                    ?>
+                    <tr id="batch-<?php echo e($row['batch_id']); ?>" class="border-b border-[#e4e8e6] <?php echo e($focusBatchId === (int) ($row['batch_id'] ?? 0) ? 'bg-amber-50 ring-2 ring-amber-300 ring-inset' : ''); ?>">
+                      <td class="px-4 py-2.5"><?php echo e($row['waktu']); ?></td>
+                      <td class="px-4 py-2.5 font-semibold"><?php echo e($row['part_number']); ?></td>
+                      <td class="px-4 py-2.5 font-semibold"><?php echo e($row['part_name']); ?></td>
+                      <td class="px-4 py-2.5"><?php echo e($row['processed_by'] ?? '-'); ?></td>
+                      <td class="px-4 py-2.5"><?php echo e($row['condition'] ?? '-'); ?></td>
+                      <td class="px-4 py-2.5"><?php echo e($row['merek']); ?></td>
+                      <td class="px-4 py-2.5"><?php echo e($row['kategori']); ?></td>
+                      <td class="px-4 py-2.5"><?php echo e($row['unit']); ?></td>
+                      <td class="px-4 py-2.5"><?php echo e($row['berat']); ?></td>
+                      <td class="px-4 py-2.5"><?php echo e(number_format((int) $row['qty'], 0, ',', '.')); ?></td>
+                      <td class="px-4 py-2.5"><?php echo e(number_format((int) $row['stok'], 0, ',', '.')); ?></td>
+                      <td class="px-4 py-2.5"><?php echo e($row['harga_beli']); ?></td>
+                      <td class="px-4 py-2.5 font-semibold"><?php echo e($row['subtotal']); ?></td>
+                      <td class="px-4 py-2.5"><?php echo e($row['payment_type']); ?></td>
+                      <td class="px-4 py-2.5"><?php echo e($row['down_payment'] ?? '-'); ?></td>
+                      <td class="px-4 py-2.5"><?php echo e($row['total_dibayar'] ?? $row['sudah_dibayar'] ?? '-'); ?></td>
+                      <td class="px-4 py-2.5"><?php echo e($row['payment_type'] === 'KREDIT' ? ($row['credit_days'] . ' hari (' . $row['credit_due_date'] . ')') : '-'); ?></td>
+                      <td class="px-4 py-2.5"><span class="inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold <?php echo e($statusClass); ?>"><?php echo e($row['status']); ?></span></td>
                       <td class="px-4 py-2.5 text-right">
-                        @if (!empty($row['receipt_url']))
-                          <a href="{{ $row['receipt_url'] }}" target="_blank" rel="noopener" class="inline-flex items-center rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!empty($row['receipt_url'])): ?>
+                          <a href="<?php echo e($row['receipt_url']); ?>" target="_blank" rel="noopener" class="inline-flex items-center rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">
                             Lihat Nota
                           </a>
-                        @else
+                        <?php else: ?>
                           <span class="text-sm text-[#52615a]">-</span>
-                        @endif
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                       </td>
                     </tr>
-                  @empty
+                  <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                     <tr>
                       <td colspan="19" class="px-4 py-8 text-center text-[#52615a]">Belum ada riwayat pembelian untuk supplier ini.</td>
                     </tr>
-                  @endforelse
+                  <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                 </tbody>
               </table>
             </div>
@@ -287,15 +298,25 @@
           document.body.classList.remove('sf-mobile-menu-open');
         }
       });
-      @if($focusBatchId > 0)
+      <?php if($focusBatchId > 0): ?>
         window.addEventListener('load', () => {
-          const targetRow = document.getElementById('batch-{{ $focusBatchId }}');
+          const targetRow = document.getElementById('batch-<?php echo e($focusBatchId); ?>');
           if (targetRow) {
             targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }
         });
-      @endif
+      <?php endif; ?>
     </script>
 
-    @include('filament.partials.logout-modal')
-</x-filament-panels::page>
+    <?php echo $__env->make('filament.partials.logout-modal', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal166a02a7c5ef5a9331faf66fa665c256)): ?>
+<?php $attributes = $__attributesOriginal166a02a7c5ef5a9331faf66fa665c256; ?>
+<?php unset($__attributesOriginal166a02a7c5ef5a9331faf66fa665c256); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal166a02a7c5ef5a9331faf66fa665c256)): ?>
+<?php $component = $__componentOriginal166a02a7c5ef5a9331faf66fa665c256; ?>
+<?php unset($__componentOriginal166a02a7c5ef5a9331faf66fa665c256); ?>
+<?php endif; ?>
+<?php /**PATH C:\laragon\www\backend\resources\views/filament/resources/supplier-resource/pages/view-supplier.blade.php ENDPATH**/ ?>

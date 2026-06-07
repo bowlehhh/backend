@@ -16,6 +16,8 @@ class ProductBatch extends Model
         'product_id',
         'supplier_id',
         'batch_code',
+        'condition',
+        'processed_by',
         'purchase_price',
         'expedition_cost',
         'down_payment_amount',

@@ -14,6 +14,8 @@ class UpdateDashboardProductRequest extends FormRequest
             'category' => 'Alat Berat',
             'barcode' => strtoupper((string) $this->input('barcode', '')),
             'unit' => strtoupper((string) $this->input('unit', '')),
+            'weight_unit' => strtolower(trim((string) $this->input('weight_unit', 'kg'))),
+            'weight_unit_custom' => trim((string) $this->input('weight_unit_custom', '')),
         ]);
     }
 
@@ -31,9 +33,11 @@ class UpdateDashboardProductRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255', Rule::unique('products', 'slug')->ignore($product?->id)],
-            'barcode' => ['nullable', 'string', 'max:100', Rule::unique('products', 'barcode')->ignore($product?->id)],
+            'barcode' => ['nullable', 'string', 'max:100'],
             'unit' => ['nullable', 'string', 'max:30'],
             'weight' => ['nullable', 'numeric', 'min:0'],
+            'weight_unit' => ['nullable', Rule::in(['gram', 'kg', 'ton', 'lb', 'oz', 'other'])],
+            'weight_unit_custom' => ['nullable', 'string', 'max:30', 'required_if:weight_unit,other'],
             'description' => ['nullable', 'string'],
             'image' => ['nullable', 'image', 'max:5120'],
             'category' => ['required', 'string', 'max:255'],
@@ -45,6 +49,8 @@ class UpdateDashboardProductRequest extends FormRequest
             'supplier_address' => ['nullable', 'string'],
             'supplier_note' => ['nullable', 'string'],
             'batch_code' => ['nullable', 'string', 'max:255', Rule::unique('product_batches', 'batch_code')->ignore($batchId)],
+            'condition' => ['nullable', 'string', 'max:120'],
+            'processed_by' => ['nullable', 'string', 'max:255'],
             'purchase_price' => ['required', 'numeric', 'min:0'],
             'expedition_cost' => ['nullable', 'numeric', 'min:0'],
             'down_payment_amount' => ['nullable', 'numeric', 'min:0'],

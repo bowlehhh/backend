@@ -1,4 +1,4 @@
-@php
+<?php
     $type = $type ?? 'credits';
     $title = $title ?? 'Modul';
     $icon = $icon ?? 'credit_card';
@@ -21,9 +21,20 @@
     $ptCustomerGroups = $ptCustomerGroups ?? [];
     $ptCustomerDetail = $ptCustomerDetail ?? ['pt_name' => '', 'rows' => [], 'summary' => null];
     $productGroups = $productGroups ?? ['summary' => [], 'groups' => []];
-@endphp
+?>
 
-<x-filament-panels::page>
+<?php if (isset($component)) { $__componentOriginal166a02a7c5ef5a9331faf66fa665c256 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal166a02a7c5ef5a9331faf66fa665c256 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'filament-panels::components.page.index','data' => []] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('filament-panels::page'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
@@ -225,17 +236,17 @@
             </div>
           </div>
           <nav class="flex-1 min-h-0 flex flex-col space-y-1 overflow-y-auto">
-            <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] rounded-lg font-medium" href="{{ url('/admin/products') }}"><span class="material-symbols-outlined">inventory_2</span><span class="nav-label">Barang</span></a>
-            <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] rounded-lg font-medium" href="{{ url('/admin/suppliers') }}"><span class="material-symbols-outlined">local_shipping</span><span class="nav-label">Supplier</span></a>
-            <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'credits' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=credits') }}"><span class="material-symbols-outlined">credit_card</span><span class="nav-label">Kredit &amp; Utang Saya</span></a>
-            <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'supplier-transactions' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=supplier-transactions') }}"><span class="material-symbols-outlined">account_tree</span><span class="nav-label">Transaksi PT/CV</span></a>
-            <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'reports' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=reports') }}"><span class="material-symbols-outlined">analytics</span><span class="nav-label">Laporan</span></a>
-            <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'users' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=users') }}"><span class="material-symbols-outlined">group</span><span class="nav-label">User</span></a>
-            <a class="sf-nav-item mt-auto flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'product-groups' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=product-groups') }}"><span class="material-symbols-outlined">inventory_2</span><span class="nav-label">Kelompok Barang</span></a>
+            <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] rounded-lg font-medium" href="<?php echo e(url('/admin/products')); ?>"><span class="material-symbols-outlined">inventory_2</span><span class="nav-label">Barang</span></a>
+            <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] rounded-lg font-medium" href="<?php echo e(url('/admin/suppliers')); ?>"><span class="material-symbols-outlined">local_shipping</span><span class="nav-label">Supplier</span></a>
+            <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium <?php echo e($type === 'credits' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]'); ?>" href="<?php echo e(url('/admin/admin-module?type=credits')); ?>"><span class="material-symbols-outlined">credit_card</span><span class="nav-label">Kredit &amp; Utang Saya</span></a>
+            <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium <?php echo e($type === 'supplier-transactions' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]'); ?>" href="<?php echo e(url('/admin/admin-module?type=supplier-transactions')); ?>"><span class="material-symbols-outlined">account_tree</span><span class="nav-label">Transaksi PT/CV</span></a>
+            <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium <?php echo e($type === 'reports' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]'); ?>" href="<?php echo e(url('/admin/admin-module?type=reports')); ?>"><span class="material-symbols-outlined">analytics</span><span class="nav-label">Laporan</span></a>
+            <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium <?php echo e($type === 'users' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]'); ?>" href="<?php echo e(url('/admin/admin-module?type=users')); ?>"><span class="material-symbols-outlined">group</span><span class="nav-label">User</span></a>
+            <a class="sf-nav-item mt-auto flex items-center gap-3 px-3 py-2 rounded-lg font-medium <?php echo e($type === 'product-groups' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]'); ?>" href="<?php echo e(url('/admin/admin-module?type=product-groups')); ?>"><span class="material-symbols-outlined">inventory_2</span><span class="nav-label">Kelompok Barang</span></a>
           </nav>
           <div class="mt-4 pt-3 pb-5 border-t border-[#d4dbd7]">
-            <form method="POST" action="{{ route('logout') }}" class="js-admin-logout-form">
-              @csrf
+            <form method="POST" action="<?php echo e(route('logout')); ?>" class="js-admin-logout-form">
+              <?php echo csrf_field(); ?>
               <button type="submit" class="sf-nav-item w-full flex items-center gap-3 text-[#ba1a1a] px-3 py-2 hover:bg-[#ffdad6] rounded-lg font-medium text-left">
                 <span class="material-symbols-outlined">logout</span>
                 <span class="nav-label">Logout</span>
@@ -245,36 +256,36 @@
         </aside>
 
         <main class="sf-main-scroll p-4 md:p-6">
-          @if ($type !== 'taxonomy')
+          <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($type !== 'taxonomy'): ?>
             <div class="flex items-end justify-between gap-4 mb-6">
               <div>
-                <h1 class="text-[40px] leading-[48px] font-semibold text-[#191c1e]">{{ $title }}</h1>
-                <p class="text-[#52615a]">Kelola data {{ strtolower($title) }} dengan tampilan konsisten seperti halaman barang.</p>
+                <h1 class="text-[40px] leading-[48px] font-semibold text-[#191c1e]"><?php echo e($title); ?></h1>
+                <p class="text-[#52615a]">Kelola data <?php echo e(strtolower($title)); ?> dengan tampilan konsisten seperti halaman barang.</p>
               </div>
             </div>
-          @endif
+          <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
-          @if ($type === 'reports')
+          <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($type === 'reports'): ?>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
               <div class="bg-white p-6 rounded-xl border border-[#d4dbd7] custom-shadow">
                 <div class="flex items-center gap-3 mb-2"><div class="p-1 rounded-lg bg-[#e6fff3]"><span class="material-symbols-outlined text-[#006948]">today</span></div><span class="text-[#52615a] font-medium">Pengeluaran Hari Ini</span></div>
-                <div class="text-[34px] leading-[42px] font-bold text-[#006948]">Rp {{ number_format((float) ($reportStats['today_total'] ?? 0), 0, ',', '.') }}</div>
-                <p class="text-sm text-[#52615a] mt-2">{{ number_format((int) ($reportStats['today_count'] ?? 0), 0, ',', '.') }} transaksi pembelian</p>
+                <div class="text-[34px] leading-[42px] font-bold text-[#006948]">Rp <?php echo e(number_format((float) ($reportStats['today_total'] ?? 0), 0, ',', '.')); ?></div>
+                <p class="text-sm text-[#52615a] mt-2"><?php echo e(number_format((int) ($reportStats['today_count'] ?? 0), 0, ',', '.')); ?> transaksi pembelian</p>
               </div>
               <div class="bg-white p-6 rounded-xl border border-[#d4dbd7] custom-shadow">
                 <div class="flex items-center gap-3 mb-2"><div class="p-1 rounded-lg bg-[#ececff]"><span class="material-symbols-outlined text-[#4648d4]">calendar_month</span></div><span class="text-[#52615a] font-medium">Pengeluaran Bulan Ini</span></div>
-                <div class="text-[34px] leading-[42px] font-bold text-[#4648d4]">Rp {{ number_format((float) ($reportStats['month_total'] ?? 0), 0, ',', '.') }}</div>
-                <p class="text-sm text-[#52615a] mt-2">{{ number_format((int) ($reportStats['month_count'] ?? 0), 0, ',', '.') }} transaksi pembelian</p>
+                <div class="text-[34px] leading-[42px] font-bold text-[#4648d4]">Rp <?php echo e(number_format((float) ($reportStats['month_total'] ?? 0), 0, ',', '.')); ?></div>
+                <p class="text-sm text-[#52615a] mt-2"><?php echo e(number_format((int) ($reportStats['month_count'] ?? 0), 0, ',', '.')); ?> transaksi pembelian</p>
               </div>
               <div class="bg-white p-6 rounded-xl border border-[#d4dbd7] custom-shadow">
                 <div class="flex items-center gap-3 mb-2"><div class="p-1 rounded-lg bg-[#fff2df]"><span class="material-symbols-outlined text-[#825100]">calendar_today</span></div><span class="text-[#52615a] font-medium">Pengeluaran Tahun Ini</span></div>
-                <div class="text-[34px] leading-[42px] font-bold text-[#825100]">Rp {{ number_format((float) ($reportStats['year_total'] ?? 0), 0, ',', '.') }}</div>
-                <p class="text-sm text-[#52615a] mt-2">{{ number_format((int) ($reportStats['year_count'] ?? 0), 0, ',', '.') }} transaksi pembelian</p>
+                <div class="text-[34px] leading-[42px] font-bold text-[#825100]">Rp <?php echo e(number_format((float) ($reportStats['year_total'] ?? 0), 0, ',', '.')); ?></div>
+                <p class="text-sm text-[#52615a] mt-2"><?php echo e(number_format((int) ($reportStats['year_count'] ?? 0), 0, ',', '.')); ?> transaksi pembelian</p>
               </div>
               <div class="bg-white p-6 rounded-xl border border-[#d4dbd7] custom-shadow">
                 <div class="flex items-center gap-3 mb-2"><div class="p-1 rounded-lg bg-[#e8efff]"><span class="material-symbols-outlined text-[#1e40af]">point_of_sale</span></div><span class="text-[#52615a] font-medium">Transaksi Kasir Hari Ini</span></div>
-                <div class="text-[34px] leading-[42px] font-bold text-[#1e40af]">Rp {{ number_format((float) ($reportStats['cashier_today_total'] ?? 0), 0, ',', '.') }}</div>
-                <p class="text-sm text-[#52615a] mt-2">{{ number_format((int) ($reportStats['cashier_today_count'] ?? 0), 0, ',', '.') }} transaksi kasir</p>
+                <div class="text-[34px] leading-[42px] font-bold text-[#1e40af]">Rp <?php echo e(number_format((float) ($reportStats['cashier_today_total'] ?? 0), 0, ',', '.')); ?></div>
+                <p class="text-sm text-[#52615a] mt-2"><?php echo e(number_format((int) ($reportStats['cashier_today_count'] ?? 0), 0, ',', '.')); ?> transaksi kasir</p>
               </div>
             </div>
 
@@ -286,26 +297,26 @@
                 </div>
 
                 <div class="space-y-4">
-                  @forelse ($reportMonthlyPurchases as $monthGroup)
+                  <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $reportMonthlyPurchases; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $monthGroup): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
                     <div class="rounded-xl border border-[#d4dbd7] bg-[#fdfefe] overflow-hidden">
                       <div class="border-b border-[#d4dbd7] bg-[#f8faf9] px-5 py-4">
                         <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                           <div>
                             <p class="text-[11px] uppercase tracking-[0.2em] text-[#52615a]">Bulan</p>
-                            <h3 class="text-2xl font-semibold text-[#191c1e]">{{ $monthGroup['month_label'] }}</h3>
+                            <h3 class="text-2xl font-semibold text-[#191c1e]"><?php echo e($monthGroup['month_label']); ?></h3>
                           </div>
                           <div class="flex flex-col items-start gap-3 lg:items-end">
                             <div class="flex flex-wrap gap-2 text-sm">
-                              <span class="inline-flex items-center rounded-full bg-[#e6fff3] px-3 py-1 font-semibold text-[#006948]">Total {{ number_format((int) $monthGroup['summary']['total_transaksi'], 0, ',', '.') }} transaksi</span>
-                              <span class="inline-flex items-center rounded-full bg-[#ececff] px-3 py-1 font-semibold text-[#4648d4]">Total {{ $monthGroup['summary']['total_nilai'] }}</span>
-                              <span class="inline-flex items-center rounded-full bg-[#eef8f4] px-3 py-1 font-semibold text-[#006948]">Lunas {{ number_format((int) $monthGroup['summary']['lunas_count'], 0, ',', '.') }}</span>
-                              <span class="inline-flex items-center rounded-full bg-[#eef8f4] px-3 py-1 font-semibold text-[#006948]">Nilai Lunas {{ $monthGroup['summary']['lunas_value'] }}</span>
-                              <span class="inline-flex items-center rounded-full bg-[#fff4dd] px-3 py-1 font-semibold text-[#a36700]">Utang {{ number_format((int) $monthGroup['summary']['utang_count'], 0, ',', '.') }}</span>
-                              <span class="inline-flex items-center rounded-full bg-[#fff4dd] px-3 py-1 font-semibold text-[#a36700]">Nilai Utang {{ $monthGroup['summary']['utang_value'] }}</span>
+                              <span class="inline-flex items-center rounded-full bg-[#e6fff3] px-3 py-1 font-semibold text-[#006948]">Total <?php echo e(number_format((int) $monthGroup['summary']['total_transaksi'], 0, ',', '.')); ?> transaksi</span>
+                              <span class="inline-flex items-center rounded-full bg-[#ececff] px-3 py-1 font-semibold text-[#4648d4]">Total <?php echo e($monthGroup['summary']['total_nilai']); ?></span>
+                              <span class="inline-flex items-center rounded-full bg-[#eef8f4] px-3 py-1 font-semibold text-[#006948]">Lunas <?php echo e(number_format((int) $monthGroup['summary']['lunas_count'], 0, ',', '.')); ?></span>
+                              <span class="inline-flex items-center rounded-full bg-[#eef8f4] px-3 py-1 font-semibold text-[#006948]">Nilai Lunas <?php echo e($monthGroup['summary']['lunas_value']); ?></span>
+                              <span class="inline-flex items-center rounded-full bg-[#fff4dd] px-3 py-1 font-semibold text-[#a36700]">Utang <?php echo e(number_format((int) $monthGroup['summary']['utang_count'], 0, ',', '.')); ?></span>
+                              <span class="inline-flex items-center rounded-full bg-[#fff4dd] px-3 py-1 font-semibold text-[#a36700]">Nilai Utang <?php echo e($monthGroup['summary']['utang_value']); ?></span>
                             </div>
                             <button
                               type="button"
-                              data-print-month-purchase="{{ e(json_encode($monthGroup, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) }}"
+                              data-print-month-purchase="<?php echo e(e(json_encode($monthGroup, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES))); ?>"
                               onclick="printMonthlyPurchaseNota(this)"
                               class="inline-flex items-center gap-2 rounded-lg border border-[#bccac0] bg-white px-3 py-2 text-sm font-semibold text-[#006948] hover:bg-[#f1f4f2] shadow-sm"
                               title="Print nota bulanan"
@@ -330,7 +341,7 @@
                               <h4 class="font-semibold text-[#126c3a]">Transaksi Lunas</h4>
                               <p class="text-xs text-[#4b6b56]">Barang yang sudah terbayar penuh pada bulan ini.</p>
                             </div>
-                            <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#126c3a]">{{ number_format((int) $monthGroup['summary']['lunas_count'], 0, ',', '.') }} data</span>
+                            <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#126c3a]"><?php echo e(number_format((int) $monthGroup['summary']['lunas_count'], 0, ',', '.')); ?> data</span>
                           </div>
                           <div class="overflow-x-auto">
                             <table class="min-w-[980px] w-full text-left border-collapse">
@@ -347,29 +358,29 @@
                                 </tr>
                               </thead>
                               <tbody class="divide-y divide-emerald-100 bg-white">
-                                @forelse ($monthGroup['lunas'] as $trx)
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_2 = true; $__currentLoopData = $monthGroup['lunas']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $trx): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_2 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
                                   <tr class="hover:bg-emerald-50/40 transition-colors">
-                                    <td class="px-4 py-3 text-[15px] whitespace-nowrap">{{ $trx['tanggal'] }}</td>
-                                    <td class="px-4 py-3 text-[15px] font-semibold">{{ $trx['supplier'] }}</td>
-                                    <td class="px-4 py-3 text-[15px]">{{ $trx['barang'] }}</td>
-                                    <td class="px-4 py-3 text-[15px] whitespace-nowrap">{{ number_format((int) $trx['qty'], 0, ',', '.') }}</td>
-                                    <td class="px-4 py-3 text-[15px] whitespace-nowrap">{{ $trx['harga_satuan'] }}</td>
-                                    <td class="px-4 py-3 text-[15px] font-semibold whitespace-nowrap">{{ $trx['total'] }}</td>
-                                    <td class="px-4 py-3 text-[15px] whitespace-nowrap">{{ $trx['jatuh_tempo'] }}</td>
+                                    <td class="px-4 py-3 text-[15px] whitespace-nowrap"><?php echo e($trx['tanggal']); ?></td>
+                                    <td class="px-4 py-3 text-[15px] font-semibold"><?php echo e($trx['supplier']); ?></td>
+                                    <td class="px-4 py-3 text-[15px]"><?php echo e($trx['barang']); ?></td>
+                                    <td class="px-4 py-3 text-[15px] whitespace-nowrap"><?php echo e(number_format((int) $trx['qty'], 0, ',', '.')); ?></td>
+                                    <td class="px-4 py-3 text-[15px] whitespace-nowrap"><?php echo e($trx['harga_satuan']); ?></td>
+                                    <td class="px-4 py-3 text-[15px] font-semibold whitespace-nowrap"><?php echo e($trx['total']); ?></td>
+                                    <td class="px-4 py-3 text-[15px] whitespace-nowrap"><?php echo e($trx['jatuh_tempo']); ?></td>
                                     <td class="px-4 py-3 text-right whitespace-nowrap">
-                                      @if (!empty($trx['supplier_id']))
-                                        <a href="{{ url('/admin/suppliers/' . $trx['supplier_id'] . '?batch_id=' . $trx['batch_id']) }}#riwayat-pembelian" class="inline-flex items-center gap-1 rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">
+                                      <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!empty($trx['supplier_id'])): ?>
+                                        <a href="<?php echo e(url('/admin/suppliers/' . $trx['supplier_id'] . '?batch_id=' . $trx['batch_id'])); ?>#riwayat-pembelian" class="inline-flex items-center gap-1 rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">
                                           <span class="material-symbols-outlined text-base">open_in_new</span>
                                           <span>Detail</span>
                                         </a>
-                                      @else
+                                      <?php else: ?>
                                         <span class="text-sm text-[#52615a]">-</span>
-                                      @endif
+                                      <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                     </td>
                                   </tr>
-                                @empty
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_2): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                                   <tr><td colspan="8" class="px-4 py-8 text-center text-[#52615a]">Tidak ada transaksi lunas di bulan ini.</td></tr>
-                                @endforelse
+                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                               </tbody>
                             </table>
                           </div>
@@ -381,7 +392,7 @@
                               <h4 class="font-semibold text-[#915500]">Transaksi Utang</h4>
                               <p class="text-xs text-[#6f531d]">Barang kredit yang masih ada sisa tagihan atau jatuh tempo.</p>
                             </div>
-                            <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#915500]">{{ number_format((int) $monthGroup['summary']['utang_count'], 0, ',', '.') }} data</span>
+                            <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#915500]"><?php echo e(number_format((int) $monthGroup['summary']['utang_count'], 0, ',', '.')); ?> data</span>
                           </div>
                           <div class="overflow-x-auto">
                             <table class="min-w-[1180px] w-full text-left border-collapse">
@@ -402,49 +413,49 @@
                                 </tr>
                               </thead>
                               <tbody class="divide-y divide-amber-100 bg-white">
-                                @forelse ($monthGroup['utang'] as $trx)
-                                  @php
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_2 = true; $__currentLoopData = $monthGroup['utang']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $trx): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_2 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                                  <?php
                                     $statusClass = $trx['status'] === 'JATUH TEMPO'
                                         ? 'bg-red-100 text-red-700'
                                         : 'bg-amber-100 text-amber-700';
-                                  @endphp
+                                  ?>
                                   <tr class="hover:bg-amber-50/40 transition-colors">
-                                    <td class="px-4 py-3 text-[15px] whitespace-nowrap">{{ $trx['tanggal'] }}</td>
-                                    <td class="px-4 py-3 text-[15px] font-semibold">{{ $trx['supplier'] }}</td>
-                                    <td class="px-4 py-3 text-[15px]">{{ $trx['barang'] }}</td>
-                                    <td class="px-4 py-3 text-[15px] whitespace-nowrap">{{ number_format((int) $trx['qty'], 0, ',', '.') }}</td>
-                                    <td class="px-4 py-3 text-[15px] whitespace-nowrap">{{ $trx['harga_satuan'] }}</td>
-                                    <td class="px-4 py-3 text-[15px] font-semibold whitespace-nowrap">{{ $trx['total'] }}</td>
-                                    <td class="px-4 py-3 text-[15px] whitespace-nowrap">{{ $trx['down_payment'] }}</td>
-                                    <td class="px-4 py-3 text-[15px] whitespace-nowrap">{{ $trx['sudah_dibayar'] }}</td>
-                                    <td class="px-4 py-3 text-[15px] font-semibold whitespace-nowrap">{{ $trx['sisa_kredit'] }}</td>
-                                    <td class="px-4 py-3 text-[15px] whitespace-nowrap">{{ $trx['jatuh_tempo'] }}</td>
+                                    <td class="px-4 py-3 text-[15px] whitespace-nowrap"><?php echo e($trx['tanggal']); ?></td>
+                                    <td class="px-4 py-3 text-[15px] font-semibold"><?php echo e($trx['supplier']); ?></td>
+                                    <td class="px-4 py-3 text-[15px]"><?php echo e($trx['barang']); ?></td>
+                                    <td class="px-4 py-3 text-[15px] whitespace-nowrap"><?php echo e(number_format((int) $trx['qty'], 0, ',', '.')); ?></td>
+                                    <td class="px-4 py-3 text-[15px] whitespace-nowrap"><?php echo e($trx['harga_satuan']); ?></td>
+                                    <td class="px-4 py-3 text-[15px] font-semibold whitespace-nowrap"><?php echo e($trx['total']); ?></td>
+                                    <td class="px-4 py-3 text-[15px] whitespace-nowrap"><?php echo e($trx['down_payment']); ?></td>
+                                    <td class="px-4 py-3 text-[15px] whitespace-nowrap"><?php echo e($trx['sudah_dibayar']); ?></td>
+                                    <td class="px-4 py-3 text-[15px] font-semibold whitespace-nowrap"><?php echo e($trx['sisa_kredit']); ?></td>
+                                    <td class="px-4 py-3 text-[15px] whitespace-nowrap"><?php echo e($trx['jatuh_tempo']); ?></td>
                                     <td class="px-4 py-3 text-[15px] whitespace-nowrap">
-                                      <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $statusClass }}">{{ $trx['status'] }}</span>
+                                      <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold <?php echo e($statusClass); ?>"><?php echo e($trx['status']); ?></span>
                                     </td>
                                     <td class="px-4 py-3 text-right whitespace-nowrap">
-                                      @if (!empty($trx['supplier_id']))
-                                        <a href="{{ url('/admin/suppliers/' . $trx['supplier_id']) }}#riwayat-pembelian" class="inline-flex items-center gap-1 rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">
+                                      <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!empty($trx['supplier_id'])): ?>
+                                        <a href="<?php echo e(url('/admin/suppliers/' . $trx['supplier_id'])); ?>#riwayat-pembelian" class="inline-flex items-center gap-1 rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">
                                           <span class="material-symbols-outlined text-base">open_in_new</span>
                                           <span>Detail</span>
                                         </a>
-                                      @else
+                                      <?php else: ?>
                                         <span class="text-sm text-[#52615a]">-</span>
-                                      @endif
+                                      <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                     </td>
                                   </tr>
-                                @empty
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_2): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                                   <tr><td colspan="12" class="px-4 py-8 text-center text-[#52615a]">Tidak ada transaksi utang di bulan ini.</td></tr>
-                                @endforelse
+                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                               </tbody>
                             </table>
                           </div>
                         </div>
                       </div>
                     </div>
-                  @empty
+                  <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                     <div class="rounded-xl border border-[#d4dbd7] bg-white px-6 py-10 text-center text-[#52615a]">Belum ada data pembelian.</div>
-                  @endforelse
+                  <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                 </div>
               </div>
 
@@ -455,21 +466,21 @@
                 </div>
 
                 <div class="space-y-4">
-                  @forelse ($reportMonthlyCashierTransactions as $monthGroup)
+                  <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $reportMonthlyCashierTransactions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $monthGroup): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
                     <div class="rounded-xl border border-[#d4dbd7] bg-[#fdfefe] overflow-hidden">
                       <div class="border-b border-[#d4dbd7] bg-[#f8faf9] px-5 py-4">
                         <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                           <div>
                             <p class="text-[11px] uppercase tracking-[0.2em] text-[#52615a]">Bulan</p>
-                            <h3 class="text-2xl font-semibold text-[#191c1e]">{{ $monthGroup['month_label'] }}</h3>
+                            <h3 class="text-2xl font-semibold text-[#191c1e]"><?php echo e($monthGroup['month_label']); ?></h3>
                           </div>
                           <div class="grid grid-cols-2 gap-2 text-sm sm:flex sm:flex-wrap">
-                            <span class="inline-flex items-center rounded-full bg-[#e6fff3] px-3 py-1 font-semibold text-[#006948]">Total {{ number_format((int) $monthGroup['summary']['total_transaksi'], 0, ',', '.') }} transaksi</span>
-                            <span class="inline-flex items-center rounded-full bg-[#ececff] px-3 py-1 font-semibold text-[#4648d4]">Nilai {{ $monthGroup['summary']['total_nilai'] }}</span>
-                            <span class="inline-flex items-center rounded-full bg-[#e8efff] px-3 py-1 font-semibold text-[#1e40af]">Cash {{ number_format((int) $monthGroup['summary']['cash_count'], 0, ',', '.') }}</span>
-                            <span class="inline-flex items-center rounded-full bg-[#e8efff] px-3 py-1 font-semibold text-[#1e40af]">Lunas {{ number_format((int) $monthGroup['summary']['lunas_count'], 0, ',', '.') }}</span>
-                            <span class="inline-flex items-center rounded-full bg-[#fff4dd] px-3 py-1 font-semibold text-[#a36700]">Credit {{ number_format((int) $monthGroup['summary']['credit_count'], 0, ',', '.') }}</span>
-                            <span class="inline-flex items-center rounded-full bg-[#fff4dd] px-3 py-1 font-semibold text-[#a36700]">Utang {{ number_format((int) $monthGroup['summary']['utang_count'], 0, ',', '.') }}</span>
+                            <span class="inline-flex items-center rounded-full bg-[#e6fff3] px-3 py-1 font-semibold text-[#006948]">Total <?php echo e(number_format((int) $monthGroup['summary']['total_transaksi'], 0, ',', '.')); ?> transaksi</span>
+                            <span class="inline-flex items-center rounded-full bg-[#ececff] px-3 py-1 font-semibold text-[#4648d4]">Nilai <?php echo e($monthGroup['summary']['total_nilai']); ?></span>
+                            <span class="inline-flex items-center rounded-full bg-[#e8efff] px-3 py-1 font-semibold text-[#1e40af]">Cash <?php echo e(number_format((int) $monthGroup['summary']['cash_count'], 0, ',', '.')); ?></span>
+                            <span class="inline-flex items-center rounded-full bg-[#e8efff] px-3 py-1 font-semibold text-[#1e40af]">Lunas <?php echo e(number_format((int) $monthGroup['summary']['lunas_count'], 0, ',', '.')); ?></span>
+                            <span class="inline-flex items-center rounded-full bg-[#fff4dd] px-3 py-1 font-semibold text-[#a36700]">Credit <?php echo e(number_format((int) $monthGroup['summary']['credit_count'], 0, ',', '.')); ?></span>
+                            <span class="inline-flex items-center rounded-full bg-[#fff4dd] px-3 py-1 font-semibold text-[#a36700]">Utang <?php echo e(number_format((int) $monthGroup['summary']['utang_count'], 0, ',', '.')); ?></span>
                           </div>
                         </div>
                       </div>
@@ -492,61 +503,61 @@
                             </tr>
                           </thead>
                           <tbody class="divide-y divide-[#e4e8e6]">
-                            @forelse ($monthGroup['rows'] as $trx)
-                              @php
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_2 = true; $__currentLoopData = $monthGroup['rows']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $trx): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_2 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                              <?php
                                 $statusClass = $trx['status'] === 'LUNAS'
                                     ? 'bg-emerald-100 text-emerald-700'
                                     : ($trx['status'] === 'JATUH TEMPO' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700');
-                              @endphp
+                              ?>
                               <tr class="hover:bg-[#f6f8f7] transition-colors">
-                                <td class="px-5 py-4 font-semibold whitespace-nowrap">{{ $trx['invoice_number'] }}</td>
-                                <td class="px-5 py-4 whitespace-nowrap">{{ $trx['created_at'] }}</td>
-                                <td class="px-5 py-4">{{ $trx['customer_name'] }}</td>
-                                @php
+                                <td class="px-5 py-4 font-semibold whitespace-nowrap"><?php echo e($trx['invoice_number']); ?></td>
+                                <td class="px-5 py-4 whitespace-nowrap"><?php echo e($trx['created_at']); ?></td>
+                                <td class="px-5 py-4"><?php echo e($trx['customer_name']); ?></td>
+                                <?php
                                   $barangItems = array_values(array_filter($trx['barang_items'] ?? []));
                                   $barangVisible = array_slice($barangItems, 0, 3);
                                   $barangRemaining = max(0, count($barangItems) - count($barangVisible));
-                                @endphp
+                                ?>
                                 <td class="px-5 py-4 align-top">
                                   <div class="min-w-[260px] max-w-[380px]">
                                     <div class="flex flex-wrap gap-1.5">
-                                      @forelse($barangVisible as $barang)
+                                      <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_3 = true; $__currentLoopData = $barangVisible; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $barang): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_3 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
                                         <span class="inline-flex max-w-full items-center rounded-full border border-[#d4dbd7] bg-[#f8faf9] px-2.5 py-1 text-xs font-medium text-[#3d4a42]">
-                                          <span class="truncate">{{ $barang }}</span>
+                                          <span class="truncate"><?php echo e($barang); ?></span>
                                         </span>
-                                      @empty
+                                      <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_3): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                                         <span class="text-sm text-[#52615a]">-</span>
-                                      @endforelse
-                                      @if($barangRemaining > 0)
+                                      <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                      <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($barangRemaining > 0): ?>
                                         <span class="inline-flex items-center rounded-full bg-[#e6fff3] px-2.5 py-1 text-xs font-semibold text-[#006948]">
-                                          +{{ number_format($barangRemaining, 0, ',', '.') }} lainnya
+                                          +<?php echo e(number_format($barangRemaining, 0, ',', '.')); ?> lainnya
                                         </span>
-                                      @endif
+                                      <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                     </div>
                                   </div>
                                 </td>
-                                <td class="px-5 py-4 whitespace-nowrap">{{ number_format((int) $trx['qty'], 0, ',', '.') }}</td>
-                                <td class="px-5 py-4 uppercase whitespace-nowrap">{{ $trx['payment_method'] }}</td>
-                                <td class="px-5 py-4 text-right font-semibold whitespace-nowrap">{{ $trx['total'] }}</td>
-                                <td class="px-5 py-4 text-right whitespace-nowrap">{{ $trx['credit_amount'] }}</td>
-                                <td class="px-5 py-4 whitespace-nowrap">{{ $trx['credit_due_date'] }}</td>
+                                <td class="px-5 py-4 whitespace-nowrap"><?php echo e(number_format((int) $trx['qty'], 0, ',', '.')); ?></td>
+                                <td class="px-5 py-4 uppercase whitespace-nowrap"><?php echo e($trx['payment_method']); ?></td>
+                                <td class="px-5 py-4 text-right font-semibold whitespace-nowrap"><?php echo e($trx['total']); ?></td>
+                                <td class="px-5 py-4 text-right whitespace-nowrap"><?php echo e($trx['credit_amount']); ?></td>
+                                <td class="px-5 py-4 whitespace-nowrap"><?php echo e($trx['credit_due_date']); ?></td>
                                 <td class="px-5 py-4 whitespace-nowrap">
-                                  <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $statusClass }}">{{ $trx['status'] }}</span>
+                                  <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold <?php echo e($statusClass); ?>"><?php echo e($trx['status']); ?></span>
                                 </td>
                                 <td class="px-5 py-4 text-right whitespace-nowrap">
-                                  <a href="{{ route('admin.sales.receipt', ['sale' => $trx['sale_id']]) }}" target="_blank" rel="noopener" class="inline-flex items-center rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">Detail</a>
+                                  <a href="<?php echo e(route('admin.sales.receipt', ['sale' => $trx['sale_id']])); ?>" target="_blank" rel="noopener" class="inline-flex items-center rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">Detail</a>
                                 </td>
                               </tr>
-                            @empty
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_2): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                               <tr><td colspan="11" class="px-5 py-10 text-center text-[#52615a]">Belum ada transaksi kasir di bulan ini.</td></tr>
-                            @endforelse
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                           </tbody>
                         </table>
                       </div>
                     </div>
-                  @empty
+                  <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                     <div class="rounded-xl border border-[#d4dbd7] bg-white px-6 py-10 text-center text-[#52615a]">Belum ada transaksi kasir.</div>
-                  @endforelse
+                  <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                 </div>
               </div>
 
@@ -571,61 +582,67 @@
                       </tr>
                     </thead>
                     <tbody class="divide-y divide-[#e4e8e6]">
-                      @forelse ($reportSupplierGroups as $group)
+                      <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $reportSupplierGroups; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $group): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
                         <tr class="hover:bg-[#f6f8f7] transition-colors">
-                          <td class="px-6 py-4 font-semibold">{{ $group['supplier'] }}</td>
-                          <td class="px-6 py-4">{{ number_format((int) $group['total_transaksi'], 0, ',', '.') }}</td>
-                          <td class="px-6 py-4">{{ number_format((int) $group['total_qty'], 0, ',', '.') }}</td>
-                          <td class="px-6 py-4 font-semibold">{{ $group['total_modal'] }}</td>
-                          <td class="px-6 py-4">{{ number_format((int) $group['kredit_count'], 0, ',', '.') }}</td>
-                          <td class="px-6 py-4">{{ number_format((int) $group['jatuh_tempo_count'], 0, ',', '.') }}</td>
-                          <td class="px-6 py-4">{{ number_format((int) $group['lunas_count'], 0, ',', '.') }}</td>
-                          <td class="px-6 py-4">{{ $group['last_purchase_at'] }}</td>
+                          <td class="px-6 py-4 font-semibold"><?php echo e($group['supplier']); ?></td>
+                          <td class="px-6 py-4"><?php echo e(number_format((int) $group['total_transaksi'], 0, ',', '.')); ?></td>
+                          <td class="px-6 py-4"><?php echo e(number_format((int) $group['total_qty'], 0, ',', '.')); ?></td>
+                          <td class="px-6 py-4 font-semibold"><?php echo e($group['total_modal']); ?></td>
+                          <td class="px-6 py-4"><?php echo e(number_format((int) $group['kredit_count'], 0, ',', '.')); ?></td>
+                          <td class="px-6 py-4"><?php echo e(number_format((int) $group['jatuh_tempo_count'], 0, ',', '.')); ?></td>
+                          <td class="px-6 py-4"><?php echo e(number_format((int) $group['lunas_count'], 0, ',', '.')); ?></td>
+                          <td class="px-6 py-4"><?php echo e($group['last_purchase_at']); ?></td>
                           <td class="px-6 py-4 text-right">
-                            @if(!empty($group['supplier_id']))
-                              <a href="{{ url('/admin/suppliers/' . $group['supplier_id']) }}#riwayat-pembelian" class="inline-flex items-center rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">Detail</a>
-                            @else
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!empty($group['supplier_id'])): ?>
+                              <a href="<?php echo e(url('/admin/suppliers/' . $group['supplier_id'])); ?>#riwayat-pembelian" class="inline-flex items-center rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">Detail</a>
+                            <?php else: ?>
                               <span class="text-sm text-[#52615a]">-</span>
-                            @endif
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                           </td>
                         </tr>
-                      @empty
+                      <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                         <tr><td colspan="9" class="px-6 py-10 text-center text-[#52615a]">Belum ada data kelompok PT/CV.</td></tr>
-                      @endforelse
+                      <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                     </tbody>
                   </table>
                 </div>
               </div>
             </div>
-          @elseif ($type === 'supplier-transactions')
+          <?php elseif($type === 'supplier-transactions'): ?>
             <div class="space-y-6">
-              @forelse ($ptCustomerGroups as $monthGroup)
+              <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $ptCustomerGroups; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $monthGroup): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
                 <div class="bg-white border border-[#d4dbd7] rounded-xl overflow-hidden custom-shadow">
                   <div class="px-6 py-4 border-b border-[#d4dbd7]">
                     <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                       <div>
                         <p class="text-xs uppercase tracking-[0.32em] text-[#52615a]">Bulan</p>
-                        <h2 class="text-lg font-semibold text-[#191c1e]">{{ $monthGroup['month_label'] }}</h2>
+                        <h2 class="text-lg font-semibold text-[#191c1e]"><?php echo e($monthGroup['month_label']); ?></h2>
                         <p class="text-sm text-[#52615a]">Transaksi PT/CV yang tercatat pada bulan ini.</p>
                       </div>
                       <div class="flex flex-wrap gap-2">
                         <span class="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-700">
-                          PT {{ number_format((int) ($monthGroup['summary']['total_pt'] ?? 0), 0, ',', '.') }}
+                          PT <?php echo e(number_format((int) ($monthGroup['summary']['total_pt'] ?? 0), 0, ',', '.')); ?>
+
                         </span>
                         <span class="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700">
-                          Transaksi {{ number_format((int) ($monthGroup['summary']['total_transaksi'] ?? 0), 0, ',', '.') }}
+                          Transaksi <?php echo e(number_format((int) ($monthGroup['summary']['total_transaksi'] ?? 0), 0, ',', '.')); ?>
+
                         </span>
                         <span class="inline-flex items-center rounded-full bg-violet-100 px-3 py-1 text-sm font-semibold text-violet-700">
-                          Nilai {{ $monthGroup['summary']['total_nilai'] ?? 'Rp 0' }}
+                          Nilai <?php echo e($monthGroup['summary']['total_nilai'] ?? 'Rp 0'); ?>
+
                         </span>
                         <span class="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-700">
-                          Kredit {{ number_format((int) ($monthGroup['summary']['kredit'] ?? 0), 0, ',', '.') }}
+                          Kredit <?php echo e(number_format((int) ($monthGroup['summary']['kredit'] ?? 0), 0, ',', '.')); ?>
+
                         </span>
                         <span class="inline-flex items-center rounded-full bg-rose-100 px-3 py-1 text-sm font-semibold text-rose-700">
-                          Jatuh Tempo {{ number_format((int) ($monthGroup['summary']['jatuh_tempo'] ?? 0), 0, ',', '.') }}
+                          Jatuh Tempo <?php echo e(number_format((int) ($monthGroup['summary']['jatuh_tempo'] ?? 0), 0, ',', '.')); ?>
+
                         </span>
                         <span class="inline-flex items-center rounded-full bg-cyan-100 px-3 py-1 text-sm font-semibold text-cyan-700">
-                          Lunas {{ number_format((int) ($monthGroup['summary']['lunas'] ?? 0), 0, ',', '.') }}
+                          Lunas <?php echo e(number_format((int) ($monthGroup['summary']['lunas'] ?? 0), 0, ',', '.')); ?>
+
                         </span>
                       </div>
                     </div>
@@ -646,45 +663,45 @@
                         </tr>
                       </thead>
                       <tbody class="divide-y divide-[#e4e8e6]">
-                        @forelse ($monthGroup['rows'] as $group)
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_2 = true; $__currentLoopData = $monthGroup['rows']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $group): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_2 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
                           <tr class="hover:bg-[#f6f8f7] transition-colors">
-                            <td class="px-6 py-4 font-semibold">{{ $group['pt_name'] }}</td>
-                            <td class="px-6 py-4">{{ number_format((int) $group['total_transaksi'], 0, ',', '.') }}</td>
-                            <td class="px-6 py-4">{{ number_format((int) $group['total_qty'], 0, ',', '.') }}</td>
-                            <td class="px-6 py-4 font-semibold">{{ $group['total_nilai'] }}</td>
-                            <td class="px-6 py-4">{{ number_format((int) $group['kredit'], 0, ',', '.') }}</td>
-                            <td class="px-6 py-4">{{ number_format((int) $group['jatuh_tempo'], 0, ',', '.') }}</td>
-                            <td class="px-6 py-4">{{ number_format((int) $group['lunas'], 0, ',', '.') }}</td>
-                            <td class="px-6 py-4">{{ $group['terakhir_beli'] }}</td>
+                            <td class="px-6 py-4 font-semibold"><?php echo e($group['pt_name']); ?></td>
+                            <td class="px-6 py-4"><?php echo e(number_format((int) $group['total_transaksi'], 0, ',', '.')); ?></td>
+                            <td class="px-6 py-4"><?php echo e(number_format((int) $group['total_qty'], 0, ',', '.')); ?></td>
+                            <td class="px-6 py-4 font-semibold"><?php echo e($group['total_nilai']); ?></td>
+                            <td class="px-6 py-4"><?php echo e(number_format((int) $group['kredit'], 0, ',', '.')); ?></td>
+                            <td class="px-6 py-4"><?php echo e(number_format((int) $group['jatuh_tempo'], 0, ',', '.')); ?></td>
+                            <td class="px-6 py-4"><?php echo e(number_format((int) $group['lunas'], 0, ',', '.')); ?></td>
+                            <td class="px-6 py-4"><?php echo e($group['terakhir_beli']); ?></td>
                             <td class="px-6 py-4 text-right">
-                              <a href="{{ url('/admin/admin-module?type=supplier-transactions&pt=' . urlencode($group['pt_name'])) }}" class="inline-flex items-center rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">Detail</a>
+                              <a href="<?php echo e(url('/admin/admin-module?type=supplier-transactions&pt=' . urlencode($group['pt_name']))); ?>" class="inline-flex items-center rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">Detail</a>
                             </td>
                           </tr>
-                        @empty
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_2): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                           <tr><td colspan="9" class="px-6 py-10 text-center text-[#52615a]">Belum ada data kelompok PT/CV pada bulan ini.</td></tr>
-                        @endforelse
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                       </tbody>
                     </table>
                   </div>
                 </div>
-              @empty
+              <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                 <div class="rounded-xl border border-[#d4dbd7] bg-white px-6 py-10 text-center text-[#52615a]">Belum ada data kelompok PT/CV.</div>
-              @endforelse
+              <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
             </div>
 
-            @if(!empty($ptCustomerDetail['pt_name']))
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!empty($ptCustomerDetail['pt_name'])): ?>
               <div class="mt-6 bg-white border border-[#d4dbd7] rounded-xl overflow-hidden custom-shadow">
               <div class="px-6 py-4 border-b border-[#d4dbd7]">
-                <h2 class="text-lg font-semibold text-[#191c1e]">Detail Riwayat PT/CV: {{ $ptCustomerDetail['pt_name'] }}</h2>
+                <h2 class="text-lg font-semibold text-[#191c1e]">Detail Riwayat PT/CV: <?php echo e($ptCustomerDetail['pt_name']); ?></h2>
                   <p class="text-sm text-[#52615a]">Riwayat transaksi dari kasir, lengkap dengan nota penjualan.</p>
               </div>
-                @if(!empty($ptCustomerDetail['summary']))
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!empty($ptCustomerDetail['summary'])): ?>
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-3 px-6 py-4 border-b border-[#d4dbd7] bg-[#f8faf9]">
-                    <div><p class="text-xs uppercase text-[#52615a]">Total Transaksi</p><p class="text-xl font-semibold text-[#191c1e]">{{ number_format((int) $ptCustomerDetail['summary']['total_transaksi'], 0, ',', '.') }} kali</p></div>
-                    <div><p class="text-xs uppercase text-[#52615a]">Total Qty</p><p class="text-xl font-semibold text-[#191c1e]">{{ number_format((int) $ptCustomerDetail['summary']['total_qty'], 0, ',', '.') }}</p></div>
-                    <div><p class="text-xs uppercase text-[#52615a]">Total Nilai</p><p class="text-xl font-semibold text-[#191c1e]">{{ $ptCustomerDetail['summary']['total_nilai'] }}</p></div>
+                    <div><p class="text-xs uppercase text-[#52615a]">Total Transaksi</p><p class="text-xl font-semibold text-[#191c1e]"><?php echo e(number_format((int) $ptCustomerDetail['summary']['total_transaksi'], 0, ',', '.')); ?> kali</p></div>
+                    <div><p class="text-xs uppercase text-[#52615a]">Total Qty</p><p class="text-xl font-semibold text-[#191c1e]"><?php echo e(number_format((int) $ptCustomerDetail['summary']['total_qty'], 0, ',', '.')); ?></p></div>
+                    <div><p class="text-xs uppercase text-[#52615a]">Total Nilai</p><p class="text-xl font-semibold text-[#191c1e]"><?php echo e($ptCustomerDetail['summary']['total_nilai']); ?></p></div>
                   </div>
-                @endif
+                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                 <div class="overflow-x-auto">
                   <table class="w-full text-left border-collapse">
                     <thead>
@@ -701,56 +718,56 @@
                       </tr>
                     </thead>
                     <tbody class="divide-y divide-[#e4e8e6]">
-                      @forelse($ptCustomerDetail['rows'] as $row)
+                      <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $ptCustomerDetail['rows']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
                         <tr class="hover:bg-[#f6f8f7] transition-colors">
-                          <td class="px-6 py-4 font-semibold">{{ $row['invoice'] }}</td>
-                          <td class="px-6 py-4">{{ $row['waktu'] }}</td>
-                          <td class="px-6 py-4">{{ $row['metode'] }}</td>
-                          <td class="px-6 py-4">{{ number_format((int) $row['qty'], 0, ',', '.') }}</td>
-                          <td class="px-6 py-4 font-semibold">{{ $row['total'] }}</td>
-                          <td class="px-6 py-4">{{ $row['kredit'] }}</td>
-                          <td class="px-6 py-4">{{ $row['jatuh_tempo'] }}</td>
+                          <td class="px-6 py-4 font-semibold"><?php echo e($row['invoice']); ?></td>
+                          <td class="px-6 py-4"><?php echo e($row['waktu']); ?></td>
+                          <td class="px-6 py-4"><?php echo e($row['metode']); ?></td>
+                          <td class="px-6 py-4"><?php echo e(number_format((int) $row['qty'], 0, ',', '.')); ?></td>
+                          <td class="px-6 py-4 font-semibold"><?php echo e($row['total']); ?></td>
+                          <td class="px-6 py-4"><?php echo e($row['kredit']); ?></td>
+                          <td class="px-6 py-4"><?php echo e($row['jatuh_tempo']); ?></td>
                           <td class="px-6 py-4">
-                            @php
+                            <?php
                               $s = $row['status'] ?? 'LUNAS';
                               $statusClass = $s === 'LUNAS'
                                   ? 'bg-emerald-100 text-emerald-700'
                                   : ($s === 'JATUH TEMPO' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700');
-                            @endphp
-                            <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $statusClass }}">{{ $s }}</span>
+                            ?>
+                            <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold <?php echo e($statusClass); ?>"><?php echo e($s); ?></span>
                           </td>
                           <td class="px-6 py-4 text-right">
-                            <a href="{{ route('admin.sales.receipt', ['sale' => $row['sale_id']]) }}" class="inline-flex items-center rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">Lihat Nota</a>
+                            <a href="<?php echo e(route('admin.sales.receipt', ['sale' => $row['sale_id']])); ?>" class="inline-flex items-center rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">Lihat Nota</a>
                           </td>
                         </tr>
-                      @empty
+                      <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                         <tr><td colspan="9" class="px-6 py-10 text-center text-[#52615a]">Belum ada riwayat transaksi PT ini.</td></tr>
-                      @endforelse
+                      <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                     </tbody>
                   </table>
                 </div>
               </div>
-            @endif
-          @elseif ($type === 'product-groups')
+            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+          <?php elseif($type === 'product-groups'): ?>
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-6">
               <div class="bg-white p-6 rounded-xl border border-[#d4dbd7] custom-shadow">
                 <div class="text-xs uppercase tracking-[0.2em] text-[#52615a]">Total Produk</div>
-                <div class="mt-2 text-[34px] leading-[42px] font-bold text-[#191c1e]">{{ number_format((int) ($productGroups['summary']['total_products'] ?? 0), 0, ',', '.') }}</div>
+                <div class="mt-2 text-[34px] leading-[42px] font-bold text-[#191c1e]"><?php echo e(number_format((int) ($productGroups['summary']['total_products'] ?? 0), 0, ',', '.')); ?></div>
                 <p class="text-sm text-[#52615a] mt-2">Part number yang punya riwayat pembelian atau penjualan</p>
               </div>
               <div class="bg-white p-6 rounded-xl border border-[#d4dbd7] custom-shadow">
                 <div class="text-xs uppercase tracking-[0.2em] text-[#52615a]">Transaksi Kasir</div>
-                <div class="mt-2 text-[34px] leading-[42px] font-bold text-[#191c1e]">{{ number_format((int) ($productGroups['summary']['sales_count'] ?? 0), 0, ',', '.') }}</div>
-                <p class="text-sm text-[#52615a] mt-2">{{ $productGroups['summary']['sales_value'] ?? 'Rp 0' }} total nilai jual</p>
+                <div class="mt-2 text-[34px] leading-[42px] font-bold text-[#191c1e]"><?php echo e(number_format((int) ($productGroups['summary']['sales_count'] ?? 0), 0, ',', '.')); ?></div>
+                <p class="text-sm text-[#52615a] mt-2"><?php echo e($productGroups['summary']['sales_value'] ?? 'Rp 0'); ?> total nilai jual</p>
               </div>
               <div class="bg-white p-6 rounded-xl border border-[#d4dbd7] custom-shadow">
                 <div class="text-xs uppercase tracking-[0.2em] text-[#52615a]">Pembelian Admin</div>
-                <div class="mt-2 text-[34px] leading-[42px] font-bold text-[#191c1e]">{{ number_format((int) ($productGroups['summary']['purchase_count'] ?? 0), 0, ',', '.') }}</div>
-                <p class="text-sm text-[#52615a] mt-2">{{ $productGroups['summary']['purchase_value'] ?? 'Rp 0' }} total nilai beli</p>
+                <div class="mt-2 text-[34px] leading-[42px] font-bold text-[#191c1e]"><?php echo e(number_format((int) ($productGroups['summary']['purchase_count'] ?? 0), 0, ',', '.')); ?></div>
+                <p class="text-sm text-[#52615a] mt-2"><?php echo e($productGroups['summary']['purchase_value'] ?? 'Rp 0'); ?> total nilai beli</p>
               </div>
               <div class="bg-white p-6 rounded-xl border border-[#d4dbd7] custom-shadow">
                 <div class="text-xs uppercase tracking-[0.2em] text-[#52615a]">Status Kredit</div>
-                <div class="mt-2 text-[34px] leading-[42px] font-bold text-[#191c1e]">{{ number_format((int) (($productGroups['summary']['sales_kredit'] ?? 0) + ($productGroups['summary']['purchase_kredit'] ?? 0)), 0, ',', '.') }}</div>
+                <div class="mt-2 text-[34px] leading-[42px] font-bold text-[#191c1e]"><?php echo e(number_format((int) (($productGroups['summary']['sales_kredit'] ?? 0) + ($productGroups['summary']['purchase_kredit'] ?? 0)), 0, ',', '.')); ?></div>
                 <p class="text-sm text-[#52615a] mt-2">Gabungan transaksi kredit pembelian dan penjualan</p>
               </div>
             </div>
@@ -758,20 +775,20 @@
             <div class="mb-4 flex flex-wrap justify-end gap-2">
               <a
                 id="productGroupsExportCsvBtn"
-                href="{{ route('admin.product-groups.export.csv') }}"
-                download="kelompok-barang-{{ now()->format('Ymd-His') }}.csv"
-                data-export-url="{{ route('admin.product-groups.export.csv') }}"
-                data-filename="kelompok-barang-{{ now()->format('Ymd-His') }}.csv"
+                href="<?php echo e(route('admin.product-groups.export.csv')); ?>"
+                download="kelompok-barang-<?php echo e(now()->format('Ymd-His')); ?>.csv"
+                data-export-url="<?php echo e(route('admin.product-groups.export.csv')); ?>"
+                data-filename="kelompok-barang-<?php echo e(now()->format('Ymd-His')); ?>.csv"
                 class="inline-flex items-center rounded-lg border border-[#bccac0] bg-white px-4 py-2 text-sm font-semibold text-[#006948] hover:bg-[#f1f4f2]"
               >
                 Export CSV
               </a>
               <a
                 id="productGroupsExportBtn"
-                href="{{ route('admin.product-groups.export') }}"
-                download="kelompok-barang-{{ now()->format('Ymd-His') }}.xlsx"
-                data-export-url="{{ route('admin.product-groups.export') }}"
-                data-filename="kelompok-barang-{{ now()->format('Ymd-His') }}.xlsx"
+                href="<?php echo e(route('admin.product-groups.export')); ?>"
+                download="kelompok-barang-<?php echo e(now()->format('Ymd-His')); ?>.xlsx"
+                data-export-url="<?php echo e(route('admin.product-groups.export')); ?>"
+                data-filename="kelompok-barang-<?php echo e(now()->format('Ymd-His')); ?>.xlsx"
                 class="inline-flex items-center rounded-lg border border-[#bccac0] bg-white px-4 py-2 text-sm font-semibold text-[#006948] hover:bg-[#f1f4f2]"
               >
                 Export Excel
@@ -779,30 +796,30 @@
             </div>
 
             <div class="space-y-4">
-              @forelse ($productGroups['groups'] as $group)
+              <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $productGroups['groups']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $group): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
                 <div class="rounded-xl border border-[#d4dbd7] bg-white overflow-hidden custom-shadow">
                   <div class="flex flex-col gap-4 px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
                     <div class="min-w-0">
                       <p class="text-xs uppercase tracking-[0.32em] text-[#52615a]">Part Number</p>
-                      <h2 class="truncate text-2xl font-semibold text-[#191c1e]">{{ $group['part_number'] }}</h2>
-                      <p class="mt-1 text-sm text-[#52615a]">{{ $group['part_name'] }}</p>
+                      <h2 class="truncate text-2xl font-semibold text-[#191c1e]"><?php echo e($group['part_number']); ?></h2>
+                      <p class="mt-1 text-sm text-[#52615a]"><?php echo e($group['part_name']); ?></p>
                     </div>
                     <div class="flex items-center gap-3 flex-shrink-0">
-                      <a href="{{ route('admin.product-groups.show', ['product' => $group['product_id']]) }}" class="inline-flex items-center rounded-lg border border-[#bccac0] bg-white px-4 py-2 text-sm font-semibold text-[#006948] hover:bg-[#f1f4f2]">Detail</a>
+                      <a href="<?php echo e(route('admin.product-groups.show', ['product' => $group['product_id']])); ?>" class="inline-flex items-center rounded-lg border border-[#bccac0] bg-white px-4 py-2 text-sm font-semibold text-[#006948] hover:bg-[#f1f4f2]">Detail</a>
                     </div>
                   </div>
                 </div>
-              @empty
+              <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                 <div class="bg-white p-8 rounded-xl border border-[#d4dbd7] text-center text-[#52615a]">Belum ada part number yang punya riwayat transaksi.</div>
-              @endforelse
+              <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
             </div>
-          @elseif ($type === 'credits')
-            @if(session('success'))
-              <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{{ session('success') }}</div>
-            @endif
-            @if($errors->any())
-              <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ $errors->first() }}</div>
-            @endif
+          <?php elseif($type === 'credits'): ?>
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(session('success')): ?>
+              <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"><?php echo e(session('success')); ?></div>
+            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($errors->any()): ?>
+              <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"><?php echo e($errors->first()); ?></div>
+            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
             <div class="bg-white border border-[#d4dbd7] rounded-xl overflow-hidden custom-shadow">
               <div class="px-6 pt-5">
                 <p class="text-sm text-[#52615a]">Tabel ini menampilkan semua kredit dari seluruh supplier yang sudah dicatat. Detail, cicilan, dan nota bisa kamu buka lewat rekap per bulan di bawah.</p>
@@ -827,40 +844,40 @@
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-[#e4e8e6]">
-                    @forelse ($rows as $row)
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $rows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
                       <tr class="hover:bg-[#f6f8f7] transition-colors">
-                        <td class="px-3 py-2.5 text-[13px] font-semibold whitespace-nowrap">{{ $row['supplier'] }}</td>
-                        <td class="px-3 py-2.5 text-[13px] whitespace-nowrap">{{ $row['part_number'] }}</td>
-                        <td class="px-3 py-2.5 text-[13px] whitespace-nowrap">{{ $row['part_name'] }}</td>
-                        <td class="px-3 py-2.5 text-[13px] whitespace-nowrap">{{ $row['merek'] ?? '-' }}</td>
-                        <td class="px-3 py-2.5 text-[13px] whitespace-nowrap">{{ $row['unit'] }}</td>
-                        <td class="px-3 py-2.5 text-[13px] whitespace-nowrap">{{ $row['qty'] }}</td>
-                        <td class="px-3 py-2.5 text-[13px] whitespace-nowrap">{{ $row['harga_beli'] }}</td>
-                        <td class="px-3 py-2.5 text-[13px] font-semibold whitespace-nowrap">{{ $row['total_kredit'] }}</td>
-                        <td class="px-3 py-2.5 text-[13px] whitespace-nowrap">{{ $row['down_payment'] ?? 'Rp 0' }}</td>
-                        <td class="px-3 py-2.5 text-[13px] whitespace-nowrap">{{ $row['sudah_dibayar'] }}</td>
-                        <td class="px-3 py-2.5 text-[13px] font-semibold whitespace-nowrap">{{ $row['sisa_kredit'] }}</td>
-                        <td class="px-3 py-2.5 text-[13px] whitespace-nowrap">{{ $row['jatuh_tempo'] }}</td>
+                        <td class="px-3 py-2.5 text-[13px] font-semibold whitespace-nowrap"><?php echo e($row['supplier']); ?></td>
+                        <td class="px-3 py-2.5 text-[13px] whitespace-nowrap"><?php echo e($row['part_number']); ?></td>
+                        <td class="px-3 py-2.5 text-[13px] whitespace-nowrap"><?php echo e($row['part_name']); ?></td>
+                        <td class="px-3 py-2.5 text-[13px] whitespace-nowrap"><?php echo e($row['merek'] ?? '-'); ?></td>
+                        <td class="px-3 py-2.5 text-[13px] whitespace-nowrap"><?php echo e($row['unit']); ?></td>
+                        <td class="px-3 py-2.5 text-[13px] whitespace-nowrap"><?php echo e($row['qty']); ?></td>
+                        <td class="px-3 py-2.5 text-[13px] whitespace-nowrap"><?php echo e($row['harga_beli']); ?></td>
+                        <td class="px-3 py-2.5 text-[13px] font-semibold whitespace-nowrap"><?php echo e($row['total_kredit']); ?></td>
+                        <td class="px-3 py-2.5 text-[13px] whitespace-nowrap"><?php echo e($row['down_payment'] ?? 'Rp 0'); ?></td>
+                        <td class="px-3 py-2.5 text-[13px] whitespace-nowrap"><?php echo e($row['sudah_dibayar']); ?></td>
+                        <td class="px-3 py-2.5 text-[13px] font-semibold whitespace-nowrap"><?php echo e($row['sisa_kredit']); ?></td>
+                        <td class="px-3 py-2.5 text-[13px] whitespace-nowrap"><?php echo e($row['jatuh_tempo']); ?></td>
                         <td class="px-3 py-2.5 text-[13px] whitespace-nowrap">
-                          @php
+                          <?php
                             $status = $row['status'] ?? 'BELUM LUNAS';
                             $statusClass = $status === 'LUNAS'
                                 ? 'bg-emerald-100 text-emerald-700'
                                 : ($status === 'JATUH TEMPO' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700');
-                          @endphp
-                          <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $statusClass }}">{{ $status }}</span>
+                          ?>
+                          <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold <?php echo e($statusClass); ?>"><?php echo e($status); ?></span>
                         </td>
                       </tr>
-                    @empty
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                       <tr><td colspan="13" class="px-6 py-10 text-center text-[#52615a]">Belum ada data kredit.</td></tr>
-                    @endforelse
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                   </tbody>
                 </table>
               </div>
               <p class="mt-3 text-sm text-[#52615a]">Untuk lihat detail, cicilan, dan nota, scroll ke bawah ke rekap per bulan.</p>
             </div>
             <div class="mt-6 rounded-xl border border-[#d4dbd7] bg-white p-6 custom-shadow">
-              @php
+              <?php
                 $creditTotals = [
                   'months' => count($reportCreditMonthlyGroups),
                   'transactions' => collect($reportCreditMonthlyGroups)->sum(fn ($g) => (int) ($g['summary']['total_transaksi'] ?? 0)),
@@ -868,7 +885,7 @@
                   'sisa' => collect($reportCreditMonthlyGroups)->sum(fn ($g) => (float) ($g['summary']['total_sisa_value'] ?? 0)),
                   'jatuh_tempo' => collect($reportCreditMonthlyGroups)->sum(fn ($g) => (int) ($g['summary']['jatuhtempo_count'] ?? 0)),
                 ];
-              @endphp
+              ?>
               <div class="mb-4">
                 <h2 class="text-lg font-semibold text-[#191c1e]">Pengelompokan Kredit per Bulan</h2>
                 <p class="text-sm text-[#52615a]">Ringkasan kredit dan utang ditampilkan per bulan supaya mudah dipantau tanpa pindah halaman.</p>
@@ -877,41 +894,41 @@
               <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div class="rounded-xl border border-[#d4dbd7] bg-[#fffaf2] p-5">
                   <p class="text-xs uppercase tracking-[0.2em] text-[#826100]">Total Nilai</p>
-                  <p class="mt-2 text-2xl font-semibold text-[#a36700]">Rp {{ number_format((float) $creditTotals['total'], 0, ',', '.') }}</p>
+                  <p class="mt-2 text-2xl font-semibold text-[#a36700]">Rp <?php echo e(number_format((float) $creditTotals['total'], 0, ',', '.')); ?></p>
                   <p class="mt-1 text-sm text-[#6f6a5f]">Akumulasi semua pembelian kredit</p>
                 </div>
                 <div class="rounded-xl border border-[#d4dbd7] bg-[#f4fbf7] p-5">
                   <p class="text-xs uppercase tracking-[0.2em] text-[#006948]">Sisa Tagihan</p>
-                  <p class="mt-2 text-2xl font-semibold text-[#006948]">Rp {{ number_format((float) $creditTotals['sisa'], 0, ',', '.') }}</p>
+                  <p class="mt-2 text-2xl font-semibold text-[#006948]">Rp <?php echo e(number_format((float) $creditTotals['sisa'], 0, ',', '.')); ?></p>
                   <p class="mt-1 text-sm text-[#52615a]">Total yang belum lunas</p>
                 </div>
                 <div class="rounded-xl border border-[#d4dbd7] bg-[#fff4f2] p-5">
                   <p class="text-xs uppercase tracking-[0.2em] text-[#ba1a1a]">Perhatian</p>
-                  <p class="mt-2 text-2xl font-semibold text-[#ba1a1a]">{{ number_format((int) $creditTotals['jatuh_tempo'], 0, ',', '.') }}</p>
+                  <p class="mt-2 text-2xl font-semibold text-[#ba1a1a]"><?php echo e(number_format((int) $creditTotals['jatuh_tempo'], 0, ',', '.')); ?></p>
                   <p class="mt-1 text-sm text-[#52615a]">Transaksi jatuh tempo</p>
                 </div>
                 <div class="rounded-xl border border-[#d4dbd7] bg-[#f4f6ff] p-5">
                   <p class="text-xs uppercase tracking-[0.2em] text-[#4648d4]">Bulan Tercatat</p>
-                  <p class="mt-2 text-2xl font-semibold text-[#4648d4]">{{ number_format((int) $creditTotals['months'], 0, ',', '.') }}</p>
-                  <p class="mt-1 text-sm text-[#52615a]">{{ number_format((int) $creditTotals['transactions'], 0, ',', '.') }} transaksi kredit</p>
+                  <p class="mt-2 text-2xl font-semibold text-[#4648d4]"><?php echo e(number_format((int) $creditTotals['months'], 0, ',', '.')); ?></p>
+                  <p class="mt-1 text-sm text-[#52615a]"><?php echo e(number_format((int) $creditTotals['transactions'], 0, ',', '.')); ?> transaksi kredit</p>
                 </div>
               </div>
 
               <div class="space-y-4">
-                @forelse ($reportCreditMonthlyGroups as $monthGroup)
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $reportCreditMonthlyGroups; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $monthGroup): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
                   <div class="rounded-xl border border-[#d4dbd7] bg-white overflow-hidden">
                     <div class="border-b border-[#d4dbd7] bg-[#f8faf9] px-5 py-4">
                       <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                         <div>
                           <p class="text-[11px] uppercase tracking-[0.2em] text-[#52615a]">Bulan</p>
-                          <h3 class="text-2xl font-semibold text-[#191c1e]">{{ $monthGroup['month_label'] }}</h3>
+                          <h3 class="text-2xl font-semibold text-[#191c1e]"><?php echo e($monthGroup['month_label']); ?></h3>
                           <p class="mt-1 text-sm text-[#52615a]">Kredit dan utang yang tercatat pada bulan ini.</p>
                         </div>
                         <div class="grid grid-cols-2 gap-2 text-sm sm:flex sm:flex-wrap">
-                          <span class="inline-flex items-center rounded-full bg-[#e6fff3] px-3 py-1 font-semibold text-[#006948]">Transaksi {{ number_format((int) $monthGroup['summary']['total_transaksi'], 0, ',', '.') }}</span>
-                          <span class="inline-flex items-center rounded-full bg-[#ececff] px-3 py-1 font-semibold text-[#4648d4]">Nilai {{ $monthGroup['summary']['total_nilai'] }}</span>
-                          <span class="inline-flex items-center rounded-full bg-[#fff4dd] px-3 py-1 font-semibold text-[#a36700]">Sisa {{ $monthGroup['summary']['total_sisa'] }}</span>
-                          <span class="inline-flex items-center rounded-full bg-[#ffdad6] px-3 py-1 font-semibold text-[#ba1a1a]">Jatuh Tempo {{ number_format((int) $monthGroup['summary']['jatuhtempo_count'], 0, ',', '.') }}</span>
+                          <span class="inline-flex items-center rounded-full bg-[#e6fff3] px-3 py-1 font-semibold text-[#006948]">Transaksi <?php echo e(number_format((int) $monthGroup['summary']['total_transaksi'], 0, ',', '.')); ?></span>
+                          <span class="inline-flex items-center rounded-full bg-[#ececff] px-3 py-1 font-semibold text-[#4648d4]">Nilai <?php echo e($monthGroup['summary']['total_nilai']); ?></span>
+                          <span class="inline-flex items-center rounded-full bg-[#fff4dd] px-3 py-1 font-semibold text-[#a36700]">Sisa <?php echo e($monthGroup['summary']['total_sisa']); ?></span>
+                          <span class="inline-flex items-center rounded-full bg-[#ffdad6] px-3 py-1 font-semibold text-[#ba1a1a]">Jatuh Tempo <?php echo e(number_format((int) $monthGroup['summary']['jatuhtempo_count'], 0, ',', '.')); ?></span>
                         </div>
                       </div>
                     </div>
@@ -934,8 +951,8 @@
                           </tr>
                         </thead>
                         <tbody class="divide-y divide-[#e4e8e6]">
-                          @forelse ($monthGroup['rows'] as $trx)
-                            @php
+                          <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_2 = true; $__currentLoopData = $monthGroup['rows']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $trx): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_2 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                            <?php
                               $statusClass = $trx['status'] === 'JATUH TEMPO'
                                   ? 'bg-red-100 text-red-700'
                                   : ($trx['status'] === 'LUNAS' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700');
@@ -943,64 +960,65 @@
                                   ? route('admin.credits.receipt', ['batch' => $trx['batch_id']])
                                   : route('admin.credits.detail', ['batch' => $trx['batch_id']]) . '#input-cicilan';
                               $statusLabel = $trx['status'] === 'LUNAS' ? 'Lihat Nota' : 'Buka Detail';
-                            @endphp
+                            ?>
                             <tr class="hover:bg-[#f6f8f7] transition-colors">
-                              <td class="px-5 py-4 whitespace-nowrap">{{ $trx['tanggal'] }}</td>
-                              <td class="px-5 py-4 font-semibold">{{ $trx['supplier'] }}</td>
-                              <td class="px-5 py-4 font-medium text-[#191c1e]">{{ $trx['barang'] }}</td>
-                              <td class="px-5 py-4 whitespace-nowrap">{{ number_format((int) $trx['qty'], 0, ',', '.') }}</td>
-                              <td class="px-5 py-4 text-right whitespace-nowrap">{{ $trx['subtotal'] }}</td>
-                              <td class="px-5 py-4 text-right whitespace-nowrap">{{ $trx['down_payment'] }}</td>
-                              <td class="px-5 py-4 text-right whitespace-nowrap">{{ $trx['sudah_dibayar'] }}</td>
-                              <td class="px-5 py-4 text-right font-semibold whitespace-nowrap">{{ $trx['sisa_kredit'] }}</td>
-                              <td class="px-5 py-4 whitespace-nowrap">{{ $trx['jatuh_tempo'] }}</td>
+                              <td class="px-5 py-4 whitespace-nowrap"><?php echo e($trx['tanggal']); ?></td>
+                              <td class="px-5 py-4 font-semibold"><?php echo e($trx['supplier']); ?></td>
+                              <td class="px-5 py-4 font-medium text-[#191c1e]"><?php echo e($trx['barang']); ?></td>
+                              <td class="px-5 py-4 whitespace-nowrap"><?php echo e(number_format((int) $trx['qty'], 0, ',', '.')); ?></td>
+                              <td class="px-5 py-4 text-right whitespace-nowrap"><?php echo e($trx['subtotal']); ?></td>
+                              <td class="px-5 py-4 text-right whitespace-nowrap"><?php echo e($trx['down_payment']); ?></td>
+                              <td class="px-5 py-4 text-right whitespace-nowrap"><?php echo e($trx['sudah_dibayar']); ?></td>
+                              <td class="px-5 py-4 text-right font-semibold whitespace-nowrap"><?php echo e($trx['sisa_kredit']); ?></td>
+                              <td class="px-5 py-4 whitespace-nowrap"><?php echo e($trx['jatuh_tempo']); ?></td>
                               <td class="px-5 py-4 whitespace-nowrap text-center">
                                 <a
-                                  href="{{ $statusHref }}"
-                                  class="inline-flex w-full max-w-[130px] cursor-pointer select-none items-center justify-center rounded-full px-3 py-2 text-xs font-semibold {{ $statusClass }} hover:opacity-90"
-                                  title="{{ $statusLabel }}"
-                                  aria-label="{{ $statusLabel }}"
+                                  href="<?php echo e($statusHref); ?>"
+                                  class="inline-flex w-full max-w-[130px] cursor-pointer select-none items-center justify-center rounded-full px-3 py-2 text-xs font-semibold <?php echo e($statusClass); ?> hover:opacity-90"
+                                  title="<?php echo e($statusLabel); ?>"
+                                  aria-label="<?php echo e($statusLabel); ?>"
                                   role="button"
                                 >
-                                  {{ $trx['status'] }}
+                                  <?php echo e($trx['status']); ?>
+
                                 </a>
                               </td>
                               <td class="px-5 py-4 text-right whitespace-nowrap">
-                                @if (!empty($trx['batch_id']))
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!empty($trx['batch_id'])): ?>
                                   <div class="flex flex-wrap justify-end gap-1.5">
-                                    <a href="{{ route('admin.credits.detail', ['batch' => $trx['batch_id']]) }}#input-cicilan" class="inline-flex items-center gap-1 rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">
+                                    <a href="<?php echo e(route('admin.credits.detail', ['batch' => $trx['batch_id']])); ?>#input-cicilan" class="inline-flex items-center gap-1 rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">
                                       <span class="material-symbols-outlined text-base">open_in_new</span>
                                       <span>Detail / Cicil</span>
                                     </a>
-                                    <a href="{{ route('admin.credits.receipt', ['batch' => $trx['batch_id']]) }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">
+                                    <a href="<?php echo e(route('admin.credits.receipt', ['batch' => $trx['batch_id']])); ?>" target="_blank" rel="noopener" class="inline-flex items-center gap-1 rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">
                                       <span class="material-symbols-outlined text-base">receipt_long</span>
                                       <span>Nota</span>
                                     </a>
                                   </div>
-                                @else
+                                <?php else: ?>
                                   <span class="text-sm text-[#52615a]">-</span>
-                                @endif
+                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                               </td>
                             </tr>
-                          @empty
+                          <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_2): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                             <tr><td colspan="11" class="px-5 py-10 text-center text-[#52615a]">Belum ada transaksi kredit pada bulan ini.</td></tr>
-                          @endforelse
+                          <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                         </tbody>
                       </table>
                     </div>
                   </div>
-                @empty
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                   <div class="rounded-xl border border-[#d4dbd7] bg-white px-6 py-10 text-center text-[#52615a]">Belum ada kredit yang tercatat.</div>
-                @endforelse
+                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
               </div>
 
-              @php
+              <?php
                 $settlementTotals = [
                   'count' => count($creditSettlementHistory),
                   'total' => collect($creditSettlementHistory)->sum(fn ($row) => (float) ($row['nominal'] ?? 0)),
                   'pelunasan_count' => collect($creditSettlementHistory)->where('jenis', 'Pelunasan')->count(),
                 ];
-              @endphp
+              ?>
 
               <div class="mt-6 rounded-xl border border-[#d4dbd7] bg-white overflow-hidden">
                 <div class="border-b border-[#d4dbd7] bg-[#f8faf9] px-5 py-4">
@@ -1011,9 +1029,9 @@
                       <p class="mt-1 text-sm text-[#52615a]">Bagian ini hanya menampilkan kredit yang sudah lunas, lengkap dengan riwayat pembayaran dan nota.</p>
                     </div>
                     <div class="grid grid-cols-2 gap-2 text-sm sm:flex sm:flex-wrap">
-                      <span class="inline-flex items-center rounded-full bg-[#e6fff3] px-3 py-1 font-semibold text-[#006948]">Total {{ number_format((int) $settlementTotals['count'], 0, ',', '.') }} transaksi</span>
-                      <span class="inline-flex items-center rounded-full bg-[#ececff] px-3 py-1 font-semibold text-[#4648d4]">Nilai Rp {{ number_format((float) $settlementTotals['total'], 0, ',', '.') }}</span>
-                      <span class="inline-flex items-center rounded-full bg-[#fff4dd] px-3 py-1 font-semibold text-[#a36700]">Pelunasan {{ number_format((int) $settlementTotals['pelunasan_count'], 0, ',', '.') }}</span>
+                      <span class="inline-flex items-center rounded-full bg-[#e6fff3] px-3 py-1 font-semibold text-[#006948]">Total <?php echo e(number_format((int) $settlementTotals['count'], 0, ',', '.')); ?> transaksi</span>
+                      <span class="inline-flex items-center rounded-full bg-[#ececff] px-3 py-1 font-semibold text-[#4648d4]">Nilai Rp <?php echo e(number_format((float) $settlementTotals['total'], 0, ',', '.')); ?></span>
+                      <span class="inline-flex items-center rounded-full bg-[#fff4dd] px-3 py-1 font-semibold text-[#a36700]">Pelunasan <?php echo e(number_format((int) $settlementTotals['pelunasan_count'], 0, ',', '.')); ?></span>
                     </div>
                   </div>
                 </div>
@@ -1033,46 +1051,46 @@
                       </tr>
                     </thead>
                     <tbody class="divide-y divide-[#e4e8e6]">
-                      @forelse ($creditSettlementHistory as $history)
+                      <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $creditSettlementHistory; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $history): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
                         <tr class="hover:bg-[#f6f8f7] transition-colors">
-                          <td class="px-5 py-4 whitespace-nowrap">{{ $history['tanggal'] }}</td>
-                          <td class="px-5 py-4 font-semibold">{{ $history['supplier'] }}</td>
+                          <td class="px-5 py-4 whitespace-nowrap"><?php echo e($history['tanggal']); ?></td>
+                          <td class="px-5 py-4 font-semibold"><?php echo e($history['supplier']); ?></td>
                           <td class="px-5 py-4 font-medium text-[#191c1e]">
-                            <div>{{ $history['barang'] }}</div>
-                            <div class="mt-1 text-xs text-[#52615a]">{{ $history['part_number'] }}</div>
+                            <div><?php echo e($history['barang']); ?></div>
+                            <div class="mt-1 text-xs text-[#52615a]"><?php echo e($history['part_number']); ?></div>
                           </td>
-                          <td class="px-5 py-4 font-semibold whitespace-nowrap">{{ $history['nominal_text'] }}</td>
+                          <td class="px-5 py-4 font-semibold whitespace-nowrap"><?php echo e($history['nominal_text']); ?></td>
                           <td class="px-5 py-4 whitespace-nowrap">
-                            <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $history['jenis_class'] }}">{{ $history['jenis'] }}</span>
+                            <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold <?php echo e($history['jenis_class']); ?>"><?php echo e($history['jenis']); ?></span>
                           </td>
-                          <td class="px-5 py-4 whitespace-nowrap">{{ $history['kasir'] }}</td>
-                          <td class="px-5 py-4">{{ $history['note'] }}</td>
+                          <td class="px-5 py-4 whitespace-nowrap"><?php echo e($history['kasir']); ?></td>
+                          <td class="px-5 py-4"><?php echo e($history['note']); ?></td>
                           <td class="px-5 py-4 text-right whitespace-nowrap">
-                            <a href="{{ $history['receipt_url'] }}" class="inline-flex items-center gap-1 rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">
+                            <a href="<?php echo e($history['receipt_url']); ?>" class="inline-flex items-center gap-1 rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">
                               <span class="material-symbols-outlined text-base">receipt_long</span>
                               <span>Nota</span>
                             </a>
                           </td>
                         </tr>
-                      @empty
+                      <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                         <tr><td colspan="8" class="px-5 py-10 text-center text-[#52615a]">Belum ada riwayat pelunasan.</td></tr>
-                      @endforelse
+                      <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                     </tbody>
                   </table>
                 </div>
               </div>
-            @elseif ($type === 'users')
-            @if(session('success'))
-              <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{{ session('success') }}</div>
-            @endif
-            @if($errors->any())
-              <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ $errors->first() }}</div>
-            @endif
+            <?php elseif($type === 'users'): ?>
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(session('success')): ?>
+              <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"><?php echo e(session('success')); ?></div>
+            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($errors->any()): ?>
+              <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"><?php echo e($errors->first()); ?></div>
+            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
             <div class="mb-6 rounded-xl border border-[#d4dbd7] bg-white p-5 custom-shadow">
               <h2 class="mb-4 text-lg font-semibold text-[#191c1e]">Tambah Akun Baru</h2>
-              <form method="POST" action="{{ route('admin.users.store') }}" class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                @csrf
+              <form method="POST" action="<?php echo e(route('admin.users.store')); ?>" class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <?php echo csrf_field(); ?>
                 <div>
                   <label class="mb-1 block text-sm font-medium text-[#3d4a42]">Nama</label>
                   <input type="text" name="name" class="w-full rounded-lg border-[#bccac0] focus:border-[#006948] focus:ring-[#006948]/20" required>
@@ -1110,42 +1128,42 @@
             </div>
 
             <div class="space-y-4">
-              @forelse ($userRows as $userRow)
+              <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $userRows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $userRow): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
                 <div class="rounded-xl border border-[#d4dbd7] bg-white p-5 custom-shadow">
                   <div class="mb-3 flex items-center justify-between gap-3">
                     <div>
-                      <h3 class="text-base font-semibold text-[#191c1e]">{{ $userRow['nama'] }}</h3>
-                      <p class="text-sm text-[#52615a]">{{ $userRow['email'] }}</p>
+                      <h3 class="text-base font-semibold text-[#191c1e]"><?php echo e($userRow['nama']); ?></h3>
+                      <p class="text-sm text-[#52615a]"><?php echo e($userRow['email']); ?></p>
                     </div>
-                    <form method="POST" action="{{ route('admin.users.destroy', $userRow['id']) }}" onsubmit="return openDeleteUserModal(this)">
-                      @csrf
-                      @method('DELETE')
+                    <form method="POST" action="<?php echo e(route('admin.users.destroy', $userRow['id'])); ?>" onsubmit="return openDeleteUserModal(this)">
+                      <?php echo csrf_field(); ?>
+                      <?php echo method_field('DELETE'); ?>
                       <button type="submit" class="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50">Hapus</button>
                     </form>
                   </div>
 
-                  <form method="POST" action="{{ route('admin.users.update', $userRow['id']) }}" class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    @csrf
-                    @method('PUT')
+                  <form method="POST" action="<?php echo e(route('admin.users.update', $userRow['id'])); ?>" class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <?php echo csrf_field(); ?>
+                    <?php echo method_field('PUT'); ?>
                     <div>
                       <label class="mb-1 block text-sm font-medium text-[#3d4a42]">Nama</label>
-                      <input type="text" name="name" value="{{ $userRow['nama'] }}" class="w-full rounded-lg border-[#bccac0] focus:border-[#006948] focus:ring-[#006948]/20" required>
+                      <input type="text" name="name" value="<?php echo e($userRow['nama']); ?>" class="w-full rounded-lg border-[#bccac0] focus:border-[#006948] focus:ring-[#006948]/20" required>
                     </div>
                     <div>
                       <label class="mb-1 block text-sm font-medium text-[#3d4a42]">Email</label>
-                      <input type="email" name="email" value="{{ $userRow['email'] }}" class="w-full rounded-lg border-[#bccac0] focus:border-[#006948] focus:ring-[#006948]/20" required>
+                      <input type="email" name="email" value="<?php echo e($userRow['email']); ?>" class="w-full rounded-lg border-[#bccac0] focus:border-[#006948] focus:ring-[#006948]/20" required>
                     </div>
                     <div>
                       <label class="mb-1 block text-sm font-medium text-[#3d4a42]">Role</label>
                       <select name="role" class="w-full rounded-lg border-[#bccac0] focus:border-[#006948] focus:ring-[#006948]/20" required>
-                        <option value="cashier" @selected($userRow['role'] === 'cashier')>Cashier</option>
-                        <option value="admin" @selected($userRow['role'] === 'admin')>Admin</option>
+                        <option value="cashier" <?php if($userRow['role'] === 'cashier'): echo 'selected'; endif; ?>>Cashier</option>
+                        <option value="admin" <?php if($userRow['role'] === 'admin'): echo 'selected'; endif; ?>>Admin</option>
                       </select>
                     </div>
                     <div class="flex items-end">
                       <label class="inline-flex items-center gap-2 rounded-lg border border-[#d4dbd7] px-3 py-2">
                         <input type="hidden" name="is_active" value="0">
-                        <input type="checkbox" name="is_active" value="1" @checked($userRow['is_active']) class="rounded border-[#bccac0] text-[#006948] focus:ring-[#006948]/20">
+                        <input type="checkbox" name="is_active" value="1" <?php if($userRow['is_active']): echo 'checked'; endif; ?> class="rounded border-[#bccac0] text-[#006948] focus:ring-[#006948]/20">
                         <span class="text-sm text-[#3d4a42]">Akun aktif</span>
                       </label>
                     </div>
@@ -1162,11 +1180,11 @@
                     </div>
                   </form>
                 </div>
-              @empty
+              <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                 <div class="rounded-xl border border-[#d4dbd7] bg-white px-6 py-10 text-center text-[#52615a]">Belum ada user.</div>
-              @endforelse
+              <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
             </div>
-          @else
+          <?php else: ?>
             <div class="bg-white border border-[#d4dbd7] rounded-xl overflow-hidden custom-shadow">
               <div class="px-6 py-4 border-b border-[#d4dbd7] flex items-center justify-end">
                 <button type="button" onclick="window.print()" class="inline-flex items-center rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">Print Tabel</button>
@@ -1175,39 +1193,39 @@
                 <table class="w-full text-left border-collapse print-source-table">
                   <thead>
                     <tr class="bg-[#eceef0] text-[#3d4a42] border-b border-[#d4dbd7]">
-                      @if (!empty($rows))
-                        @foreach (array_keys($rows[0]) as $key)
-                          <th class="px-6 py-4 font-medium uppercase tracking-wider">{{ str_replace('_', ' ', $key) }}</th>
-                        @endforeach
-                      @endif
+                      <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!empty($rows)): ?>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = array_keys($rows[0]); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                          <th class="px-6 py-4 font-medium uppercase tracking-wider"><?php echo e(str_replace('_', ' ', $key)); ?></th>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                      <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-[#e4e8e6]">
-                    @forelse ($rows as $row)
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $rows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
                       <tr class="hover:bg-[#f6f8f7] transition-colors">
-                        @foreach ($row as $value)
-                          <td class="px-6 py-4 text-[15px]">{{ $value }}</td>
-                        @endforeach
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $row; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $value): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                          <td class="px-6 py-4 text-[15px]"><?php echo e($value); ?></td>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                       </tr>
-                    @empty
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                       <tr><td colspan="10" class="px-6 py-10 text-center text-[#52615a]">Belum ada data.</td></tr>
-                    @endforelse
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                   </tbody>
                 </table>
               </div>
             </div>
-          @endif
+          <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
         </main>
       </div>
     </div>
 
-    @if ($type === 'credits')
+    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($type === 'credits'): ?>
       <div id="creditInstallmentModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 px-4">
         <div class="w-full max-w-xl rounded-xl border border-[#d4dbd7] bg-white p-6 shadow-2xl">
           <h3 class="text-xl font-semibold text-[#191c1e]">Bayar Cicilan Kredit</h3>
           <p id="creditInstallmentInfo" class="mt-1 text-sm text-[#52615a]">Isi nominal cicilan untuk kredit yang dipilih.</p>
           <form id="creditInstallmentForm" method="POST" class="mt-4 space-y-4">
-            @csrf
+            <?php echo csrf_field(); ?>
             <div>
               <label class="mb-1 block text-sm font-medium text-[#3d4a42]">Nominal Cicilan</label>
               <input id="creditInstallmentAmount" type="text" name="amount" inputmode="numeric" placeholder="Contoh: 500000" class="w-full rounded-lg border-[#bccac0] focus:border-[#006948] focus:ring-[#006948]/20" required>
@@ -1230,19 +1248,19 @@
           </form>
         </div>
       </div>
-    @endif
+    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
-    @if ($type === 'taxonomy')
+    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($type === 'taxonomy'): ?>
       <div id="taxonomyModal" class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-900/50 px-4">
         <div class="w-full max-w-2xl rounded-xl border border-[#d4dbd7] bg-white p-6 shadow-2xl">
           <h3 id="taxonomyModalTitle" class="text-xl font-semibold text-[#191c1e]">Tambah Data</h3>
-          <form id="taxonomyForm" method="POST" action="{{ route('admin.taxonomy.store') }}" class="mt-4 space-y-4">
-            @csrf
+          <form id="taxonomyForm" method="POST" action="<?php echo e(route('admin.taxonomy.store')); ?>" class="mt-4 space-y-4">
+            <?php echo csrf_field(); ?>
             <input type="hidden" name="_method" value="POST">
-            <input type="hidden" name="q" value="{{ $searchKeyword }}">
-            <input type="hidden" name="sort" value="{{ $taxonomySort }}">
-            <input type="hidden" name="dir" value="{{ $taxonomyDir }}">
-            <input type="hidden" name="page" value="{{ $taxonomyPagination['current_page'] }}">
+            <input type="hidden" name="q" value="<?php echo e($searchKeyword); ?>">
+            <input type="hidden" name="sort" value="<?php echo e($taxonomySort); ?>">
+            <input type="hidden" name="dir" value="<?php echo e($taxonomyDir); ?>">
+            <input type="hidden" name="page" value="<?php echo e($taxonomyPagination['current_page']); ?>">
             <input type="hidden" id="taxonomyCategoryId" name="category_id" value="">
             <input type="hidden" id="taxonomyBrandId" name="brand_id" value="">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1280,15 +1298,15 @@
         <div class="w-full max-w-lg rounded-xl border border-[#d4dbd7] bg-white p-6 shadow-2xl">
           <h3 class="text-xl font-semibold text-[#191c1e]">Hapus Data</h3>
           <p id="taxonomyDeleteMessage" class="mt-2 text-sm text-[#52615a]">Data akan dihapus.</p>
-          <form id="taxonomyDeleteForm" method="POST" action="{{ route('admin.taxonomy.destroy') }}" class="mt-5">
-            @csrf
-            @method('DELETE')
+          <form id="taxonomyDeleteForm" method="POST" action="<?php echo e(route('admin.taxonomy.destroy')); ?>" class="mt-5">
+            <?php echo csrf_field(); ?>
+            <?php echo method_field('DELETE'); ?>
             <input type="hidden" name="category_id" id="taxonomyDeleteCategoryId" value="">
             <input type="hidden" name="brand_id" id="taxonomyDeleteBrandId" value="">
-            <input type="hidden" name="q" value="{{ $searchKeyword }}">
-            <input type="hidden" name="sort" value="{{ $taxonomySort }}">
-            <input type="hidden" name="dir" value="{{ $taxonomyDir }}">
-            <input type="hidden" name="page" value="{{ $taxonomyPagination['current_page'] }}">
+            <input type="hidden" name="q" value="<?php echo e($searchKeyword); ?>">
+            <input type="hidden" name="sort" value="<?php echo e($taxonomySort); ?>">
+            <input type="hidden" name="dir" value="<?php echo e($taxonomyDir); ?>">
+            <input type="hidden" name="page" value="<?php echo e($taxonomyPagination['current_page']); ?>">
             <div class="flex justify-end gap-2">
               <button type="button" id="closeTaxonomyDeleteBtn" class="rounded-lg border border-[#bccac0] px-4 py-2 text-[#3d4a42]">Batal</button>
               <button type="submit" class="rounded-lg bg-[#ba1a1a] px-4 py-2 text-white">Ya, Hapus</button>
@@ -1296,7 +1314,7 @@
           </form>
         </div>
       </div>
-    @endif
+    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
     <div id="deleteUserModal" class="fixed inset-0 z-50 hidden items-center justify-center px-4 user-delete-modal-backdrop">
       <div class="w-full max-w-2xl rounded-2xl border border-[#d4dbd7] bg-white p-7 shadow-2xl">
@@ -1374,7 +1392,7 @@
         }
       });
 
-      @if ($type === 'credits')
+      <?php if($type === 'credits'): ?>
       const creditInstallmentModal = document.getElementById('creditInstallmentModal');
       const creditInstallmentForm = document.getElementById('creditInstallmentForm');
       const creditInstallmentInfo = document.getElementById('creditInstallmentInfo');
@@ -1422,9 +1440,9 @@
       creditInstallmentModal?.addEventListener('click', (event) => {
         if (event.target === creditInstallmentModal) closeCreditInstallmentModal();
       });
-      @endif
+      <?php endif; ?>
 
-      @if ($type === 'taxonomy')
+      <?php if($type === 'taxonomy'): ?>
       const taxonomySearchInput = document.getElementById('taxonomySearchInput');
       const taxonomySearchForm = document.getElementById('taxonomySearchForm');
       let taxonomyDebounceTimer = null;
@@ -1452,7 +1470,7 @@
       document.getElementById('openTaxonomyCreateModalBtn')?.addEventListener('click', () => {
         if (!taxonomyForm) return;
         taxonomyModalTitle.textContent = 'Tambah Data';
-        taxonomyForm.action = '{{ route('admin.taxonomy.store') }}';
+        taxonomyForm.action = '<?php echo e(route('admin.taxonomy.store')); ?>';
         if (taxonomyMethodInput) taxonomyMethodInput.value = 'POST';
         taxonomyCategoryId.value = '';
         taxonomyBrandId.value = '';
@@ -1485,7 +1503,7 @@
         button.addEventListener('click', () => {
           const row = JSON.parse(button.getAttribute('data-tax-edit') || '{}');
           taxonomyModalTitle.textContent = 'Edit Data';
-          taxonomyForm.action = '{{ route('admin.taxonomy.update') }}';
+          taxonomyForm.action = '<?php echo e(route('admin.taxonomy.update')); ?>';
           if (taxonomyMethodInput) taxonomyMethodInput.value = 'PUT';
           taxonomyCategoryId.value = row.category_id || '';
           taxonomyBrandId.value = row.brand_id || '';
@@ -1599,10 +1617,20 @@
           productGroupsExportCsvBtn.textContent = originalText;
         }
       });
-      @endif
+      <?php endif; ?>
     </script>
 
-    <script src="{{ asset('js/admin-module-credit-print.js') }}?v={{ filemtime(public_path('js/admin-module-credit-print.js')) }}"></script>
+    <script src="<?php echo e(asset('js/admin-module-credit-print.js')); ?>?v=<?php echo e(filemtime(public_path('js/admin-module-credit-print.js'))); ?>"></script>
 
-    @include('filament.partials.logout-modal')
-</x-filament-panels::page>
+    <?php echo $__env->make('filament.partials.logout-modal', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal166a02a7c5ef5a9331faf66fa665c256)): ?>
+<?php $attributes = $__attributesOriginal166a02a7c5ef5a9331faf66fa665c256; ?>
+<?php unset($__attributesOriginal166a02a7c5ef5a9331faf66fa665c256); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal166a02a7c5ef5a9331faf66fa665c256)): ?>
+<?php $component = $__componentOriginal166a02a7c5ef5a9331faf66fa665c256; ?>
+<?php unset($__componentOriginal166a02a7c5ef5a9331faf66fa665c256); ?>
+<?php endif; ?>
+<?php /**PATH C:\laragon\www\backend\resources\views/filament/pages/admin-module.blade.php ENDPATH**/ ?>

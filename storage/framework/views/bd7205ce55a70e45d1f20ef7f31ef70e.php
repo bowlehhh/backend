@@ -9,6 +9,7 @@
     <div>
       <label class="mb-1 block text-sm font-medium text-on-surface">Part Number</label>
       <input type="text" name="barcode" class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 uppercase focus:border-primary focus:outline-none">
+      <p class="mt-1 text-xs text-on-surface-variant">Boleh sama kalau kondisi atau waktu input berbeda.</p>
       <p class="mt-1 text-xs text-error" data-error-for="barcode"></p>
     </div>
     <div>
@@ -16,10 +17,29 @@
       <input type="text" name="unit" class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 uppercase focus:border-primary focus:outline-none" placeholder="PCS / UNIT / BOX">
       <p class="mt-1 text-xs text-error" data-error-for="unit"></p>
     </div>
-    <div>
-      <label class="mb-1 block text-sm font-medium text-on-surface">Berat (kg)</label>
-      <input type="number" step="0.01" min="0" name="weight" class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 focus:border-primary focus:outline-none" placeholder="0">
-      <p class="mt-1 text-xs text-error" data-error-for="weight"></p>
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_140px]">
+      <div>
+        <label class="mb-1 block text-sm font-medium text-on-surface">Berat</label>
+        <input type="number" step="0.01" min="0" name="weight" class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 focus:border-primary focus:outline-none" placeholder="0">
+        <p class="mt-1 text-xs text-error" data-error-for="weight"></p>
+      </div>
+      <div>
+        <label class="mb-1 block text-sm font-medium text-on-surface">Satuan</label>
+        <select name="weight_unit" class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 focus:border-primary focus:outline-none">
+          <option value="kg" selected>kg</option>
+          <option value="gram">gram</option>
+          <option value="ton">ton</option>
+          <option value="lb">lb</option>
+          <option value="oz">oz</option>
+          <option value="other">Lainnya</option>
+        </select>
+        <p class="mt-1 text-xs text-error" data-error-for="weight_unit"></p>
+      </div>
+      <div class="sm:col-span-2 hidden" data-weight-unit-custom-wrap>
+        <label class="mb-1 block text-sm font-medium text-on-surface">Satuan Kustom</label>
+        <input type="text" name="weight_unit_custom" class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 focus:border-primary focus:outline-none" placeholder="Contoh: sack, box, pack">
+        <p class="mt-1 text-xs text-error" data-error-for="weight_unit_custom"></p>
+      </div>
     </div>
     <div>
       <label class="mb-1 block text-sm font-medium text-on-surface">Slug</label>
@@ -28,14 +48,13 @@
     </div>
     <div>
       <label class="mb-1 block text-sm font-medium text-on-surface">Kategori</label>
-      <select name="category" class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 focus:border-primary focus:outline-none">
-        <option value="Alat Berat">Alat Berat</option>
-      </select>
+      <input type="text" name="category" class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 focus:border-primary focus:outline-none" value="Alat Berat" readonly>
+      <p class="mt-1 text-xs text-on-surface-variant">Kategori ini tetap satu: Alat Berat.</p>
       <p class="mt-1 text-xs text-error" data-error-for="category"></p>
     </div>
     <div>
       <label class="mb-1 block text-sm font-medium text-on-surface">Merek</label>
-      <input type="text" name="brand" class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 focus:border-primary focus:outline-none">
+      <input type="text" name="brand" class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 focus:border-primary focus:outline-none" placeholder="Masukkan merek">
       <p class="mt-1 text-xs text-error" data-error-for="brand"></p>
     </div>
     <div class="md:col-span-2">

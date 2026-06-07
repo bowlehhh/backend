@@ -79,10 +79,14 @@ class ViewSupplier extends ViewRecord
                 'waktu' => $batch->created_at ? $batch->created_at->format('d M Y H:i') : '-',
                 'part_number' => strtoupper((string) ($batch->product?->barcode ?? '-')),
                 'part_name' => strtoupper((string) ($batch->product?->name ?? '-')),
+                'processed_by' => trim((string) ($batch->processed_by ?? '')) ?: '-',
+                'condition' => $batch->condition ?: '-',
                 'merek' => $batch->product?->brand?->name ?? '-',
                 'kategori' => $batch->product?->category?->name ?? '-',
                 'unit' => strtoupper((string) ($batch->product?->unit ?? '-')),
-                'berat' => $batch->product?->weight !== null ? rtrim(rtrim((string) $batch->product->weight, '0'), '.') . ' Kg' : '-',
+                'berat' => $batch->product?->weight !== null
+                    ? rtrim(rtrim((string) $batch->product->weight, '0'), '.') . ' ' . strtolower((string) ($batch->product?->weight_unit ?: 'kg'))
+                    : '-',
                 'qty' => $qty,
                 'stok' => $qty,
                 'harga_beli' => 'Rp ' . number_format($price, 0, ',', '.'),
@@ -113,6 +117,7 @@ class ViewSupplier extends ViewRecord
         return [
             'supplier' => $supplier,
             'purchaseRows' => $purchaseRows,
+            'focusBatchId' => (int) request()->query('batch_id', 0),
             'summary' => [
                 'total_transactions' => $totalTransactions,
                 'total_products' => $batches->unique('product_id')->count(),

@@ -5,6 +5,17 @@
     <p class="mt-1 text-xs text-error" data-error-for="batch_code"></p>
   </div>
   <div>
+    <label class="mb-1 block text-sm font-medium text-on-surface">Kondisi Barang <span class="text-on-surface-variant">(opsional)</span></label>
+    <input type="text" name="condition" class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 focus:border-primary focus:outline-none" placeholder="Baru, bekas, layak pakai, rekondisi">
+    <p class="mt-1 text-xs text-error" data-error-for="condition"></p>
+  </div>
+  <div>
+    <label class="mb-1 block text-sm font-medium text-on-surface">Diproses Oleh <span class="text-on-surface-variant">(opsional)</span></label>
+    <input type="text" name="processed_by" value="{{ auth()->user()?->name ?? '' }}" class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 focus:border-primary focus:outline-none" placeholder="Nama petugas / admin">
+    <p class="mt-1 text-xs text-on-surface-variant">Nama yang menginput atau memproses pembelian ini.</p>
+    <p class="mt-1 text-xs text-error" data-error-for="processed_by"></p>
+  </div>
+  <div>
     <label class="mb-1 block text-sm font-medium text-on-surface">Harga Beli Satuan</label>
     <input type="text" inputmode="numeric" name="purchase_price" class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 focus:border-primary focus:outline-none" placeholder="0">
     <p class="mt-1 text-xs text-error" data-error-for="purchase_price"></p>

@@ -2,9 +2,12 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\CreditInstallment;
 use App\Models\ProductBatch;
 use App\Models\Product;
+use App\Models\Sale;
 use App\Models\User;
+use App\Services\ProductGroupReportService;
 use BackedEnum;
 use Filament\Pages\Page;
 use Illuminate\Support\Carbon;
@@ -25,7 +28,7 @@ class AdminModule extends Page
 
     public function getViewData(): array
     {
-        $type = request()->query('type', 'batches');
+        $type = request()->query('type', 'credits');
         $searchKeyword = trim((string) request()->query('q', ''));
         $taxonomySort = (string) request()->query('sort', 'category');
         $taxonomyDir = strtolower((string) request()->query('dir', 'asc')) === 'desc' ? 'desc' : 'asc';
@@ -43,16 +46,15 @@ class AdminModule extends Page
         );
 
         $modules = [
-            'batches' => ['label' => 'Batch Barang', 'icon' => 'layers'],
-            'credits' => ['label' => 'Kredit', 'icon' => 'credit_card'],
+            'credits' => ['label' => 'Kredit & Utang Saya', 'icon' => 'credit_card'],
             'supplier-transactions' => ['label' => 'Transaksi PT/CV', 'icon' => 'account_tree'],
-            'taxonomy' => ['label' => 'Kategori & Merek', 'icon' => 'category'],
+            'product-groups' => ['label' => 'Kelompok Barang', 'icon' => 'inventory_2'],
             'reports' => ['label' => 'Laporan', 'icon' => 'analytics'],
             'users' => ['label' => 'User', 'icon' => 'group'],
         ];
 
         if (! array_key_exists($type, $modules)) {
-            $type = 'batches';
+            $type = 'credits';
         }
 
         return [
@@ -64,11 +66,14 @@ class AdminModule extends Page
             'userRows' => $this->getUserRows(),
             'searchKeyword' => $searchKeyword,
             'reportStats' => $this->getReportStats(),
-            'reportTransactions' => $this->getReportTransactions(),
+            'reportCreditMonthlyGroups' => $this->getCreditMonthlyGroups(),
+            'reportMonthlyPurchases' => $this->getReportMonthlyPurchases(),
             'reportSupplierGroups' => $this->getReportSupplierGroups(),
+            'creditSettlementHistory' => $this->getCreditSettlementHistory(),
             'ptCustomerGroups' => $this->getPtCustomerGroups(),
             'ptCustomerDetail' => $this->getPtCustomerDetail((string) request()->query('pt', '')),
-            'reportCashierTransactions' => $this->getReportCashierTransactions(),
+            'productGroups' => $type === 'product-groups' ? $this->getProductGroups() : ['summary' => [], 'groups' => []],
+            'reportMonthlyCashierTransactions' => $this->getReportMonthlyCashierTransactions(),
             'taxonomyStats' => $this->getTaxonomyStats(),
             'taxonomyPagination' => $taxonomyData['pagination'] ?? [],
             'taxonomySort' => $taxonomySort,
@@ -83,10 +88,8 @@ class AdminModule extends Page
     private function getRows(string $type, string $searchKeyword = ''): array
     {
         return match ($type) {
-            'batches' => $this->getBatchRows($searchKeyword),
             'credits' => $this->getCreditRows(),
             'supplier-transactions' => [],
-            'taxonomy' => $this->getTaxonomyRows($searchKeyword)['items'] ?? [],
             'users' => $this->getUserRows(),
             default => [],
         };
@@ -94,15 +97,14 @@ class AdminModule extends Page
 
     private function getCreditRows(): array
     {
-        if (! Schema::hasTable('product_batches')) {
+        if (! Schema::hasTable('product_batches') || ! Schema::hasColumn('product_batches', 'payment_type')) {
             return [];
         }
 
         $query = ProductBatch::query()
             ->with(['product:id,name,barcode,unit,brand_id', 'product.brand:id,name', 'supplier:id,name'])
             ->where('payment_type', 'KREDIT')
-            ->latest('id')
-            ->limit(200);
+            ->latest('id');
 
         $hasInstallments = Schema::hasTable('credit_installments');
 
@@ -507,33 +509,466 @@ class AdminModule extends Page
         return $serviceName;
     }
 
-    private function getReportTransactions(): array
+    private function getReportMonthlyPurchases(): array
     {
         if (! Schema::hasTable('product_batches')) {
             return [];
         }
 
-        return ProductBatch::query()
+        $hasInstallments = Schema::hasTable('credit_installments');
+        $installmentPaidMap = [];
+
+        if ($hasInstallments) {
+            $installmentPaidMap = DB::table('credit_installments')
+                ->selectRaw('product_batch_id, COALESCE(SUM(amount), 0) as paid_total')
+                ->groupBy('product_batch_id')
+                ->pluck('paid_total', 'product_batch_id')
+                ->map(fn ($value) => (float) $value)
+                ->toArray();
+        }
+
+        $batches = ProductBatch::query()
             ->with(['product:id,name,barcode', 'supplier:id,name'])
             ->latest('created_at')
-            ->limit(50)
-            ->get()
-            ->map(function (ProductBatch $batch): array {
-                $expeditionCost = (float) ($batch->expedition_cost ?? 0);
-                $total = ((float) $batch->purchase_price * (int) $batch->stock) + $expeditionCost;
+            ->get();
 
-                return [
-                    'tanggal' => optional($batch->created_at)->format('d M Y H:i') ?: '-',
-                    'supplier' => $batch->supplier?->name ?: '-',
-                    'barang' => $batch->product?->name ?: '-',
-                    'qty' => (int) $batch->stock,
-                    'harga_satuan' => 'Rp ' . number_format((float) $batch->purchase_price, 0, ',', '.'),
-                    'biaya_ekspedisi' => 'Rp ' . number_format($expeditionCost, 0, ',', '.'),
-                    'total' => 'Rp ' . number_format($total, 0, ',', '.'),
-                    'supplier_id' => $batch->supplier_id,
+        $grouped = [];
+
+        foreach ($batches as $batch) {
+            $createdAt = $batch->created_at ? Carbon::parse($batch->created_at) : null;
+            $monthKey = $createdAt?->format('Y-m') ?? 'tanpa-tanggal';
+            $monthLabel = $createdAt ? $this->formatMonthLabel($createdAt) : 'Tanpa Tanggal';
+            $qty = (int) ($batch->stock ?? 0);
+            $price = (float) ($batch->purchase_price ?? 0);
+            $expeditionCost = (float) ($batch->expedition_cost ?? 0);
+            $downPayment = (float) ($batch->down_payment_amount ?? 0);
+            $total = ($qty * $price) + $expeditionCost;
+            $paymentType = strtoupper((string) ($batch->payment_type ?? 'LUNAS'));
+            $installmentPaid = (float) ($installmentPaidMap[$batch->id] ?? 0);
+            $paid = min($total, $downPayment + $installmentPaid);
+            $remaining = max(0, $total - $paid);
+            $status = $this->resolveBatchPaymentStatus($batch, $remaining);
+
+            if (! isset($grouped[$monthKey])) {
+                $grouped[$monthKey] = [
+                    'month_key' => $monthKey,
+                    'month_label' => $monthLabel,
+                    'summary' => [
+                        'total_transaksi' => 0,
+                        'total_qty' => 0,
+                        'total_nilai_value' => 0.0,
+                        'lunas_count' => 0,
+                        'utang_count' => 0,
+                        'lunas_value' => 0.0,
+                        'utang_value' => 0.0,
+                    ],
+                    'lunas' => [],
+                    'utang' => [],
                 ];
+            }
+
+            $row = [
+                'batch_id' => (int) $batch->id,
+                'tanggal' => $createdAt ? $createdAt->format('d M Y H:i') : '-',
+                'supplier' => $batch->supplier?->name ?: '-',
+                'barang' => $batch->product?->name ?: '-',
+                'qty' => $qty,
+                'harga_satuan' => 'Rp ' . number_format($price, 0, ',', '.'),
+                'biaya_ekspedisi' => 'Rp ' . number_format($expeditionCost, 0, ',', '.'),
+                'total' => 'Rp ' . number_format($total, 0, ',', '.'),
+                'total_value' => $total,
+                'payment_type' => $paymentType,
+                'down_payment' => 'Rp ' . number_format($downPayment, 0, ',', '.'),
+                'sudah_dibayar' => 'Rp ' . number_format($paid, 0, ',', '.'),
+                'sisa_kredit' => 'Rp ' . number_format($remaining, 0, ',', '.'),
+                'jatuh_tempo' => $batch->credit_due_date ? Carbon::parse($batch->credit_due_date)->format('d M Y') : '-',
+                'status' => $status,
+                'is_utang' => $paymentType === 'KREDIT' && $remaining > 0,
+                'supplier_id' => $batch->supplier_id,
+            ];
+
+            $grouped[$monthKey]['summary']['total_transaksi']++;
+            $grouped[$monthKey]['summary']['total_qty'] += $qty;
+            $grouped[$monthKey]['summary']['total_nilai_value'] += $total;
+
+            if ($status === 'LUNAS') {
+                $grouped[$monthKey]['summary']['lunas_count']++;
+                $grouped[$monthKey]['summary']['lunas_value'] += $total;
+                $grouped[$monthKey]['lunas'][] = $row;
+            } else {
+                $grouped[$monthKey]['summary']['utang_count']++;
+                $grouped[$monthKey]['summary']['utang_value'] += $total;
+                $grouped[$monthKey]['utang'][] = $row;
+            }
+        }
+
+        return collect($grouped)
+            ->map(function (array $group): array {
+                $group['summary']['total_nilai'] = 'Rp ' . number_format((float) $group['summary']['total_nilai_value'], 0, ',', '.');
+                $group['summary']['lunas_value'] = 'Rp ' . number_format((float) $group['summary']['lunas_value'], 0, ',', '.');
+                $group['summary']['utang_value'] = 'Rp ' . number_format((float) $group['summary']['utang_value'], 0, ',', '.');
+                unset($group['summary']['total_nilai_value']);
+
+                return $group;
             })
+            ->sortKeysDesc()
+            ->values()
             ->toArray();
+    }
+
+    private function getCreditMonthlyGroups(): array
+    {
+        if (! Schema::hasTable('product_batches') || ! Schema::hasColumn('product_batches', 'payment_type')) {
+            return [];
+        }
+
+        $hasInstallments = Schema::hasTable('credit_installments');
+        $installmentPaidMap = [];
+
+        if ($hasInstallments) {
+            $installmentPaidMap = DB::table('credit_installments')
+                ->selectRaw('product_batch_id, COALESCE(SUM(amount), 0) as paid_total')
+                ->groupBy('product_batch_id')
+                ->pluck('paid_total', 'product_batch_id')
+                ->map(fn ($value) => (float) $value)
+                ->toArray();
+        }
+
+        $batches = ProductBatch::query()
+            ->with(['product:id,name,barcode', 'supplier:id,name'])
+            ->where('payment_type', 'KREDIT')
+            ->latest('created_at')
+            ->get();
+
+        $grouped = [];
+
+        foreach ($batches as $batch) {
+            $qty = (int) ($batch->stock ?? 0);
+            $price = (float) ($batch->purchase_price ?? 0);
+            $expeditionCost = (float) ($batch->expedition_cost ?? 0);
+            $downPayment = (float) ($batch->down_payment_amount ?? 0);
+            $subtotal = ($qty * $price) + $expeditionCost;
+            $installmentPaid = (float) ($installmentPaidMap[$batch->id] ?? 0);
+            $paid = min($subtotal, $downPayment + $installmentPaid);
+            $remaining = max(0, $subtotal - $paid);
+
+            $createdAt = $batch->created_at ? Carbon::parse($batch->created_at) : null;
+            $monthKey = $createdAt?->format('Y-m') ?? 'tanpa-tanggal';
+            $monthLabel = $createdAt ? $this->formatMonthLabel($createdAt) : 'Tanpa Tanggal';
+            $status = $remaining <= 0
+                ? 'LUNAS'
+                : ($batch->credit_due_date && Carbon::parse($batch->credit_due_date)->isPast() ? 'JATUH TEMPO' : 'BELUM LUNAS');
+
+            if (! isset($grouped[$monthKey])) {
+                $grouped[$monthKey] = [
+                    'month_key' => $monthKey,
+                    'month_label' => $monthLabel,
+                    'summary' => [
+                        'total_transaksi' => 0,
+                        'total_nilai_value' => 0.0,
+                        'total_sisa_value' => 0.0,
+                        'jatuhtempo_count' => 0,
+                    ],
+                    'rows' => [],
+                ];
+            }
+
+            $row = [
+                'batch_id' => (int) $batch->id,
+                'supplier_id' => $batch->supplier_id,
+                'supplier' => $batch->supplier?->name ?: '-',
+                'barang' => $batch->product?->name ?: '-',
+                'tanggal' => $createdAt ? $createdAt->format('d M Y H:i') : '-',
+                'created_at_ts' => $createdAt?->timestamp ?? 0,
+                'qty' => $qty,
+                'subtotal' => 'Rp ' . number_format($subtotal, 0, ',', '.'),
+                'down_payment' => 'Rp ' . number_format($downPayment, 0, ',', '.'),
+                'sudah_dibayar' => 'Rp ' . number_format($paid, 0, ',', '.'),
+                'sisa_kredit' => 'Rp ' . number_format($remaining, 0, ',', '.'),
+                'sisa_kredit_value' => $remaining,
+                'jatuh_tempo' => $batch->credit_due_date ? Carbon::parse($batch->credit_due_date)->format('d M Y') : '-',
+                'jatuh_tempo_ts' => $batch->credit_due_date ? Carbon::parse($batch->credit_due_date)->timestamp : 0,
+                'status' => $status,
+            ];
+
+            $grouped[$monthKey]['summary']['total_transaksi']++;
+            $grouped[$monthKey]['summary']['total_nilai_value'] += $subtotal;
+            $grouped[$monthKey]['summary']['total_sisa_value'] += $remaining;
+            if ($status === 'JATUH TEMPO') {
+                $grouped[$monthKey]['summary']['jatuhtempo_count']++;
+            }
+
+            $grouped[$monthKey]['rows'][] = $row;
+        }
+
+        return collect($grouped)
+            ->map(function (array $group): array {
+                $group['rows'] = collect($group['rows'])
+                    ->sortBy(fn (array $row) => sprintf(
+                        '%01d-%020d-%020d',
+                        $row['status'] === 'JATUH TEMPO' ? 0 : 1,
+                        $row['jatuh_tempo_ts'] > 0 ? $row['jatuh_tempo_ts'] : PHP_INT_MAX,
+                        $row['created_at_ts'] > 0 ? (PHP_INT_MAX - $row['created_at_ts']) : PHP_INT_MAX
+                    ))
+                    ->values()
+                    ->map(function (array $row): array {
+                        unset($row['created_at_ts'], $row['jatuh_tempo_ts']);
+                        return $row;
+                    })
+                    ->toArray();
+                $group['summary']['total_nilai'] = 'Rp ' . number_format((float) $group['summary']['total_nilai_value'], 0, ',', '.');
+                $group['summary']['total_sisa'] = 'Rp ' . number_format((float) $group['summary']['total_sisa_value'], 0, ',', '.');
+
+                return $group;
+            })
+            ->sortKeysDesc()
+            ->values()
+            ->toArray();
+    }
+
+    private function getCreditSettlementHistory(): array
+    {
+        if (! Schema::hasTable('credit_installments')) {
+            return [];
+        }
+
+        $batchSelects = [
+            'id',
+            'product_id',
+            'supplier_id',
+            'stock',
+            'purchase_price',
+            'created_at',
+        ];
+
+        foreach (['expedition_cost', 'down_payment_amount', 'credit_due_date'] as $column) {
+            if (Schema::hasColumn('product_batches', $column)) {
+                $batchSelects[] = $column;
+            }
+        }
+
+        if (Schema::hasColumn('product_batches', 'payment_type')) {
+            $batchSelects[] = 'payment_type';
+        }
+
+        $batches = ProductBatch::query()
+            ->with([
+                'product:id,name,barcode',
+                'supplier:id,name',
+                'creditInstallments.user:id,name',
+            ])
+            ->get($batchSelects)
+            ->filter(function (ProductBatch $batch): bool {
+                $qty = (int) ($batch->stock ?? 0);
+                $price = (float) ($batch->purchase_price ?? 0);
+                $expeditionCost = (float) ($batch->expedition_cost ?? 0);
+                $downPayment = (float) ($batch->down_payment_amount ?? 0);
+                $totalCredit = ($qty * $price) + $expeditionCost;
+                $paid = min($totalCredit, $downPayment + (float) $batch->creditInstallments->sum('amount'));
+
+                return $totalCredit > 0 && max(0, $totalCredit - $paid) <= 0;
+            })
+            ->values();
+
+        if ($batches->isEmpty()) {
+            return [];
+        }
+
+        return $batches->map(function (ProductBatch $batch): ?array {
+            $qty = (int) ($batch->stock ?? 0);
+            $price = (float) ($batch->purchase_price ?? 0);
+            $expeditionCost = (float) ($batch->expedition_cost ?? 0);
+            $downPayment = (float) ($batch->down_payment_amount ?? 0);
+            $totalCredit = ($qty * $price) + $expeditionCost;
+            $installments = $batch->creditInstallments->sortBy([
+                ['paid_at', 'asc'],
+                ['id', 'asc'],
+            ]);
+
+            $runningPaid = $downPayment;
+            $finalInstallment = null;
+
+            foreach ($installments as $installment) {
+                $runningPaid += (float) ($installment->amount ?? 0);
+                if ($runningPaid >= $totalCredit) {
+                    $finalInstallment = $installment;
+                    break;
+                }
+            }
+
+            if (! $finalInstallment) {
+                return null;
+            }
+
+            $note = trim((string) ($finalInstallment->note ?? '')) ?: 'Pelunasan kredit';
+
+            return [
+                'id' => (int) $finalInstallment->id,
+                'batch_id' => (int) ($finalInstallment->product_batch_id ?? 0),
+                'tanggal' => $finalInstallment->paid_at?->format('d M Y') ?? '-',
+                'jam' => $finalInstallment->created_at?->format('H:i:s') ?? '-',
+                'supplier' => $batch->supplier?->name ?: '-',
+                'barang' => $batch->product?->name ?: '-',
+                'part_number' => $batch->product?->barcode ?: '-',
+                'nominal' => (float) ($finalInstallment->amount ?? 0),
+                'nominal_text' => 'Rp ' . number_format((float) ($finalInstallment->amount ?? 0), 0, ',', '.'),
+                'note' => $note,
+                'kasir' => $finalInstallment->user?->name ?: '-',
+                'jenis' => 'Pelunasan',
+                'jenis_class' => 'bg-emerald-100 text-emerald-700',
+                'receipt_url' => route('admin.credits.installment.receipt', [
+                    'batch' => $finalInstallment->product_batch_id,
+                    'installment' => $finalInstallment->id,
+                ]),
+            ];
+        })->filter()->sortByDesc('tanggal')->values()->toArray();
+    }
+
+    private function getReportMonthlyCashierTransactions(): array
+    {
+        if (! Schema::hasTable('sales')) {
+            return [];
+        }
+
+        $sales = Sale::query()
+            ->with(['user:id,name', 'items:id,sale_id,product_name,qty,subtotal'])
+            ->withSum('returns as total_return_refund', 'refund_amount')
+            ->when(Schema::hasColumn('sales', 'deleted_at'), fn ($q) => $q->whereNull('deleted_at'))
+            ->latest('created_at')
+            ->get([
+                'id',
+                'user_id',
+                'invoice_number',
+                'customer_name',
+                'cashier_service_name',
+                'total',
+                'payment_method',
+                'paid_amount',
+                'credit_amount',
+                'credit_due_date',
+                'created_at',
+            ]);
+
+        $grouped = [];
+
+        foreach ($sales as $sale) {
+            $createdAt = $sale->created_at ? Carbon::parse($sale->created_at) : null;
+            $monthKey = $createdAt?->format('Y-m') ?? 'tanpa-tanggal';
+            $monthLabel = $createdAt ? $this->formatMonthLabel($createdAt) : 'Tanpa Tanggal';
+            $paymentMethod = strtoupper((string) ($sale->payment_method ?? 'CASH'));
+            $creditAmount = (float) ($sale->credit_amount ?? 0);
+            $dueDate = $sale->credit_due_date ? Carbon::parse($sale->credit_due_date) : null;
+            $total = (float) ($sale->total ?? 0);
+            $status = 'LUNAS';
+            if ($paymentMethod === 'CREDIT' && $creditAmount > 0) {
+                $status = ($dueDate && $dueDate->isPast()) ? 'JATUH TEMPO' : 'BELUM LUNAS';
+            }
+
+            if (! isset($grouped[$monthKey])) {
+                $grouped[$monthKey] = [
+                    'month_key' => $monthKey,
+                    'month_label' => $monthLabel,
+                    'summary' => [
+                        'total_transaksi' => 0,
+                        'total_nilai_value' => 0.0,
+                        'cash_count' => 0,
+                        'credit_count' => 0,
+                        'lunas_count' => 0,
+                        'utang_count' => 0,
+                    ],
+                    'rows' => [],
+                ];
+            }
+
+            $itemsList = $sale->items
+                ->map(fn ($item) => trim((string) $item->product_name))
+                ->filter()
+                ->values();
+
+            $row = [
+                'sale_id' => (int) $sale->id,
+                'invoice_number' => (string) ($sale->invoice_number ?: '-'),
+                'customer_name' => $sale->customer_name ?: 'Pembeli Umum',
+                'barang' => $itemsList->implode(', ') !== '' ? $itemsList->implode(', ') : '-',
+                'barang_items' => $itemsList->toArray(),
+                'barang_count' => $itemsList->count(),
+                'qty' => (int) $sale->items->sum('qty'),
+                'payment_method' => $paymentMethod,
+                'created_at' => $createdAt ? $createdAt->format('d M Y H:i') : '-',
+                'total' => 'Rp ' . number_format($total, 0, ',', '.'),
+                'total_value' => $total,
+                'credit_amount' => 'Rp ' . number_format($creditAmount, 0, ',', '.'),
+                'credit_due_date' => $dueDate ? $dueDate->format('d M Y') : '-',
+                'status' => $status,
+            ];
+
+            $grouped[$monthKey]['summary']['total_transaksi']++;
+            $grouped[$monthKey]['summary']['total_nilai_value'] += $total;
+
+            if ($paymentMethod === 'CASH') {
+                $grouped[$monthKey]['summary']['cash_count']++;
+            } else {
+                $grouped[$monthKey]['summary']['credit_count']++;
+            }
+
+            if ($status === 'LUNAS') {
+                $grouped[$monthKey]['summary']['lunas_count']++;
+            } else {
+                $grouped[$monthKey]['summary']['utang_count']++;
+            }
+
+            $grouped[$monthKey]['rows'][] = $row;
+        }
+
+        return collect($grouped)
+            ->map(function (array $group): array {
+                $group['summary']['total_nilai'] = 'Rp ' . number_format((float) $group['summary']['total_nilai_value'], 0, ',', '.');
+                unset($group['summary']['total_nilai_value']);
+
+                return $group;
+            })
+            ->sortKeysDesc()
+            ->values()
+            ->toArray();
+    }
+
+    private function formatMonthLabel(Carbon $date): string
+    {
+        $monthNames = [
+            1 => 'Januari',
+            2 => 'Februari',
+            3 => 'Maret',
+            4 => 'April',
+            5 => 'Mei',
+            6 => 'Juni',
+            7 => 'Juli',
+            8 => 'Agustus',
+            9 => 'September',
+            10 => 'Oktober',
+            11 => 'November',
+            12 => 'Desember',
+        ];
+
+        return ($monthNames[(int) $date->format('n')] ?? $date->format('F')) . ' ' . $date->format('Y');
+    }
+
+    private function resolveBatchPaymentStatus(ProductBatch $batch, float $remaining): string
+    {
+        $paymentType = strtoupper((string) ($batch->payment_type ?? 'LUNAS'));
+
+        if ($paymentType !== 'KREDIT') {
+            return 'LUNAS';
+        }
+
+        if ($remaining <= 0) {
+            return 'LUNAS';
+        }
+
+        if ($batch->credit_due_date && Carbon::parse($batch->credit_due_date)->isPast()) {
+            return 'JATUH TEMPO';
+        }
+
+        return 'BELUM LUNAS';
     }
 
     private function getReportSupplierGroups(): array
@@ -631,6 +1066,28 @@ class AdminModule extends Page
             ->toArray();
     }
 
+    private function getProductGroups(): array
+    {
+        return app(ProductGroupReportService::class)->build();
+    }
+
+    private function resolveSaleStatus(string $paymentMethod, float $creditAmount, ?Carbon $dueDate = null): string
+    {
+        if ($paymentMethod !== 'CREDIT') {
+            return 'LUNAS';
+        }
+
+        if ($creditAmount <= 0) {
+            return 'LUNAS';
+        }
+
+        if ($dueDate && $dueDate->isPast()) {
+            return 'JATUH TEMPO';
+        }
+
+        return 'BELUM LUNAS';
+    }
+
     private function getPtCustomerGroups(): array
     {
         $rows = $this->getPtCvRowsForAdmin();
@@ -640,9 +1097,38 @@ class AdminModule extends Page
 
         $grouped = [];
         foreach ($rows as $row) {
+            $createdAt = !empty($row->created_at) ? Carbon::parse($row->created_at) : null;
+            $monthKey = $createdAt?->format('Y-m') ?? 'tanpa-tanggal';
+            $monthLabel = $createdAt ? $this->formatMonthLabel($createdAt) : 'Tanpa Tanggal';
             $name = $this->normalizePtCvName((string) ($row->pt_name ?? ''));
-            if (! isset($grouped[$name])) {
-                $grouped[$name] = [
+            if (! isset($grouped[$monthKey])) {
+                $grouped[$monthKey] = [
+                    'month_key' => $monthKey,
+                    'month_label' => $monthLabel,
+                    'month_ts' => $createdAt?->timestamp ?? 0,
+                    'summary' => [
+                        'total_transaksi' => 0,
+                        'total_pt' => 0,
+                        'total_qty' => 0,
+                        'total_nilai_value' => 0.0,
+                        'kredit' => 0,
+                        'jatuh_tempo' => 0,
+                        'lunas' => 0,
+                    ],
+                    'rows' => [],
+                ];
+            }
+
+            $method = strtoupper((string) ($row->payment_method ?? 'CASH'));
+            $creditAmount = (float) ($row->credit_amount ?? 0);
+            $dueDate = !empty($row->credit_due_date) ? Carbon::parse($row->credit_due_date) : null;
+            $status = 'LUNAS';
+            if ($method === 'CREDIT' && $creditAmount > 0) {
+                $status = ($dueDate && $dueDate->isPast()) ? 'JATUH TEMPO' : 'BELUM LUNAS';
+            }
+
+            if (! isset($grouped[$monthKey]['rows'][$name])) {
+                $grouped[$monthKey]['rows'][$name] = [
                     'pt_name' => $name,
                     'total_transaksi' => 0,
                     'total_qty' => 0,
@@ -655,41 +1141,70 @@ class AdminModule extends Page
                 ];
             }
 
-            $method = strtoupper((string) ($row->payment_method ?? 'CASH'));
-            $creditAmount = (float) ($row->credit_amount ?? 0);
-            $dueDate = !empty($row->credit_due_date) ? Carbon::parse($row->credit_due_date) : null;
-            $status = 'LUNAS';
-            if ($method === 'CREDIT' && $creditAmount > 0) {
-                $status = ($dueDate && $dueDate->isPast()) ? 'JATUH TEMPO' : 'BELUM LUNAS';
-            }
-
-            $grouped[$name]['total_transaksi']++;
-            $grouped[$name]['total_qty'] += (int) ($row->qty ?? 0);
-            $grouped[$name]['total_nilai_value'] += (float) ($row->sale_total ?? 0);
+            $grouped[$monthKey]['summary']['total_transaksi']++;
+            $grouped[$monthKey]['summary']['total_qty'] += (int) ($row->qty ?? 0);
+            $grouped[$monthKey]['summary']['total_nilai_value'] += (float) ($row->sale_total ?? 0);
             if (in_array($status, ['BELUM LUNAS', 'JATUH TEMPO'], true)) {
-                $grouped[$name]['kredit']++;
+                $grouped[$monthKey]['summary']['kredit']++;
             }
             if ($status === 'JATUH TEMPO') {
-                $grouped[$name]['jatuh_tempo']++;
+                $grouped[$monthKey]['summary']['jatuh_tempo']++;
             }
             if ($status === 'LUNAS') {
-                $grouped[$name]['lunas']++;
+                $grouped[$monthKey]['summary']['lunas']++;
             }
 
-            $ts = !empty($row->created_at) ? Carbon::parse($row->created_at)->timestamp : 0;
-            if ($ts > $grouped[$name]['terakhir_beli_ts']) {
-                $grouped[$name]['terakhir_beli_ts'] = $ts;
-                $grouped[$name]['terakhir_beli'] = !empty($row->created_at) ? Carbon::parse($row->created_at)->format('d M Y H:i') : '-';
+            $grouped[$monthKey]['rows'][$name]['total_transaksi']++;
+            $grouped[$monthKey]['rows'][$name]['total_qty'] += (int) ($row->qty ?? 0);
+            $grouped[$monthKey]['rows'][$name]['total_nilai_value'] += (float) ($row->sale_total ?? 0);
+            if (in_array($status, ['BELUM LUNAS', 'JATUH TEMPO'], true)) {
+                $grouped[$monthKey]['rows'][$name]['kredit']++;
+            }
+            if ($status === 'JATUH TEMPO') {
+                $grouped[$monthKey]['rows'][$name]['jatuh_tempo']++;
+            }
+            if ($status === 'LUNAS') {
+                $grouped[$monthKey]['rows'][$name]['lunas']++;
+            }
+
+            $ts = $createdAt?->timestamp ?? 0;
+            if ($ts > $grouped[$monthKey]['rows'][$name]['terakhir_beli_ts']) {
+                $grouped[$monthKey]['rows'][$name]['terakhir_beli_ts'] = $ts;
+                $grouped[$monthKey]['rows'][$name]['terakhir_beli'] = $createdAt ? $createdAt->format('d M Y H:i') : '-';
             }
         }
 
         return collect($grouped)
-            ->map(function (array $row) {
-                $row['total_nilai'] = 'Rp ' . number_format((float) $row['total_nilai_value'], 0, ',', '.');
-                unset($row['total_nilai_value'], $row['terakhir_beli_ts']);
-                return $row;
+            ->map(function (array $group) {
+                $group['rows'] = collect($group['rows'])
+                    ->map(function (array $row): array {
+                        $row['total_nilai'] = 'Rp ' . number_format((float) $row['total_nilai_value'], 0, ',', '.');
+                        return $row;
+                    })
+                    ->sort(function (array $a, array $b): int {
+                        return ($b['total_transaksi'] <=> $a['total_transaksi'])
+                            ?: ($b['terakhir_beli_ts'] <=> $a['terakhir_beli_ts'])
+                            ?: ($b['total_qty'] <=> $a['total_qty']);
+                    })
+                    ->map(function (array $row): array {
+                        unset($row['total_nilai_value'], $row['terakhir_beli_ts']);
+                        return $row;
+                    })
+                    ->values()
+                    ->toArray();
+
+                $group['summary']['total_pt'] = count($group['rows']);
+                $group['summary']['total_nilai'] = 'Rp ' . number_format((float) $group['summary']['total_nilai_value'], 0, ',', '.');
+                unset($group['summary']['total_nilai_value']);
+                return $group;
             })
-            ->sortByDesc('total_transaksi')
+            ->sort(function (array $a, array $b): int {
+                return ($b['month_ts'] <=> $a['month_ts']);
+            })
+            ->map(function (array $group): array {
+                unset($group['month_ts']);
+                return $group;
+            })
             ->values()
             ->toArray();
     }

@@ -61,7 +61,7 @@ class ProductResource extends Resource
                         TextInput::make('barcode')
                             ->label('Barcode')
                             ->maxLength(100)
-                            ->unique(ignoreRecord: true)
+                            ->helperText('Boleh sama jika kondisi atau waktu input berbeda.')
                             ->columnSpan(1),
                         TextInput::make('slug')
                             ->required()

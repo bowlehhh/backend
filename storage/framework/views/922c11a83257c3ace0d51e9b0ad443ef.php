@@ -1,10 +1,21 @@
-@php
+<?php
     $viewData = $this->getViewData();
     $stats = $viewData['stats'] ?? ['total' => 0, 'active' => 0, 'total_stock' => 0];
     $suppliers = $viewData['suppliers'] ?? [];
-@endphp
+?>
 
-<x-filament-panels::page>
+<?php if (isset($component)) { $__componentOriginal166a02a7c5ef5a9331faf66fa665c256 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal166a02a7c5ef5a9331faf66fa665c256 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'filament-panels::components.page.index','data' => []] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('filament-panels::page'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
@@ -83,33 +94,33 @@
             </div>
           </div>
           <nav class="flex-1 min-h-0 flex flex-col space-y-1 overflow-y-auto">
-            <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium" href="{{ url('/admin/products') }}">
+            <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium" href="<?php echo e(url('/admin/products')); ?>">
               <span class="material-symbols-outlined">inventory_2</span>
               <span>Barang</span>
             </a>
-            <a class="sf-nav-item flex items-center gap-3 bg-[#006948] text-white rounded-lg px-3 py-2 font-medium" href="{{ url('/admin/suppliers') }}">
+            <a class="sf-nav-item flex items-center gap-3 bg-[#006948] text-white rounded-lg px-3 py-2 font-medium" href="<?php echo e(url('/admin/suppliers')); ?>">
               <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">local_shipping</span>
               <span>Supplier</span>
             </a>
-            <a class="sf-nav-item w-full flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=credits') }}">
+            <a class="sf-nav-item w-full flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium text-left" href="<?php echo e(url('/admin/admin-module?type=credits')); ?>">
               <span class="material-symbols-outlined">credit_card</span><span>Kredit &amp; Utang Saya</span>
             </a>
-            <a class="sf-nav-item w-full flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=supplier-transactions') }}">
+            <a class="sf-nav-item w-full flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium text-left" href="<?php echo e(url('/admin/admin-module?type=supplier-transactions')); ?>">
               <span class="material-symbols-outlined">account_tree</span><span>Transaksi PT</span>
             </a>
-            <a class="sf-nav-item w-full flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=reports') }}">
+            <a class="sf-nav-item w-full flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium text-left" href="<?php echo e(url('/admin/admin-module?type=reports')); ?>">
               <span class="material-symbols-outlined">analytics</span><span>Laporan</span>
             </a>
-            <a class="sf-nav-item w-full flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=users') }}">
+            <a class="sf-nav-item w-full flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium text-left" href="<?php echo e(url('/admin/admin-module?type=users')); ?>">
               <span class="material-symbols-outlined">group</span><span>User</span>
             </a>
-            <a class="sf-nav-item w-full mt-auto flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=product-groups') }}">
+            <a class="sf-nav-item w-full mt-auto flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium text-left" href="<?php echo e(url('/admin/admin-module?type=product-groups')); ?>">
               <span class="material-symbols-outlined">inventory_2</span><span>Kelompok Barang</span>
             </a>
           </nav>
           <div class="mt-4 pt-3 pb-5 border-t border-[#d4dbd7]">
-            <form method="POST" action="{{ route('logout') }}" class="js-admin-logout-form">
-              @csrf
+            <form method="POST" action="<?php echo e(route('logout')); ?>" class="js-admin-logout-form">
+              <?php echo csrf_field(); ?>
               <button type="submit" class="sf-nav-item w-full flex items-center gap-3 text-[#ba1a1a] px-3 py-2 hover:bg-[#ffdad6] transition-all rounded-lg font-medium text-left">
                 <span class="material-symbols-outlined">logout</span>
                 <span>Logout</span>
@@ -129,15 +140,15 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5 mb-6">
             <div class="bg-[#ffffff] border border-[#b8c5be] rounded-xl p-5 md:p-6 custom-shadow">
               <p class="text-base text-[#415149] font-medium">Total Supplier</p>
-              <p class="text-[34px] md:text-[40px] leading-tight font-extrabold text-[#006948] mt-2">{{ number_format($stats['total'] ?? 0, 0, ',', '.') }}</p>
+              <p class="text-[34px] md:text-[40px] leading-tight font-extrabold text-[#006948] mt-2"><?php echo e(number_format($stats['total'] ?? 0, 0, ',', '.')); ?></p>
             </div>
             <div class="bg-[#ffffff] border border-[#b8c5be] rounded-xl p-5 md:p-6 custom-shadow">
               <p class="text-base text-[#415149] font-medium">Supplier Aktif</p>
-              <p class="text-[34px] md:text-[40px] leading-tight font-extrabold text-[#825100] mt-2">{{ number_format($stats['active'] ?? 0, 0, ',', '.') }}</p>
+              <p class="text-[34px] md:text-[40px] leading-tight font-extrabold text-[#825100] mt-2"><?php echo e(number_format($stats['active'] ?? 0, 0, ',', '.')); ?></p>
             </div>
             <div class="bg-[#ffffff] border border-[#b8c5be] rounded-xl p-5 md:p-6 custom-shadow">
               <p class="text-base text-[#415149] font-medium">Total Stok Supplier</p>
-              <p class="text-[34px] md:text-[40px] leading-tight font-extrabold text-[#4648d4] mt-2">{{ number_format($stats['total_stock'] ?? 0, 0, ',', '.') }}</p>
+              <p class="text-[34px] md:text-[40px] leading-tight font-extrabold text-[#4648d4] mt-2"><?php echo e(number_format($stats['total_stock'] ?? 0, 0, ',', '.')); ?></p>
             </div>
           </div>
 
@@ -155,21 +166,21 @@
                 </tr>
               </thead>
               <tbody>
-                @forelse($suppliers as $supplier)
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $suppliers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $supplier): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
                   <tr class="border-t border-[#e4e8e6]">
-                    <td class="px-5 py-4 font-semibold">{{ $supplier['name'] ?: '-' }}</td>
-                    <td class="px-5 py-4">{{ $supplier['type'] ?: '-' }}</td>
-                    <td class="px-5 py-4">{{ $supplier['address'] ?: '-' }}</td>
-                    <td class="px-5 py-4">{{ $supplier['phone'] ?: '-' }}</td>
-                    <td class="px-5 py-4">{{ $supplier['product_count'] }}</td>
-                    <td class="px-5 py-4">{{ $supplier['stock_total'] }}</td>
+                    <td class="px-5 py-4 font-semibold"><?php echo e($supplier['name'] ?: '-'); ?></td>
+                    <td class="px-5 py-4"><?php echo e($supplier['type'] ?: '-'); ?></td>
+                    <td class="px-5 py-4"><?php echo e($supplier['address'] ?: '-'); ?></td>
+                    <td class="px-5 py-4"><?php echo e($supplier['phone'] ?: '-'); ?></td>
+                    <td class="px-5 py-4"><?php echo e($supplier['product_count']); ?></td>
+                    <td class="px-5 py-4"><?php echo e($supplier['stock_total']); ?></td>
                     <td class="px-5 py-4 text-right">
-                      <a class="text-[#006948]" href="{{ url('/admin/suppliers/' . $supplier['id']) }}">Detail</a>
+                      <a class="text-[#006948]" href="<?php echo e(url('/admin/suppliers/' . $supplier['id'])); ?>">Detail</a>
                     </td>
                   </tr>
-                @empty
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                   <tr><td colspan="7" class="px-5 py-8 text-center text-[#52615a]">Belum ada supplier.</td></tr>
-                @endforelse
+                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
               </tbody>
             </table>
           </div>
@@ -183,5 +194,15 @@
       document.body.classList.add('sf-dashboard-page');
     </script>
 
-    @include('filament.partials.logout-modal')
-</x-filament-panels::page>
+    <?php echo $__env->make('filament.partials.logout-modal', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal166a02a7c5ef5a9331faf66fa665c256)): ?>
+<?php $attributes = $__attributesOriginal166a02a7c5ef5a9331faf66fa665c256; ?>
+<?php unset($__attributesOriginal166a02a7c5ef5a9331faf66fa665c256); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal166a02a7c5ef5a9331faf66fa665c256)): ?>
+<?php $component = $__componentOriginal166a02a7c5ef5a9331faf66fa665c256; ?>
+<?php unset($__componentOriginal166a02a7c5ef5a9331faf66fa665c256); ?>
+<?php endif; ?>
+<?php /**PATH C:\laragon\www\backend\resources\views/filament/pages/admin-suppliers.blade.php ENDPATH**/ ?>

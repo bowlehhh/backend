@@ -19,9 +19,9 @@ class AdminSalesController extends Controller
             $pdf = Pdf::loadView('cashier.receipt', [
                 'sale' => $sale,
                 'storeName' => config('app.name', 'Toko Pak Paul'),
-                'historyUrl' => url('/admin/admin-dashboard'),
-                'historyLabel' => 'Kembali ke Dashboard Admin',
-                'newTransactionUrl' => url('/admin/admin-dashboard'),
+                'historyUrl' => url('/admin/products'),
+                'historyLabel' => 'Kembali ke Barang',
+                'newTransactionUrl' => url('/admin/products'),
                 'showNewTransactionButton' => false,
             ])->setPaper('a4', 'portrait');
 
@@ -32,9 +32,9 @@ class AdminSalesController extends Controller
             ->view('cashier.receipt', [
                 'sale' => $sale,
                 'storeName' => config('app.name', 'Toko Pak Paul'),
-                'historyUrl' => url('/admin/admin-dashboard'),
-                'historyLabel' => 'Kembali ke Dashboard Admin',
-                'newTransactionUrl' => url('/admin/admin-dashboard'),
+                'historyUrl' => url('/admin/products'),
+                'historyLabel' => 'Kembali ke Barang',
+                'newTransactionUrl' => url('/admin/products'),
                 'showNewTransactionButton' => false,
             ])
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');

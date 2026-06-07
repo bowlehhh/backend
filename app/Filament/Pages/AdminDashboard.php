@@ -3,11 +3,13 @@
 namespace App\Filament\Pages;
 
 use App\Models\Product;
+use App\Services\OfflineBackupService;
 use BackedEnum;
 use Filament\Pages\Page;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Throwable;
 
 class AdminDashboard extends Page
 {
@@ -261,17 +263,15 @@ class AdminDashboard extends Page
     private function getProducts(): array
     {
         if (! Schema::hasTable('products')) {
-            $demo = $this->demoProducts();
-
             return [
-                'items' => $demo,
+                'items' => [],
                 'pagination' => [
                     'current_page' => 1,
-                    'per_page' => count($demo),
-                    'total' => count($demo),
+                    'per_page' => $this->perPage,
+                    'total' => 0,
                     'last_page' => 1,
-                    'from' => count($demo) > 0 ? 1 : 0,
-                    'to' => count($demo),
+                    'from' => 0,
+                    'to' => 0,
                     'has_prev' => false,
                     'has_next' => false,
                     'prev_page' => null,
@@ -323,6 +323,7 @@ class AdminDashboard extends Page
         $selects = [
             "products.id",
             "products.{$nameColumn} as product_name",
+            'products.created_at as created_at',
         ];
 
         if ($barcodeColumn) {
@@ -357,17 +358,15 @@ class AdminDashboard extends Page
             ->get();
 
         if ($items->isEmpty()) {
-            $demo = $this->demoProducts();
-
             return [
-                'items' => $demo,
+                'items' => [],
                 'pagination' => [
-                    'current_page' => 1,
-                    'per_page' => count($demo),
-                    'total' => count($demo),
+                    'current_page' => $page,
+                    'per_page' => $this->perPage,
+                    'total' => 0,
                     'last_page' => 1,
-                    'from' => count($demo) > 0 ? 1 : 0,
-                    'to' => count($demo),
+                    'from' => 0,
+                    'to' => 0,
                     'has_prev' => false,
                     'has_next' => false,
                     'prev_page' => null,
@@ -385,8 +384,10 @@ class AdminDashboard extends Page
                 'name' => $item->product_name ?? '-',
                 'sku' => $item->barcode ?: 'SKU-' . str_pad((string) $item->id, 4, '0', STR_PAD_LEFT),
                 'barcode' => $item->barcode,
+                'created_at' => $item->created_at ? \Illuminate\Support\Carbon::parse($item->created_at)->format('d M Y H:i') : '-',
                 'unit' => $details['unit'] ?? null,
                 'weight' => $details['weight'] ?? null,
+                'weight_unit' => $details['weight_unit'] ?? 'kg',
                 'category' => $item->category_name ?? '-',
                 'category_id' => $details['category_id'] ?? null,
                 'brand' => $item->brand_name ?? '-',
@@ -409,6 +410,8 @@ class AdminDashboard extends Page
                 'supplier_note' => $details['supplier_note'] ?? '',
                 'batch_id' => $details['batch_id'] ?? null,
                 'batch_code' => $details['batch_code'] ?? null,
+                'condition' => $details['condition'] ?? null,
+                'processed_by' => $details['processed_by'] ?? null,
                 'payment_type' => $details['payment_type'] ?? 'LUNAS',
                 'credit_days' => $details['credit_days'] ?? null,
                 'credit_due_date' => $details['credit_due_date'] ?? null,
@@ -459,6 +462,8 @@ class AdminDashboard extends Page
             'description' => $product->description,
             'unit' => $product->unit,
             'weight' => $product->weight,
+            'weight_unit' => $product->weight_unit ?: 'kg',
+            'created_at' => $product->created_at?->format('d M Y H:i'),
             'image_url' => $product->image_path ? '/storage/' . ltrim($product->image_path, '/') : null,
             'is_active' => $product->is_active,
             'stock' => (int) ($batch?->stock ?? 0),
@@ -474,6 +479,8 @@ class AdminDashboard extends Page
             'supplier_note' => $batch?->supplier?->note,
             'batch_id' => $batch?->id,
             'batch_code' => $batch?->batch_code,
+            'condition' => $batch?->condition,
+            'processed_by' => $batch?->processed_by,
             'payment_type' => $batch?->payment_type ?? 'LUNAS',
             'credit_days' => $batch?->credit_days,
             'credit_due_date' => $batch?->credit_due_date?->toDateString(),
@@ -576,52 +583,6 @@ class AdminDashboard extends Page
         return 'Rp ' . number_format((float) $value, 0, ',', '.');
     }
 
-    private function demoProducts(): array
-    {
-        return [
-            [
-                'id' => 1,
-                'name' => 'Nike Air Max 270',
-                'sku' => 'SHOE-2023-001',
-                'category' => 'Pakaian',
-                'brand' => 'Nike',
-                'stock' => 124,
-                'purchase_price' => 'Rp 1.200.000',
-                'selling_price' => 'Rp 1.850.000',
-            ],
-            [
-                'id' => 2,
-                'name' => 'Sony WH-1000XM4',
-                'sku' => 'ELEC-SNY-42',
-                'category' => 'Elektronik',
-                'brand' => 'Sony',
-                'stock' => 8,
-                'purchase_price' => 'Rp 3.100.000',
-                'selling_price' => 'Rp 4.499.000',
-            ],
-            [
-                'id' => 3,
-                'name' => 'Minimalist Watch',
-                'sku' => 'ACCS-GEN-08',
-                'category' => 'Aksesoris',
-                'brand' => 'Generic',
-                'stock' => 45,
-                'purchase_price' => 'Rp 250.000',
-                'selling_price' => 'Rp 599.000',
-            ],
-            [
-                'id' => 4,
-                'name' => 'Logitech G915 TKL',
-                'sku' => 'ELEC-LOGI-915',
-                'category' => 'Elektronik',
-                'brand' => 'Logitech',
-                'stock' => 3,
-                'purchase_price' => 'Rp 2.400.000',
-                'selling_price' => 'Rp 3.250.000',
-            ],
-        ];
-    }
-
     public function deleteProduct(int $id): void
     {
         if (Schema::hasTable('products')) {
@@ -643,6 +604,33 @@ class AdminDashboard extends Page
                     ->danger()
                     ->send();
             }
+        }
+    }
+
+    public function createOfflineBackup(OfflineBackupService $backupService): void
+    {
+        try {
+            $result = $backupService->createBackup();
+            $notePdfCount = (int) ($result['note_pdf_count'] ?? 0);
+
+            Notification::make()
+                ->title('Backup Excel berhasil dibuat')
+                ->body(
+                    'Disimpan di Desktop: ' . $result['folder_path']
+                    . ($notePdfCount > 0
+                        ? " | {$notePdfCount} PDF nota tersimpan di folder nota-pdf"
+                        : '')
+                )
+                ->success()
+                ->send();
+        } catch (Throwable $e) {
+            report($e);
+
+            Notification::make()
+                ->title('Backup gagal dibuat')
+                ->body('Silakan cek log Laravel untuk detail error.')
+                ->danger()
+                ->send();
         }
     }
 

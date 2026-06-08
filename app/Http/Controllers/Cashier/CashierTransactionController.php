@@ -290,19 +290,24 @@ class CashierTransactionController extends Controller
             ->limit(20)
             ->get();
 
-        $editLogs = SaleEditLog::query()
-            ->with('editor:id,name')
-            ->where('edited_by_user_id', $user->id)
-            ->latest('id')
-            ->limit(20)
-            ->get();
+        // Keep history page working even if the log tables have not been migrated yet.
+        $editLogs = Schema::hasTable('sale_edit_logs')
+            ? SaleEditLog::query()
+                ->with('editor:id,name')
+                ->where('edited_by_user_id', $user->id)
+                ->latest('id')
+                ->limit(20)
+                ->get()
+            : collect();
 
-        $deleteLogs = SaleDeleteLog::query()
-            ->with('deleter:id,name')
-            ->where('deleted_by_user_id', $user->id)
-            ->latest('id')
-            ->limit(20)
-            ->get();
+        $deleteLogs = Schema::hasTable('sale_delete_logs')
+            ? SaleDeleteLog::query()
+                ->with('deleter:id,name')
+                ->where('deleted_by_user_id', $user->id)
+                ->latest('id')
+                ->limit(20)
+                ->get()
+            : collect();
 
         $installmentPaidMap = $this->getSaleInstallmentPaidMap($sales->getCollection()->pluck('id')->all());
 

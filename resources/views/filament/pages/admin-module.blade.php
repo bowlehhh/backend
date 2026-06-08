@@ -803,6 +803,19 @@
             @if($errors->any())
               <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ $errors->first() }}</div>
             @endif
+            <div class="mb-4 flex flex-col gap-3 rounded-xl border border-[#d4dbd7] bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p class="text-sm font-semibold text-[#191c1e]">Export Excel Utang</p>
+                <p class="text-sm text-[#52615a]">Berisi daftar utang, detail cicilan, pokok, DP, dan riwayat pelunasan dalam beberapa sheet.</p>
+              </div>
+              <a
+                href="{{ route('admin.credits.export.xlsx') }}"
+                download="utang-saya-{{ now()->format('Ymd-His') }}.xlsx"
+                class="inline-flex items-center justify-center rounded-lg border border-[#bccac0] bg-white px-4 py-2 text-sm font-semibold text-[#006948] hover:bg-[#f1f4f2]"
+              >
+                Export Excel
+              </a>
+            </div>
             <div class="bg-white border border-[#d4dbd7] rounded-xl overflow-hidden custom-shadow">
               <div class="px-6 pt-5">
                 <p class="text-sm text-[#52615a]">Tabel ini menampilkan semua kredit dari seluruh supplier yang sudah dicatat. Detail, cicilan, dan nota bisa kamu buka lewat rekap per bulan di bawah.</p>

@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\AdminCreditController;
 use App\Http\Controllers\Admin\AdminSalesController;
 use App\Http\Controllers\Admin\ProductGroupCsvExportController;
 use App\Http\Controllers\Admin\ProductGroupXlsxExportController;
+use App\Http\Controllers\Admin\AdminCreditXlsxExportController;
 use App\Http\Controllers\Admin\ProductGroupController;
 use App\Http\Controllers\Admin\AdminUserController;
 use Illuminate\Support\Facades\Route;
@@ -49,6 +50,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function (): v
     Route::get('/sales/{sale}/receipt', [AdminSalesController::class, 'receipt'])->name('admin.sales.receipt');
     Route::get('/product-groups/export', ProductGroupXlsxExportController::class)->name('admin.product-groups.export');
     Route::get('/product-groups/export-csv', ProductGroupCsvExportController::class)->name('admin.product-groups.export.csv');
+    Route::get('/credits/export-xlsx', AdminCreditXlsxExportController::class)->name('admin.credits.export.xlsx');
     Route::get('/product-groups/{product}/detail', [ProductGroupController::class, 'show'])->name('admin.product-groups.show');
     Route::get('/product-groups/{product}/receipt', [ProductGroupController::class, 'receipt'])->name('admin.product-groups.receipt');
     Route::get('/credits/{batch}/detail', [AdminCreditController::class, 'detail'])->name('admin.credits.detail');

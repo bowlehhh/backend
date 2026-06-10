@@ -26,6 +26,8 @@ class CheckoutRequest extends FormRequest
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
             'items.*.product_batch_id' => ['required', 'integer', 'exists:product_batches,id'],
+            'items.*.part_number' => ['nullable', 'string', 'max:100'],
+            'items.*.merge_stock' => ['nullable', 'boolean'],
             'items.*.qty' => ['required', 'integer', 'min:1'],
             'items.*.price' => ['nullable', 'numeric', 'min:0'],
         ];

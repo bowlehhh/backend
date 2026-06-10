@@ -49,6 +49,7 @@ class UpdateDashboardProductRequest extends FormRequest
             'supplier_address' => ['nullable', 'string'],
             'supplier_note' => ['nullable', 'string'],
             'batch_code' => ['nullable', 'string', 'max:255', Rule::unique('product_batches', 'batch_code')->ignore($batchId)],
+            'supplier_invoice_number' => ['nullable', 'string', 'max:255'],
             'condition' => ['nullable', 'string', 'max:120'],
             'processed_by' => ['nullable', 'string', 'max:255'],
             'purchase_price' => ['required', 'numeric', 'min:0'],

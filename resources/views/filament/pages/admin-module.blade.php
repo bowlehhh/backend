@@ -204,7 +204,7 @@
           <button id="mobileSidebarBtn" type="button" class="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#bccac0] bg-white text-[#3d4a42] hover:bg-[#f1f4f2]" aria-label="Buka navigasi">
             <span class="material-symbols-outlined">menu</span>
           </button>
-          <div class="flex items-center gap-4"><span class="text-xl font-bold text-[#006948]">Toko Pak Paul</span></div>
+          <div class="flex items-center gap-4"><span class="text-xl font-bold text-[#006948]">Surya Duta Multindo</span></div>
         </div>
         <button id="toggleSidebarBtn" type="button" class="hidden lg:inline-flex items-center gap-1 rounded-lg border border-[#bccac0] px-3 py-2 text-sm text-[#3d4a42] hover:bg-[#f1f4f2]">
           <span class="material-symbols-outlined text-base">left_panel_close</span>
@@ -231,7 +231,23 @@
             <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'supplier-transactions' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=supplier-transactions') }}"><span class="material-symbols-outlined">account_tree</span><span class="nav-label">Transaksi PT/CV</span></a>
             <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'reports' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=reports') }}"><span class="material-symbols-outlined">analytics</span><span class="nav-label">Laporan</span></a>
             <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'users' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=users') }}"><span class="material-symbols-outlined">group</span><span class="nav-label">User</span></a>
-            <a class="sf-nav-item mt-auto flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'product-groups' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=product-groups') }}"><span class="material-symbols-outlined">inventory_2</span><span class="nav-label">Kelompok Barang</span></a>
+            <div class="mt-auto space-y-1">
+              <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'product-groups' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=product-groups') }}"><span class="material-symbols-outlined">inventory_2</span><span class="nav-label">Kelompok Barang</span></a>
+              <div class="ml-3 border-l border-[#d4dbd7] pl-3 py-1 space-y-1">
+                <a class="sf-nav-item flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('admin.transaksi.dashboard') ? 'bg-[#e8fff4] text-[#006948]' : 'text-[#52615a] hover:bg-[#f2f4f6]' }}" href="{{ route('admin.transaksi.dashboard') }}">
+                  <span class="material-symbols-outlined text-[18px]">point_of_sale</span>
+                  <span class="nav-label">Daftar Barang Jual</span>
+                </a>
+                <a class="sf-nav-item flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('admin.transactions.drafts') ? 'bg-[#e8fff4] text-[#006948]' : 'text-[#52615a] hover:bg-[#f2f4f6]' }}" href="{{ route('admin.transactions.drafts') }}">
+                  <span class="material-symbols-outlined text-[18px]">draft</span>
+                  <span class="nav-label">Draft Tertunda</span>
+                </a>
+                <a class="sf-nav-item flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('admin.transactions.history*') ? 'bg-[#e8fff4] text-[#006948]' : 'text-[#52615a] hover:bg-[#f2f4f6]' }}" href="{{ route('admin.transactions.history') }}">
+                  <span class="material-symbols-outlined text-[18px]">receipt_long</span>
+                  <span class="nav-label">History &amp; Nota</span>
+                </a>
+              </div>
+            </div>
           </nav>
           <div class="mt-4 pt-3 pb-5 border-t border-[#d4dbd7]">
             <form method="POST" action="{{ route('logout') }}" class="js-admin-logout-form">
@@ -272,9 +288,9 @@
                 <p class="text-sm text-[#52615a] mt-2">{{ number_format((int) ($reportStats['year_count'] ?? 0), 0, ',', '.') }} transaksi pembelian</p>
               </div>
               <div class="bg-white p-6 rounded-xl border border-[#d4dbd7] custom-shadow">
-                <div class="flex items-center gap-3 mb-2"><div class="p-1 rounded-lg bg-[#e8efff]"><span class="material-symbols-outlined text-[#1e40af]">point_of_sale</span></div><span class="text-[#52615a] font-medium">Transaksi Kasir Hari Ini</span></div>
+                <div class="flex items-center gap-3 mb-2"><div class="p-1 rounded-lg bg-[#e8efff]"><span class="material-symbols-outlined text-[#1e40af]">point_of_sale</span></div><span class="text-[#52615a] font-medium">Transaksi Admin Hari Ini</span></div>
                 <div class="text-[34px] leading-[42px] font-bold text-[#1e40af]">Rp {{ number_format((float) ($reportStats['cashier_today_total'] ?? 0), 0, ',', '.') }}</div>
-                <p class="text-sm text-[#52615a] mt-2">{{ number_format((int) ($reportStats['cashier_today_count'] ?? 0), 0, ',', '.') }} transaksi kasir</p>
+                <p class="text-sm text-[#52615a] mt-2">{{ number_format((int) ($reportStats['cashier_today_count'] ?? 0), 0, ',', '.') }} transaksi admin toko</p>
               </div>
             </div>
 
@@ -450,7 +466,7 @@
 
               <div class="rounded-xl border border-[#d4dbd7] bg-white p-6 custom-shadow">
                 <div class="mb-4">
-                  <h2 class="text-lg font-semibold text-[#191c1e]">Transaksi Kasir per Bulan</h2>
+                  <h2 class="text-lg font-semibold text-[#191c1e]">Transaksi Admin per Bulan</h2>
                   <p class="text-sm text-[#52615a]">Riwayat penjualan dan invoice kasir juga dikelompokkan per bulan supaya mudah ditelusuri.</p>
                 </div>
 
@@ -739,7 +755,7 @@
                 <p class="text-sm text-[#52615a] mt-2">Part number yang punya riwayat pembelian atau penjualan</p>
               </div>
               <div class="bg-white p-6 rounded-xl border border-[#d4dbd7] custom-shadow">
-                <div class="text-xs uppercase tracking-[0.2em] text-[#52615a]">Transaksi Kasir</div>
+                <div class="text-xs uppercase tracking-[0.2em] text-[#52615a]">Transaksi Admin</div>
                 <div class="mt-2 text-[34px] leading-[42px] font-bold text-[#191c1e]">{{ number_format((int) ($productGroups['summary']['sales_count'] ?? 0), 0, ',', '.') }}</div>
                 <p class="text-sm text-[#52615a] mt-2">{{ $productGroups['summary']['sales_value'] ?? 'Rp 0' }} total nilai jual</p>
               </div>
@@ -752,6 +768,26 @@
                 <div class="text-xs uppercase tracking-[0.2em] text-[#52615a]">Status Kredit</div>
                 <div class="mt-2 text-[34px] leading-[42px] font-bold text-[#191c1e]">{{ number_format((int) (($productGroups['summary']['sales_kredit'] ?? 0) + ($productGroups['summary']['purchase_kredit'] ?? 0)), 0, ',', '.') }}</div>
                 <p class="text-sm text-[#52615a] mt-2">Gabungan transaksi kredit pembelian dan penjualan</p>
+              </div>
+            </div>
+
+            <div class="mb-6 rounded-xl border border-[#d4dbd7] bg-white p-5 custom-shadow">
+              <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p class="text-sm font-semibold text-[#191c1e]">Akses Transaksi Admin</p>
+                  <p class="text-sm text-[#52615a]">Pakai daftar barang jual, simpan draft transaksi, lalu buka history atau nota dari sini.</p>
+                </div>
+                <div class="flex flex-col gap-2 sm:flex-row">
+                  <a href="{{ route('admin.transaksi.dashboard') }}" class="inline-flex items-center justify-center rounded-lg bg-[#006948] px-4 py-2 text-sm font-semibold text-white hover:brightness-95">
+                    Buka Transaksi
+                  </a>
+                  <a href="{{ route('admin.transactions.drafts') }}" class="inline-flex items-center justify-center rounded-lg border border-[#bccac0] bg-white px-4 py-2 text-sm font-semibold text-[#006948] hover:bg-[#f1f4f2]">
+                    Draft Tertunda
+                  </a>
+                  <a href="{{ route('admin.transactions.history') }}" class="inline-flex items-center justify-center rounded-lg border border-[#bccac0] bg-white px-4 py-2 text-sm font-semibold text-[#006948] hover:bg-[#f1f4f2]">
+                    History &amp; Nota
+                  </a>
+                </div>
               </div>
             </div>
 
@@ -1040,7 +1076,7 @@
                         <th class="px-5 py-4 font-medium uppercase tracking-wider">Barang</th>
                         <th class="px-5 py-4 font-medium uppercase tracking-wider">Nominal</th>
                         <th class="px-5 py-4 font-medium uppercase tracking-wider">Jenis</th>
-                        <th class="px-5 py-4 font-medium uppercase tracking-wider">Kasir</th>
+                        <th class="px-5 py-4 font-medium uppercase tracking-wider">Admin</th>
                         <th class="px-5 py-4 font-medium uppercase tracking-wider">Catatan</th>
                         <th class="px-5 py-4 font-medium uppercase tracking-wider text-right">Aksi</th>
                       </tr>
@@ -1097,8 +1133,8 @@
                 <div>
                   <label class="mb-1 block text-sm font-medium text-[#3d4a42]">Role</label>
                   <select name="role" class="w-full rounded-lg border-[#bccac0] focus:border-[#006948] focus:ring-[#006948]/20" required>
-                    <option value="cashier">Cashier</option>
-                    <option value="admin">Admin</option>
+                    <option value="admin">Admin Toko/Gudang</option>
+                    <option value="admin_besar">Admin Besar</option>
                   </select>
                 </div>
                 <div class="flex items-end">
@@ -1151,8 +1187,8 @@
                     <div>
                       <label class="mb-1 block text-sm font-medium text-[#3d4a42]">Role</label>
                       <select name="role" class="w-full rounded-lg border-[#bccac0] focus:border-[#006948] focus:ring-[#006948]/20" required>
-                        <option value="cashier" @selected($userRow['role'] === 'cashier')>Cashier</option>
-                        <option value="admin" @selected($userRow['role'] === 'admin')>Admin</option>
+                        <option value="admin" @selected($userRow['role'] === 'admin')>Admin Toko/Gudang</option>
+                        <option value="admin_besar" @selected($userRow['role'] === 'admin_besar')>Admin Besar</option>
                       </select>
                     </div>
                     <div class="flex items-end">

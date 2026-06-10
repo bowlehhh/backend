@@ -18,7 +18,7 @@ class User extends Authenticatable implements FilamentUser
 
     public const ROLE_ADMIN = 'admin';
 
-    public const ROLE_CASHIER = 'cashier';
+    public const ROLE_ADMIN_BESAR = 'admin_besar';
 
     protected $fillable = [
         'name',
@@ -57,14 +57,19 @@ class User extends Authenticatable implements FilamentUser
         return strtolower((string) $this->role) === self::ROLE_ADMIN;
     }
 
-    public function isCashier(): bool
+    public function isAdminBesar(): bool
     {
-        return strtolower((string) $this->role) === self::ROLE_CASHIER;
+        return strtolower((string) $this->role) === self::ROLE_ADMIN_BESAR;
     }
 
     public function setRoleAttribute(mixed $value): void
     {
-        $this->attributes['role'] = strtolower(trim((string) $value));
+        $normalized = strtolower(trim((string) $value));
+
+        $this->attributes['role'] = match ($normalized) {
+            'adminbesar', 'admin-besar', 'utang_piutang', 'cashier' => self::ROLE_ADMIN_BESAR,
+            default => $normalized,
+        };
     }
 
     public function canAccessPanel(Panel $panel): bool

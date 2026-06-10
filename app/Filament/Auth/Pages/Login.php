@@ -51,11 +51,11 @@ class Login extends \Filament\Auth\Pages\Login
             $user instanceof FilamentUser &&
             ! $user->canAccessPanel(Filament::getCurrentOrDefaultPanel())
         ) {
-            // User kasir boleh login dari /admin/login, lalu diarahkan ke dashboard kasir.
-            if (method_exists($user, 'isCashier') && $user->isCashier()) {
+            // User admin besar boleh login dari /admin/login, lalu diarahkan ke halaman admin besar.
+            if (method_exists($user, 'isAdminBesar') && $user->isAdminBesar()) {
                 $authGuard->login($user, $remember);
                 session()->regenerate();
-                session()->put('url.intended', url('/cashier/dashboard'));
+                session()->put('url.intended', url('/admin/admin-besar'));
 
                 return app(LoginResponse::class);
             }
@@ -86,4 +86,3 @@ class Login extends \Filament\Auth\Pages\Login
         return false;
     }
 }
-

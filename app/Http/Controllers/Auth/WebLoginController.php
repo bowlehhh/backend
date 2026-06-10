@@ -67,8 +67,8 @@ class WebLoginController extends Controller
 
     private function redirectByRole(User $user): RedirectResponse
     {
-        if ($user->isCashier()) {
-            return redirect('/cashier/dashboard');
+        if ($user->isAdminBesar()) {
+            return redirect('/admin/admin-besar');
         }
 
         return redirect('/admin/admin-dashboard');

@@ -64,11 +64,11 @@ class ProductGroupCsvExportController extends Controller
                     }
                 }
 
-                $writeRow(['Transaksi Kasir']);
+                $writeRow(['Transaksi Admin']);
 
                 foreach (($group['sales_month_groups'] ?? []) as $monthGroup) {
                     $writeRow(['Bulan', $monthGroup['month_label'] ?? '-', 'Transaksi', (string) ((int) ($monthGroup['summary']['count'] ?? 0)), 'Nilai', $monthGroup['summary']['value'] ?? 'Rp 0']);
-                    $writeRow(['Tanggal', 'Invoice', 'Pembeli / PT', 'Kasir', 'Metode', 'Qty', 'Total', 'Kredit', 'Jatuh Tempo', 'Status', 'Retur']);
+                    $writeRow(['Tanggal', 'Invoice', 'Pembeli / PT', 'Admin', 'Metode', 'Qty', 'Total', 'Kredit', 'Jatuh Tempo', 'Status', 'Retur']);
 
                     foreach (($monthGroup['rows'] ?? []) as $row) {
                         $writeRow([

@@ -12,12 +12,12 @@
 <main class="mx-auto max-w-7xl p-4 lg:p-6">
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-            <h1 class="text-2xl font-extrabold">Edit Transaksi Kasir</h1>
+            <h1 class="text-2xl font-extrabold">Edit Transaksi</h1>
             <p class="text-sm text-slate-500">Invoice: {{ $sale->invoice_number }} | Tanggal: {{ $sale->created_at?->format('d M Y H:i') }}</p>
         </div>
         <div class="flex gap-2">
             <a href="{{ route('cashier.receipt', $sale) }}" class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">Lihat Nota</a>
-            <a href="{{ route('cashier.history') }}" class="rounded-xl border border-emerald-700 px-4 py-2 text-sm font-semibold text-emerald-700">Kembali ke History</a>
+            <a href="{{ route('cashier.history') }}" class="rounded-xl border border-emerald-700 px-4 py-2 text-sm font-semibold text-emerald-700">Kembali ke Riwayat</a>
         </div>
     </div>
 
@@ -33,7 +33,7 @@
             <h2 class="text-lg font-bold text-amber-800">Edit Dikunci</h2>
             <p class="mt-1 text-sm text-amber-700">Transaksi ini sudah memiliki retur, jadi demi konsistensi stok dan nilai transaksi tidak bisa diedit atau dihapus.</p>
             <div class="mt-4 flex flex-wrap gap-2">
-                <a href="{{ route('cashier.history') }}" class="rounded-xl border border-amber-500 px-4 py-2 text-sm font-semibold text-amber-700">Kembali ke History</a>
+                <a href="{{ route('cashier.history') }}" class="rounded-xl border border-amber-500 px-4 py-2 text-sm font-semibold text-amber-700">Kembali ke Riwayat</a>
                 <a href="{{ route('cashier.receipt', $sale) }}" class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">Buka Nota</a>
             </div>
         </div>
@@ -61,11 +61,11 @@
                         <input type="text" name="customer_phone" maxlength="30" value="{{ old('customer_phone', $sale->customer_phone ?? '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="No. telepon pembeli (opsional)" />
                     </div>
                     <div>
-                        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Nama Pelayan / Kasir</label>
+                        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Nama Petugas / Admin</label>
                         <input type="text" name="cashier_service_name" maxlength="100" value="{{ old('cashier_service_name', $sale->cashier_service_name ?? $user?->name ?? '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" />
                     </div>
                     <div>
-                        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">No. Telepon Kasir</label>
+                        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">No. Telepon Admin</label>
                         <input type="text" name="cashier_phone" maxlength="30" value="{{ old('cashier_phone', $sale->cashier_phone ?? '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" />
                     </div>
                     <div>

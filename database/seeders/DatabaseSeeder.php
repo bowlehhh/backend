@@ -51,7 +51,7 @@ class DatabaseSeeder extends Seeder
 
         User::query()->create([
             'email' => 'admin@pos.test',
-            'name' => 'Admin POS',
+            'name' => 'Admin Toko/Gudang',
             'password' => Hash::make('password'),
             'role' => User::ROLE_ADMIN,
             'is_active' => true,
@@ -59,10 +59,10 @@ class DatabaseSeeder extends Seeder
         ]);
 
         User::query()->create([
-            'email' => 'cashier@pos.test',
-            'name' => 'Cashier POS',
+            'email' => 'adminbesar@pos.test',
+            'name' => 'Admin Besar',
             'password' => Hash::make('password'),
-            'role' => User::ROLE_CASHIER,
+            'role' => User::ROLE_ADMIN_BESAR,
             'is_active' => true,
             'email_verified_at' => now(),
         ]);

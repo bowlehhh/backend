@@ -1,0 +1,2 @@
+<?php echo $__env->make('cashier.receipt', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+<?php /**PATH /home/mrgana/pos-inventory/backend/resources/views/admin/transaksi/receipt.blade.php ENDPATH**/ ?>

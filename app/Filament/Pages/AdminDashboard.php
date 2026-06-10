@@ -96,9 +96,6 @@ class AdminDashboard extends Page
         $totalProducts = 0;
         $lowStock = 0;
         $stockValue = 0;
-        $creditItems = 0;
-        $creditWarnings = 0;
-
         if (Schema::hasTable('products')) {
             $totalProducts = DB::table('products')
                 ->when(Schema::hasColumn('products', 'deleted_at'), fn ($query) => $query->whereNull('deleted_at'))
@@ -124,62 +121,6 @@ class AdminDashboard extends Page
                     ->value('total') ?? 0;
             }
 
-            if (
-                $stockColumn
-                && $purchaseColumn
-                && Schema::hasColumn('product_batches', 'payment_type')
-                && Schema::hasColumn('product_batches', 'credit_due_date')
-            ) {
-                $paidByBatch = [];
-                if (Schema::hasTable('credit_installments') && Schema::hasColumn('credit_installments', 'product_batch_id') && Schema::hasColumn('credit_installments', 'amount')) {
-                    $paidByBatch = DB::table('credit_installments')
-                        ->selectRaw('product_batch_id, SUM(amount) as paid_total')
-                        ->groupBy('product_batch_id')
-                        ->pluck('paid_total', 'product_batch_id')
-                        ->map(fn ($v) => (float) $v)
-                        ->toArray();
-                }
-
-                $creditSelects = ['id', $stockColumn . ' as stock', $purchaseColumn . ' as purchase_price', 'credit_due_date'];
-                if (Schema::hasColumn('product_batches', 'expedition_cost')) {
-                    $creditSelects[] = 'expedition_cost';
-                } else {
-                    $creditSelects[] = DB::raw('0 as expedition_cost');
-                }
-                if (Schema::hasColumn('product_batches', 'down_payment_amount')) {
-                    $creditSelects[] = 'down_payment_amount';
-                } else {
-                    $creditSelects[] = DB::raw('0 as down_payment_amount');
-                }
-
-                $creditBatches = DB::table('product_batches')
-                    ->when(Schema::hasColumn('product_batches', 'deleted_at'), fn ($query) => $query->whereNull('product_batches.deleted_at'))
-                    ->whereRaw('UPPER(payment_type) = ?', ['KREDIT'])
-                    ->get($creditSelects);
-
-                $today = now()->startOfDay();
-                foreach ($creditBatches as $batch) {
-                    $expeditionCost = (float) ($batch->expedition_cost ?? 0);
-                    $total = ((float) ($batch->stock ?? 0) * (float) ($batch->purchase_price ?? 0)) + $expeditionCost;
-                    $downPayment = (float) ($batch->down_payment_amount ?? 0);
-                    $paid = min($total, $downPayment + (float) ($paidByBatch[$batch->id] ?? 0));
-                    $remaining = max(0, $total - $paid);
-
-                    if ($remaining <= 0) {
-                        continue;
-                    }
-
-                    $creditItems++;
-
-                    if (!empty($batch->credit_due_date)) {
-                        $due = \Illuminate\Support\Carbon::parse($batch->credit_due_date)->startOfDay();
-                        $days = $today->diffInDays($due, false);
-                        if ($days <= 3) {
-                            $creditWarnings++;
-                        }
-                    }
-                }
-            }
         }
 
         return [
@@ -203,20 +144,6 @@ class AdminDashboard extends Page
                 'description' => 'Estimasi nilai modal inventory',
                 'icon' => 'trending_up',
                 'variant' => 'secondary',
-            ],
-            [
-                'label' => 'Barang Kredit',
-                'value' => number_format($creditItems, 0, ',', '.'),
-                'description' => 'Klik untuk lihat daftar kredit supplier',
-                'icon' => 'credit_card',
-                'variant' => 'info',
-            ],
-            [
-                'label' => 'Warning Kredit',
-                'value' => number_format($creditWarnings, 0, ',', '.'),
-                'description' => 'Jatuh tempo <= 3 hari',
-                'icon' => 'notifications_active',
-                'variant' => 'danger',
             ],
         ];
     }
@@ -410,6 +337,7 @@ class AdminDashboard extends Page
                 'supplier_note' => $details['supplier_note'] ?? '',
                 'batch_id' => $details['batch_id'] ?? null,
                 'batch_code' => $details['batch_code'] ?? null,
+                'supplier_invoice_number' => $details['supplier_invoice_number'] ?? null,
                 'condition' => $details['condition'] ?? null,
                 'processed_by' => $details['processed_by'] ?? null,
                 'payment_type' => $details['payment_type'] ?? 'LUNAS',
@@ -479,6 +407,7 @@ class AdminDashboard extends Page
             'supplier_note' => $batch?->supplier?->note,
             'batch_id' => $batch?->id,
             'batch_code' => $batch?->batch_code,
+            'supplier_invoice_number' => $batch?->supplier_invoice_number,
             'condition' => $batch?->condition,
             'processed_by' => $batch?->processed_by,
             'payment_type' => $batch?->payment_type ?? 'LUNAS',

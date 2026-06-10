@@ -18,7 +18,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 
     Route::prefix('pos')
-        ->middleware('role:cashier')
+        ->middleware('role:admin')
         ->group(function (): void {
             Route::get('/products/search', [ProductSearchController::class, 'index']);
             Route::get('/dashboard', [CashierDashboardController::class, 'show']);

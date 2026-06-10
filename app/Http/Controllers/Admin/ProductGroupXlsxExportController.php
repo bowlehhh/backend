@@ -168,7 +168,7 @@ class ProductGroupXlsxExportController extends Controller
             }
 
             $row++;
-            $this->writeMergedRow($sheet, $row, self::LAST_COL, ['Transaksi Kasir'], $this->styleSubsectionHeader());
+            $this->writeMergedRow($sheet, $row, self::LAST_COL, ['Transaksi Admin'], $this->styleSubsectionHeader());
 
             if (! empty($group['sales_month_groups'])) {
                 foreach ($group['sales_month_groups'] as $monthGroup) {
@@ -184,7 +184,7 @@ class ProductGroupXlsxExportController extends Controller
                         'Tanggal',
                         'Invoice',
                         'Pembeli / PT',
-                        'Kasir',
+                        'Admin',
                         'Metode',
                         'Qty',
                         'Total',

@@ -12,8 +12,8 @@ class LoginResponse implements LoginResponseContract
     {
         $user = $request->user();
 
-        if ($user instanceof User && $user->isCashier()) {
-            return new RedirectResponse(url('/cashier/dashboard'));
+        if ($user instanceof User && $user->isAdminBesar()) {
+            return new RedirectResponse(url('/admin/admin-besar'));
         }
 
         return new RedirectResponse(url('/admin/admin-dashboard'));

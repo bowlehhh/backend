@@ -65,7 +65,7 @@
     <div class="sf-wrap bg-[#f7f9fb] text-[#191c1e] min-h-screen w-screen max-w-none ml-[calc(50%-50vw)] mr-[calc(50%-50vw)] overflow-x-hidden">
       <header class="bg-white border-b border-[#d4dbd7] flex justify-between items-center px-6 h-16 sticky top-0 z-20">
         <div class="flex items-center gap-4">
-          <span class="text-xl font-bold text-[#006948]">Toko Pak Paul</span>
+          <span class="text-xl font-bold text-[#006948]">Surya Duta Multindo</span>
         </div>
       </header>
 

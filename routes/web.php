@@ -4,6 +4,8 @@ use App\Http\Controllers\Auth\WebLoginController;
 use App\Http\Controllers\Cashier\CashierDashboardController;
 use App\Http\Controllers\Cashier\CashierTransactionController;
 use App\Http\Controllers\Admin\AdminDashboardProductController;
+use App\Http\Controllers\Admin\AdminBesarDashboardController;
+use App\Http\Controllers\Admin\AdminBesarTransactionController;
 use App\Http\Controllers\Admin\AdminCreditController;
 use App\Http\Controllers\Admin\AdminSalesController;
 use App\Http\Controllers\Admin\ProductGroupCsvExportController;
@@ -17,8 +19,8 @@ Route::get('/', function () {
     if (auth()->check()) {
         $user = auth()->user();
 
-        if ($user?->isCashier()) {
-            return redirect('/cashier/dashboard');
+        if ($user?->isAdminBesar()) {
+            return redirect('/admin/admin-besar');
         }
 
         return redirect('/admin/admin-dashboard');
@@ -60,14 +62,57 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function (): v
     Route::get('/credits/{batch}/installments/{installment}/receipt', [AdminCreditController::class, 'installmentReceipt'])->name('admin.credits.installment.receipt');
 });
 
-Route::middleware(['auth', 'role:cashier'])
-    ->get('/cashier/dashboard', CashierDashboardController::class)
-    ->name('cashier.dashboard');
+Route::middleware(['auth', 'role:admin'])
+    ->get('/admin/transaksi', CashierDashboardController::class)
+    ->name('admin.transaksi.dashboard');
 
-Route::middleware(['auth', 'role:cashier'])
+Route::middleware(['auth', 'role:admin'])
+    ->prefix('admin/transaksi')
+    ->group(function (): void {
+        Route::get('/history', [CashierTransactionController::class, 'history'])->name('admin.transactions.history');
+        Route::get('/history-supplier', [CashierTransactionController::class, 'historyBySupplier'])->name('admin.transactions.history.supplier');
+        Route::get('/history-supplier/detail', [CashierTransactionController::class, 'historyBySupplierDetail'])->name('admin.transactions.history.supplier.detail');
+        Route::get('/drafts', [CashierTransactionController::class, 'drafts'])->name('admin.transactions.drafts');
+        Route::get('/history/{sale}/receipt', [CashierTransactionController::class, 'receipt'])->name('admin.transactions.receipt');
+        Route::get('/history/{sale}/installment', [CashierTransactionController::class, 'installmentForm'])->name('admin.transactions.history.installment.form');
+        Route::post('/history/{sale}/installment', [CashierTransactionController::class, 'storeInstallment'])->name('admin.transactions.history.installment.store');
+        Route::get('/history/{sale}/installments/{installment}/receipt', [CashierTransactionController::class, 'installmentReceipt'])->name('admin.transactions.history.installment.receipt');
+        Route::get('/history/{sale}/edit', [CashierTransactionController::class, 'editHistory'])->name('admin.transactions.history.edit');
+        Route::put('/history/{sale}/edit', [CashierTransactionController::class, 'updateHistory'])->name('admin.transactions.history.update');
+        Route::delete('/history/{sale}/delete', [CashierTransactionController::class, 'destroyHistory'])->name('admin.transactions.history.destroy');
+        Route::get('/history/{sale}/return', [CashierTransactionController::class, 'returnForm'])->name('admin.transactions.return.form');
+        Route::post('/history/{sale}/return', [CashierTransactionController::class, 'storeReturn'])->name('admin.transactions.return.store');
+        Route::get('/returns/{salesReturn}/receipt', [CashierTransactionController::class, 'returnReceipt'])->name('admin.transactions.return.receipt');
+
+        Route::post('/cart/add/{batch}', [CashierTransactionController::class, 'add'])->name('admin.transactions.cart.add');
+        Route::post('/cart/update/{batch}', [CashierTransactionController::class, 'update'])->name('admin.transactions.cart.update');
+        Route::post('/cart/remove/{batch}', [CashierTransactionController::class, 'remove'])->name('admin.transactions.cart.remove');
+        Route::post('/cart/merge/{batch}', [CashierTransactionController::class, 'toggleMergeStock'])->name('admin.transactions.cart.merge');
+        Route::post('/cart/clear', [CashierTransactionController::class, 'clear'])->name('admin.transactions.cart.clear');
+        Route::post('/cart/hold', [CashierTransactionController::class, 'hold'])->name('admin.transactions.cart.hold');
+
+        Route::post('/drafts/{draft}/resume', [CashierTransactionController::class, 'resume'])->name('admin.transactions.drafts.resume');
+        Route::post('/drafts/{draft}/delete', [CashierTransactionController::class, 'destroyDraft'])->name('admin.transactions.drafts.delete');
+        Route::post('/checkout', [CashierTransactionController::class, 'checkout'])->name('admin.transactions.checkout');
+    });
+
+Route::middleware(['auth', 'role:admin_besar'])
+    ->prefix('admin/admin-besar')
+    ->group(function (): void {
+        Route::get('/', AdminBesarDashboardController::class)->name('admin.admin-besar.index');
+        Route::get('/history', [AdminBesarTransactionController::class, 'history'])->name('admin.admin-besar.history');
+        Route::get('/history-supplier', [AdminBesarTransactionController::class, 'historyBySupplier'])->name('admin.admin-besar.history.supplier');
+        Route::get('/history-supplier/detail', [AdminBesarTransactionController::class, 'historyBySupplierDetail'])->name('admin.admin-besar.history.supplier.detail');
+        Route::get('/history/{sale}/receipt', [CashierTransactionController::class, 'receipt'])->name('admin.admin-besar.receipt');
+        Route::get('/history/{sale}/installment', [CashierTransactionController::class, 'installmentForm'])->name('admin.admin-besar.history.installment.form');
+        Route::post('/history/{sale}/installment', [CashierTransactionController::class, 'storeInstallment'])->name('admin.admin-besar.history.installment.store');
+        Route::get('/history/{sale}/installments/{installment}/receipt', [CashierTransactionController::class, 'installmentReceipt'])->name('admin.admin-besar.history.installment.receipt');
+    });
+
+Route::middleware(['auth', 'role:admin,admin_besar'])
     ->prefix('cashier')
     ->group(function (): void {
-        // History & draft transaksi kasir.
+        Route::get('/dashboard', CashierDashboardController::class)->name('cashier.dashboard');
         Route::get('/history', [CashierTransactionController::class, 'history'])->name('cashier.history');
         Route::get('/history-supplier', [CashierTransactionController::class, 'historyBySupplier'])->name('cashier.history.supplier');
         Route::get('/history-supplier/detail', [CashierTransactionController::class, 'historyBySupplierDetail'])->name('cashier.history.supplier.detail');
@@ -82,15 +127,12 @@ Route::middleware(['auth', 'role:cashier'])
         Route::get('/history/{sale}/return', [CashierTransactionController::class, 'returnForm'])->name('cashier.return.form');
         Route::post('/history/{sale}/return', [CashierTransactionController::class, 'storeReturn'])->name('cashier.return.store');
         Route::get('/returns/{salesReturn}/receipt', [CashierTransactionController::class, 'returnReceipt'])->name('cashier.return.receipt');
-
-        // Operasi keranjang.
-        Route::post('/cart/add/{product}', [CashierTransactionController::class, 'add'])->name('cashier.cart.add');
+        Route::post('/cart/add/{batch}', [CashierTransactionController::class, 'add'])->name('cashier.cart.add');
         Route::post('/cart/update/{batch}', [CashierTransactionController::class, 'update'])->name('cashier.cart.update');
         Route::post('/cart/remove/{batch}', [CashierTransactionController::class, 'remove'])->name('cashier.cart.remove');
+        Route::post('/cart/merge/{batch}', [CashierTransactionController::class, 'toggleMergeStock'])->name('cashier.cart.merge');
         Route::post('/cart/clear', [CashierTransactionController::class, 'clear'])->name('cashier.cart.clear');
         Route::post('/cart/hold', [CashierTransactionController::class, 'hold'])->name('cashier.cart.hold');
-
-        // Operasi draft dan checkout final.
         Route::post('/drafts/{draft}/resume', [CashierTransactionController::class, 'resume'])->name('cashier.drafts.resume');
         Route::post('/drafts/{draft}/delete', [CashierTransactionController::class, 'destroyDraft'])->name('cashier.drafts.delete');
         Route::post('/checkout', [CashierTransactionController::class, 'checkout'])->name('cashier.checkout');

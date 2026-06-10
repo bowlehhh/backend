@@ -37,19 +37,17 @@ class ViewSupplier extends ViewRecord
             $goodsSubtotal = $qty * $price;
             $subtotal = $goodsSubtotal + $expeditionCost;
             $paymentType = strtoupper((string) ($batch->payment_type ?? 'LUNAS'));
-            $downPayment = 0.0;
             $installmentPaid = 0.0;
             $remaining = 0.0;
 
             if ($paymentType === 'KREDIT') {
-                $downPayment = (float) ($batch->down_payment_amount ?? 0);
                 if ($hasInstallments) {
                     $installmentPaid = (float) DB::table('credit_installments')
                         ->where('product_batch_id', $batch->id)
                         ->sum('amount');
                 }
 
-                $paid = min($subtotal, $downPayment + $installmentPaid);
+                $paid = min($subtotal, $installmentPaid);
                 $remaining = max(0, $subtotal - $paid);
             } else {
                 $paid = 0.0;
@@ -97,8 +95,6 @@ class ViewSupplier extends ViewRecord
                 'credit_due_date' => $dueDate?->format('d M Y') ?? '-',
                 'status' => $status,
                 'is_warning' => $warning,
-                'down_payment' => $paymentType === 'KREDIT' ? 'Rp ' . number_format($downPayment, 0, ',', '.') : '-',
-                'down_payment_value' => $downPayment,
                 'sudah_dibayar' => $paymentType === 'KREDIT' ? 'Rp ' . number_format($paid, 0, ',', '.') : '-',
                 'total_dibayar' => $paymentType === 'KREDIT' ? 'Rp ' . number_format($paid, 0, ',', '.') : '-',
                 'sisa_kredit' => $paymentType === 'KREDIT' ? 'Rp ' . number_format($remaining, 0, ',', '.') : '-',

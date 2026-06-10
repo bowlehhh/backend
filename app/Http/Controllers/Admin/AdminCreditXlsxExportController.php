@@ -435,7 +435,7 @@ class AdminCreditXlsxExportController extends Controller
             'Total Cicilan',
             'Total Dibayar',
             'Sisa Setelah Cicilan',
-            'Kasir',
+            'Admin',
             'Catatan',
         ], $this->styleTableHeader());
 
@@ -498,7 +498,7 @@ class AdminCreditXlsxExportController extends Controller
             'Total Kredit',
             'Total Cicilan',
             'Nominal Pelunasan',
-            'Kasir',
+            'Admin',
             'Catatan',
             'ID Nota',
         ], $this->styleTableHeader());

@@ -46,10 +46,10 @@
             <div><p class="text-xs uppercase tracking-wide text-[#5c6b64]">Unit</p><p class="mt-1 text-2xl font-semibold">{{ $product->unit ?? '-' }}</p></div>
             <div><p class="text-xs uppercase tracking-wide text-[#5c6b64]">Stok Aktif</p><p class="mt-1 text-xl font-semibold">{{ number_format((int) ($product->batches->where('is_active', true)->sum('stock') ?? 0), 0, ',', '.') }}</p></div>
             <div><p class="text-xs uppercase tracking-wide text-[#5c6b64]">Pembelian Admin</p><p class="mt-1 text-xl font-semibold">{{ number_format((int) ($purchaseSummary['count'] ?? 0), 0, ',', '.') }}</p></div>
-            <div><p class="text-xs uppercase tracking-wide text-[#5c6b64]">Transaksi Kasir</p><p class="mt-1 text-xl font-semibold">{{ number_format((int) ($salesSummary['count'] ?? 0), 0, ',', '.') }}</p></div>
+            <div><p class="text-xs uppercase tracking-wide text-[#5c6b64]">Transaksi Admin</p><p class="mt-1 text-xl font-semibold">{{ number_format((int) ($salesSummary['count'] ?? 0), 0, ',', '.') }}</p></div>
             <div><p class="text-xs uppercase tracking-wide text-[#5c6b64]">Pembelian Lunas</p><p class="mt-1 text-xl font-semibold text-[#0f8a54]">{{ number_format((int) ($purchaseSummary['lunas'] ?? 0), 0, ',', '.') }}</p></div>
             <div><p class="text-xs uppercase tracking-wide text-[#5c6b64]">Pembelian Utang</p><p class="mt-1 text-xl font-semibold text-[#b42318]">{{ number_format((int) ($purchaseSummary['utang'] ?? 0), 0, ',', '.') }}</p></div>
-            <div><p class="text-xs uppercase tracking-wide text-[#5c6b64]">Retur Kasir</p><p class="mt-1 text-xl font-semibold text-[#b36a00]">{{ number_format((int) ($salesSummary['retur'] ?? 0), 0, ',', '.') }}</p></div>
+            <div><p class="text-xs uppercase tracking-wide text-[#5c6b64]">Retur Transaksi</p><p class="mt-1 text-xl font-semibold text-[#b36a00]">{{ number_format((int) ($salesSummary['retur'] ?? 0), 0, ',', '.') }}</p></div>
             <div class="md:col-span-2"><p class="text-xs uppercase tracking-wide text-[#5c6b64]">Aktivitas Terakhir</p><p class="mt-1 text-xl font-semibold">{{ $latestActivityAt?->format('d M Y H:i') ?? '-' }}</p></div>
         </div>
     </section>
@@ -142,7 +142,7 @@
     <section class="rounded-2xl border border-[#d4dbd7] bg-white p-5 card-shadow">
         <div class="mb-4 flex items-start justify-between gap-3">
             <div>
-                <h2 class="text-2xl font-bold">Transaksi Kasir</h2>
+                <h2 class="text-2xl font-bold">Transaksi Admin</h2>
                 <p class="text-sm text-[#52615a]">Riwayat barang ini terjual ke siapa di kasir, termasuk retur jika ada.</p>
             </div>
             <div class="rounded-xl bg-[#eef7f3] px-4 py-2 text-sm text-[#006948] font-semibold">
@@ -175,7 +175,7 @@
                                     <th class="px-5 py-4 font-medium uppercase tracking-wider">Tanggal</th>
                                     <th class="px-5 py-4 font-medium uppercase tracking-wider">Invoice</th>
                                     <th class="px-5 py-4 font-medium uppercase tracking-wider">Customer / PT</th>
-                                    <th class="px-5 py-4 font-medium uppercase tracking-wider">Kasir</th>
+                                    <th class="px-5 py-4 font-medium uppercase tracking-wider">Admin</th>
                                     <th class="px-5 py-4 font-medium uppercase tracking-wider">Qty</th>
                                     <th class="px-5 py-4 font-medium uppercase tracking-wider">Subtotal</th>
                                     <th class="px-5 py-4 font-medium uppercase tracking-wider">Metode</th>

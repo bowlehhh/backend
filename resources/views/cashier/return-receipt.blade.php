@@ -56,7 +56,7 @@
         <tr>
             <td class="label">Invoice Asal</td>
             <td>{{ $sale->invoice_number }}</td>
-            <td class="label">Kasir</td>
+            <td class="label">Admin</td>
             <td>{{ $cashierDisplayName }}</td>
         </tr>
         <tr>
@@ -68,7 +68,7 @@
         <tr>
             <td class="label">No. Telp Pembeli</td>
             <td>{{ $sale->customer_phone ?: '-' }}</td>
-            <td class="label">No. Telp Kasir</td>
+            <td class="label">No. Telp Admin</td>
             <td>{{ $sale->cashier_phone ?: '-' }}</td>
         </tr>
         <tr>

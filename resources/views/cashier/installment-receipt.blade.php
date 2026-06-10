@@ -25,7 +25,7 @@
                 <p class="font-semibold">{{ $installment->paid_at?->format('d M Y H:i') ?: '-' }}</p>
             </div>
             <div>
-                <p class="text-xs uppercase text-slate-500">Kasir</p>
+                <p class="text-xs uppercase text-slate-500">Admin</p>
                 <p class="font-semibold">{{ $sale->cashier_display_name }}</p>
             </div>
             <div>
@@ -55,7 +55,7 @@
                             <th class="px-4 py-3 text-left font-semibold text-slate-600">Jenis</th>
                             <th class="px-4 py-3 text-left font-semibold text-slate-600">Tanggal</th>
                             <th class="px-4 py-3 text-left font-semibold text-slate-600">Nominal</th>
-                            <th class="px-4 py-3 text-left font-semibold text-slate-600">Kasir</th>
+                            <th class="px-4 py-3 text-left font-semibold text-slate-600">Admin</th>
                             <th class="px-4 py-3 text-left font-semibold text-slate-600">Catatan</th>
                         </tr>
                     </thead>

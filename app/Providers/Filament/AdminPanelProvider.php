@@ -32,11 +32,11 @@ class AdminPanelProvider extends PanelProvider
             ->homeUrl(function (): string {
                 $user = Auth::user();
 
-                if ($user && method_exists($user, 'isCashier') && $user->isCashier()) {
-                    return url('/cashier/dashboard');
+                if ($user && method_exists($user, 'isAdminBesar') && $user->isAdminBesar()) {
+                    return url('/admin/admin-besar');
                 }
 
-                return AdminDashboard::getUrl(panel: 'admin');
+                return url('/admin/admin-dashboard');
             })
             ->login(AdminLogin::class)
             ->darkMode(false)

@@ -1,6 +1,7 @@
 @php
-    $storeName = config('app.name', 'Toko Pak Paul');
+    $storeName = config('app.name', 'Surya Duta Multindo');
     $supplierName = $batch->supplier?->name ?? '-';
+    $supplierInvoiceNumber = $batch->supplier_invoice_number ?: '-';
     $partNumber = strtoupper((string) ($batch->product?->barcode ?? '-'));
     $partName = strtoupper((string) ($batch->product?->name ?? '-'));
     $unit = strtoupper((string) ($batch->product?->unit ?? '-'));
@@ -59,10 +60,11 @@
                 <h1 class="title">{{ strtoupper($storeName) }}</h1>
                 <p class="sub">{{ $isCredit ? 'NOTA KREDIT SUPPLIER' : 'NOTA PEMBELIAN LUNAS' }}</p>
                 <p class="sub">Supplier: <strong>{{ $supplierName }}</strong></p>
+                <p class="sub">No. Inv Supplier: <strong>{{ $supplierInvoiceNumber }}</strong></p>
             </div>
             <div class="meta">
                 <div>Tanggal Cetak: {{ $printedAt->format('d M Y H:i') }}</div>
-                <div>Batch ID: #{{ $batch->id }}</div>
+                <div>Nomor Inv: #{{ $batch->id }}</div>
                 <div>{{ $isCredit ? 'Jatuh Tempo: ' . $dueDateDisplay : 'Status: LUNAS' }}</div>
             </div>
         </div>

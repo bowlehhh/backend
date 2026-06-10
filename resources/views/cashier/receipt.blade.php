@@ -8,12 +8,9 @@
         :root { --sheet-width: 176mm; --sheet-border: 1.2px; --sheet-pad: 7px; }
         body { font-family: Arial, Helvetica, sans-serif; color: #111827; margin: 0; background: #f3f4f6; }
         .wrap { width: var(--sheet-width); margin: 12px auto; background: #fff; border: var(--sheet-border) solid #111827; padding: var(--sheet-pad); box-sizing: border-box; }
-        .header-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 10px; }
+        .header-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 8px; }
         .header-table td { border: 0; padding: 0; vertical-align: top; }
-        .header-left { width: 42%; }
-        .header-right { width: 58%; text-align: right; }
-        .company h1 { margin: 0; font-size: 19px; letter-spacing: 0.1px; }
-        .company p { margin: 1px 0; font-size: 11px; }
+        .header-title { width: 100%; text-align: center; }
         .invoice-title { border: 1.2px solid #111827; padding: 4px 12px; font-size: 24px; font-weight: 800; letter-spacing: 0.6px; text-align: center; }
         .meta-table { width: 100%; border-collapse: collapse; margin-top: 6px; border: 1px solid #111827; table-layout: fixed; }
         .meta-table td { border: 1px solid #111827; padding: 4px 5px; font-size: 11px; }
@@ -44,11 +41,27 @@
         .actions { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
         .btn { border: 1px solid #0f766e; background: #0f766e; color: #fff; padding: 7px 10px; border-radius: 8px; font-weight: 700; cursor: pointer; text-decoration: none; font-size: 11px; }
         .btn.secondary { background: #fff; color: #0f766e; }
-        @page { size: A4 portrait; margin: 4mm; }
+        @page { size: A4 landscape; margin: 2.5mm; }
         @media print {
             body { background: #fff; }
-            .wrap { width: var(--sheet-width); margin: 0 auto; border: var(--sheet-border) solid #111827; padding: var(--sheet-pad); transform: scale(0.94); transform-origin: top left; }
+            .wrap { width: auto; margin: 0; border: var(--sheet-border) solid #111827; padding: 2.5mm; transform: none; transform-origin: initial; }
             .actions { display: none; }
+            .header-table, .meta-table, .item-table, .totals, .foot-table { page-break-inside: auto; }
+            .item-table thead { display: table-header-group; }
+            .item-table tr { break-inside: avoid; page-break-inside: avoid; }
+            .item-table th, .item-table td { padding-top: 1px; padding-bottom: 1px; font-size: 7.5px; line-height: 1.05; }
+            .meta-table td, .totals td { padding-top: 2px; padding-bottom: 2px; font-size: 8px; line-height: 1.05; }
+            .header-table td { padding: 0; }
+            .foot-table, .return-history, .installment-history, .footer-note-print { display: none !important; }
+            .invoice-title { font-size: 18px; padding: 2px 8px; }
+            .meta-table .label { width: 13%; }
+            .item-table .col-no { width: 3.5%; }
+            .item-table .col-name { width: 21%; }
+            .item-table .col-part { width: 15%; }
+            .item-table .col-qty { width: 5%; }
+            .item-table .col-unit { width: 5%; }
+            .item-table .col-price { width: 18%; }
+            .item-table .col-total { width: 32.5%; }
             * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
     </style>
@@ -87,6 +100,42 @@
         ['id', 'asc'],
     ])->values();
     $hasReturnItems = $returnItemsBySaleItem->isNotEmpty();
+    $displayItems = collect($sale->items ?? [])
+        ->groupBy(fn ($item) => strtoupper(trim((string) ($item->part_number ?? $item->product?->barcode ?? 'PRODUCT-' . ($item->product_id ?? 0)))))
+        ->map(function ($items) {
+            $first = $items->first();
+            $uniquePrices = $items
+                ->pluck('price')
+                ->map(fn ($price) => (float) $price)
+                ->unique()
+                ->values();
+            $priceBreakdown = $items
+                ->groupBy(fn ($item) => number_format((float) $item->price, 2, '.', ''))
+                ->map(function ($priceItems, $priceKey) {
+                    $qty = (int) $priceItems->sum('qty');
+                    $price = (float) $priceKey;
+
+                    return [
+                        'price' => $price,
+                        'qty' => $qty,
+                        'subtotal' => $price * $qty,
+                    ];
+                })
+                ->sortBy('price')
+                ->values();
+
+            return [
+                'product_name' => (string) ($first->product_name ?: $first->product?->name ?: '-'),
+                'part_number' => (string) ($first->part_number ?: $first->product?->barcode ?: '-'),
+                'unit' => (string) ($first->product?->unit ?: '-'),
+                'qty' => (int) $items->sum('qty'),
+                'subtotal' => (float) $items->sum('subtotal'),
+                'price' => $uniquePrices->count() === 1 ? (float) $uniquePrices->first() : null,
+                'has_mixed_price' => $uniquePrices->count() > 1,
+                'price_breakdown' => $priceBreakdown,
+            ];
+        })
+        ->values();
     $paymentStatus = ($isCredit && $creditOutstanding > 0) ? 'BELUM LUNAS' : 'LUNAS';
     $finalGrandTotal = $isCredit ? $creditOutstanding : (float) $sale->total;
     $remainingAfterEntry = max(0, (float) $sale->total - $downPayment);
@@ -100,14 +149,7 @@
 <div class="wrap">
     <table class="header-table">
         <tr>
-            <td class="header-left">
-                <div class="company">
-                    <h1>{{ strtoupper($storeName) }}</h1>
-                    <p>Jl. Contoh Alamat Toko No. 1</p>
-                    <p>Telp: {{ $sale->cashier_phone ?: '08xx-xxxx-xxxx' }}</p>
-                </div>
-            </td>
-            <td class="header-right">
+            <td class="header-title">
                 <div class="invoice-title">INVOICE PENJUALAN</div>
             </td>
         </tr>
@@ -129,12 +171,12 @@
         <tr>
             <td class="label">Metode Bayar</td>
             <td>{{ strtoupper($sale->payment_method) }}</td>
-            <td class="label">No. Telp Pembeli</td>
-            <td>{{ $sale->customer_phone ?: '-' }}</td>
+            <td class="label">Jatuh Tempo</td>
+            <td>{{ $sale->credit_due_date?->format('d M Y') ?: '-' }}</td>
         </tr>
         <tr>
-            <td class="label">No. Telp Kasir</td>
-            <td>{{ $sale->cashier_phone ?: '-' }}</td>
+            <td class="label">Tempo Kredit</td>
+            <td>{{ $creditDays > 0 ? ($creditDays . ' hari') : '-' }}</td>
             <td class="label">Status</td>
             <td>{{ $paymentStatus }}</td>
         </tr>
@@ -153,26 +195,28 @@
         </tr>
         </thead>
         <tbody>
-        @foreach($sale->items as $idx => $item)
-            @php
-                $partNumber = (string) ($item->product?->barcode ?? '-');
-                $partName = (string) ($item->product_name ?: $item->product?->name ?: '-');
-            @endphp
+        @foreach($displayItems as $idx => $item)
             <tr>
                 <td class="col-no" style="text-align:center;">{{ $idx + 1 }}</td>
-                <td class="desc col-name"><strong>{{ $partName }}</strong></td>
-                <td class="desc col-part"><span style="font-size: 9px; color: #64748b;">{{ $partNumber }}</span></td>
-                <td class="col-qty" style="text-align:center;">{{ $item->qty }}</td>
-                <td class="col-unit" style="text-align:center;">{{ $item->product?->unit ?: '-' }}</td>
-                <td class="num col-price">Rp {{ number_format((float) $item->price, 0, ',', '.') }}</td>
-                <td class="num col-total">Rp {{ number_format((float) $item->subtotal, 0, ',', '.') }}</td>
+                <td class="desc col-name"><strong>{{ $item['product_name'] }}</strong></td>
+                <td class="desc col-part"><span style="font-size: 9px; color: #64748b;">{{ $item['part_number'] }}</span></td>
+                <td class="col-qty" style="text-align:center;">{{ $item['qty'] }}</td>
+                <td class="col-unit" style="text-align:center;">{{ $item['unit'] }}</td>
+                <td class="num col-price">
+                    @if($item['has_mixed_price'])
+                        Rp {{ number_format((float) $item['subtotal'], 0, ',', '.') }}
+                    @else
+                        Rp {{ number_format((float) ($item['price'] ?? 0), 0, ',', '.') }}
+                    @endif
+                </td>
+                <td class="num col-total">Rp {{ number_format((float) $item['subtotal'], 0, ',', '.') }}</td>
             </tr>
         @endforeach
         </tbody>
     </table>
 
     @if($hasReturnItems)
-        <table style="margin-top: 6px; font-size: 9px;">
+        <table style="margin-top: 6px; font-size: 9px;" class="return-history">
             <thead>
             <tr>
                 <th colspan="5">Track Record Retur</th>
@@ -237,13 +281,10 @@
         <tr><td class="label">SUBTOTAL</td><td class="num">Rp {{ number_format((float) $sale->total, 0, ',', '.') }}</td></tr>
         @if($isCredit)
             <tr><td class="label">DP / UANG MUKA</td><td class="num">Rp {{ number_format($downPayment, 0, ',', '.') }}</td></tr>
-            <tr><td class="label">TOTAL CICILAN</td><td class="num">Rp {{ number_format($installmentPaid, 0, ',', '.') }}</td></tr>
             <tr><td class="label">PEMBAYARAN TERAKHIR</td><td class="num">Rp {{ number_format($lastInstallmentReceived, 0, ',', '.') }}</td></tr>
             @if($lastInstallment)
                 <tr><td class="label">SISA SEBELUM BAYAR TERAKHIR</td><td class="num">Rp {{ number_format($creditOutstandingBeforeLastInstallment, 0, ',', '.') }}</td></tr>
             @endif
-            <tr><td class="label">SISA CICILAN</td><td class="num">Rp {{ number_format($creditOutstanding, 0, ',', '.') }}</td></tr>
-            <tr><td class="label">TEMPO KREDIT</td><td class="num">{{ $creditDays > 0 ? ($creditDays . ' hari') : '-' }}</td></tr>
         @else
             <tr><td class="label">BAYAR</td><td class="num">Rp {{ number_format($downPayment, 0, ',', '.') }}</td></tr>
             <tr><td class="label">KEMBALIAN</td><td class="num">Rp {{ number_format((float) $sale->change_amount, 0, ',', '.') }}</td></tr>
@@ -274,9 +315,6 @@
             <tr><td class="label">KEMBALIAN SELISIH</td><td class="num">Rp {{ number_format($extraPaymentChangeTotal, 0, ',', '.') }}</td></tr>
         @endif
         @if($isCredit)
-            <tr><td class="label">JATUH TEMPO</td><td class="num">{{ $sale->credit_due_date?->format('d M Y') ?: '-' }}</td></tr>
-        @endif
-        @if($isCredit)
             <tr class="grand"><td class="label">SISA AKHIR CICILAN</td><td class="num">Rp {{ number_format($finalGrandTotal, 0, ',', '.') }}</td></tr>
             @if($lastInstallmentChange > 0)
                 <tr><td class="label">UANG SISA / KEMBALIAN</td><td class="num">Rp {{ number_format($lastInstallmentChange, 0, ',', '.') }}</td></tr>
@@ -287,7 +325,7 @@
     </table>
 
     @if($isCredit && ($sale->installments?->isNotEmpty() ?? false))
-        <table style="margin-top: 6px;">
+        <table style="margin-top: 6px;" class="installment-history">
             <thead>
             <tr>
                 <th colspan="4">Riwayat Cicilan Kredit</th>
@@ -296,7 +334,7 @@
                 <th style="width: 34%;">Tanggal</th>
                 <th style="width: 22%;">Nominal</th>
                 <th style="width: 22%;">Sisa Sesudah</th>
-                <th style="width: 22%;">Kasir</th>
+                <th style="width: 22%;">Admin</th>
             </tr>
             </thead>
             <tbody>
@@ -317,7 +355,7 @@
 
     <table class="foot-table">
         <tr>
-            <td class="note-col">
+            <td class="note-col footer-note-print">
                 <strong>Catatan:</strong> Simpan faktur ini sebagai bukti transaksi resmi.
             </td>
             <td class="sign-col">
@@ -325,7 +363,7 @@
                     <div>{{ $sale->created_at?->format('d M Y') }}</div>
                     <div class="sign-bottom">
                         <strong>{{ $cashierDisplayName }}</strong><br>
-                        {{ $sale->cashier_phone ?: 'Kasir' }}
+                        {{ $sale->cashier_phone ?: 'Admin' }}
                     </div>
                 </div>
             </td>

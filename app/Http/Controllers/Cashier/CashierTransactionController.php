@@ -33,28 +33,224 @@ class CashierTransactionController extends Controller
     ) {
     }
 
+    private function canViewAllTransactions(Request $request): bool
+    {
+        $user = $request->user();
+
+        return (bool) ($user?->isAdmin() || $user?->isAdminBesar());
+    }
+
+    private function canAccessSale(Request $request, Sale $sale): bool
+    {
+        if ($this->canViewAllTransactions($request)) {
+            return true;
+        }
+
+        return (int) $sale->user_id === (int) $request->user()->id;
+    }
+
+    private function getProductAvailableStock(Product $product): int
+    {
+        return (int) ProductBatch::query()
+            ->where('product_id', $product->id)
+            ->where('is_active', true)
+            ->sum('stock');
+    }
+
+    private function getProductPartNumber(Product $product): string
+    {
+        $barcode = strtoupper(trim((string) ($product->barcode ?? '')));
+
+        return $barcode !== '' ? $barcode : 'PRODUCT-' . $product->id;
+    }
+
+    private function getBatchPartNumber(ProductBatch $batch): string
+    {
+        $batch->loadMissing('product:id,barcode');
+
+        return $this->getProductPartNumber($batch->product);
+    }
+
+    private function getBatchStock(ProductBatch $batch): int
+    {
+        return (int) $batch->stock;
+    }
+
+    private function getAvailableStockByPartNumber(string $partNumber): int
+    {
+        $normalized = strtoupper(trim($partNumber));
+
+        if ($normalized === '') {
+            return 0;
+        }
+
+        if (str_starts_with($normalized, 'PRODUCT-')) {
+            $productId = (int) substr($normalized, 8);
+
+            return (int) ProductBatch::query()
+                ->where('product_id', $productId)
+                ->where('is_active', true)
+                ->sum('stock');
+        }
+
+        return (int) ProductBatch::query()
+            ->where('is_active', true)
+            ->whereHas('product', fn ($query) => $query->whereRaw('UPPER(TRIM(barcode)) = ?', [$normalized]))
+            ->sum('stock');
+    }
+
+    private function findFirstBatchForPartNumber(string $partNumber): ?ProductBatch
+    {
+        $normalized = strtoupper(trim($partNumber));
+
+        if ($normalized === '') {
+            return null;
+        }
+
+        $query = ProductBatch::query()
+            ->with('product:id,barcode')
+            ->where('is_active', true);
+
+        if (str_starts_with($normalized, 'PRODUCT-')) {
+            $query->where('product_id', (int) substr($normalized, 8));
+        } else {
+            $query->whereHas('product', fn ($q) => $q->whereRaw('UPPER(TRIM(barcode)) = ?', [$normalized]));
+        }
+
+        return $query->oldest('id')->first();
+    }
+
+    private function findCartItemKeyByPartNumber(array $cart, string $partNumber): ?string
+    {
+        $normalized = strtoupper(trim($partNumber));
+
+        foreach ($cart as $key => $item) {
+            if (strtoupper(trim((string) ($item['part_number'] ?? ''))) === $normalized) {
+                return (string) $key;
+            }
+        }
+
+        return null;
+    }
+
+    private function findMergedCartItemKeyByPartNumber(array $cart, string $partNumber): ?string
+    {
+        $normalized = strtoupper(trim($partNumber));
+
+        foreach ($cart as $key => $item) {
+            if (strtoupper(trim((string) ($item['part_number'] ?? ''))) !== $normalized) {
+                continue;
+            }
+
+            if (! (bool) ($item['merge_stock'] ?? false)) {
+                continue;
+            }
+
+            return (string) $key;
+        }
+
+        return null;
+    }
+
+    private function findCartItemKeyByBatchId(array $cart, int $batchId): ?string
+    {
+        foreach ($cart as $key => $item) {
+            if ((int) ($item['product_batch_id'] ?? 0) === $batchId) {
+                return (string) $key;
+            }
+        }
+
+        return null;
+    }
+
+    private function normalizeStockAllocations(array $item): array
+    {
+        $allocations = $item['stock_allocations'] ?? null;
+        $normalized = [];
+
+        if (is_array($allocations)) {
+            foreach ($allocations as $batchId => $qty) {
+                $batchKey = (int) $batchId;
+                $batchQty = max(0, (int) $qty);
+                if ($batchKey > 0 && $batchQty > 0) {
+                    $normalized[$batchKey] = ($normalized[$batchKey] ?? 0) + $batchQty;
+                }
+            }
+        }
+
+        if ($normalized === []) {
+            $batchId = (int) ($item['product_batch_id'] ?? 0);
+            $qty = max(0, (int) ($item['qty'] ?? 0));
+            if ($batchId > 0 && $qty > 0) {
+                $normalized[$batchId] = $qty;
+            }
+        }
+
+        return $normalized;
+    }
+
+    private function getCartPartNumberQty(array $cart, string $partNumber, ?string $ignoreKey = null): int
+    {
+        $total = 0;
+        $normalized = strtoupper(trim($partNumber));
+
+        foreach ($cart as $key => $item) {
+            if ($ignoreKey !== null && (string) $key === $ignoreKey) {
+                continue;
+            }
+
+            if (strtoupper(trim((string) ($item['part_number'] ?? ''))) !== $normalized) {
+                continue;
+            }
+
+            $total += (int) ($item['qty'] ?? 0);
+        }
+
+        return $total;
+    }
+
     /**
      * Tambahkan 1 qty produk ke keranjang kasir aktif (session-based cart).
      */
-    public function add(Request $request, Product $product): RedirectResponse
+    public function add(Request $request, ProductBatch $batch): RedirectResponse
     {
-        $batch = ProductBatch::query()
-            ->where('product_id', $product->id)
-            ->where('is_active', true)
-            ->where('stock', '>', 0)
-            ->latest('id')
-            ->first();
+        $batch->loadMissing('product:id,name,barcode,is_active');
+        $product = $batch->product;
 
-        if (! $batch) {
-            return back()->withErrors(['cart' => 'Stok produk habis atau tidak tersedia.']);
+        if (! $product || ! $product->is_active) {
+            return back()->withErrors(['cart' => 'Produk sudah tidak aktif atau tidak tersedia.']);
         }
 
         $cart = (array) $request->session()->get('cashier_cart', []);
+        $partNumber = $this->getBatchPartNumber($batch);
+        $mergedKey = $this->findMergedCartItemKeyByPartNumber($cart, $partNumber);
         $key = (string) $batch->id;
-        $existingQty = (int) ($cart[$key]['qty'] ?? 0);
-        $nextQty = $existingQty + 1;
+        $existingKey = $this->findCartItemKeyByBatchId($cart, (int) $batch->id);
+        if ($mergedKey !== null) {
+            $key = $mergedKey;
+        } elseif ($existingKey !== null) {
+            $key = $existingKey;
+        }
 
-        if ($nextQty > (int) $batch->stock) {
+        $currentLineQty = (int) ($cart[$key]['qty'] ?? 0);
+        $currentSubtotal = (float) ($cart[$key]['merged_subtotal'] ?? ((float) ($cart[$key]['price'] ?? $batch->selling_price) * $currentLineQty));
+        $currentAllocations = $this->normalizeStockAllocations($cart[$key] ?? []);
+        $nextQty = $currentLineQty + 1;
+        $availableStock = $mergedKey !== null
+            ? $this->getAvailableStockByPartNumber($partNumber)
+            : $this->getBatchStock($batch);
+        $nextSubtotal = $mergedKey !== null
+            ? $currentSubtotal + (float) $batch->selling_price
+            : (float) $batch->selling_price * $nextQty;
+        $nextPrice = $nextQty > 0 ? $nextSubtotal / $nextQty : (float) $batch->selling_price;
+
+        if ($mergedKey !== null) {
+            $currentAllocations[(int) $batch->id] = ($currentAllocations[(int) $batch->id] ?? 0) + 1;
+        } else {
+            $currentAllocations = [(int) $batch->id => $nextQty];
+        }
+
+        if ($nextQty > $availableStock) {
             return back()->withErrors(['cart' => "Stok {$product->name} tidak cukup."]);
         }
 
@@ -62,8 +258,12 @@ class CashierTransactionController extends Controller
             'product_id' => $product->id,
             'product_batch_id' => $batch->id,
             'product_name' => $product->name,
-            'price' => (float) $batch->selling_price,
+            'part_number' => $partNumber,
+            'price' => $mergedKey !== null ? $nextPrice : (float) $batch->selling_price,
             'qty' => $nextQty,
+            'merged_subtotal' => $mergedKey !== null ? $nextSubtotal : null,
+            'merge_stock' => (bool) ($cart[$key]['merge_stock'] ?? false),
+            'stock_allocations' => $currentAllocations,
         ];
 
         $request->session()->put('cashier_cart', $cart);
@@ -83,7 +283,17 @@ class CashierTransactionController extends Controller
         $qty = max(0, (int) $request->input('qty', 1));
         $priceInput = $request->input('price');
         $cart = (array) $request->session()->get('cashier_cart', []);
+        $partNumber = $this->getBatchPartNumber($batch);
         $key = (string) $batch->id;
+
+        if (! isset($cart[$key])) {
+            $legacyKey = $this->findCartItemKeyByPartNumber($cart, $partNumber);
+            if ($legacyKey !== null) {
+                $key = $legacyKey;
+            } else {
+                return back();
+            }
+        }
 
         if (! isset($cart[$key])) {
             return back();
@@ -96,7 +306,17 @@ class CashierTransactionController extends Controller
             return back();
         }
 
-        if ($qty > (int) $batch->stock) {
+        $product = Product::query()->find($batch->product_id);
+        if (! $product || ! $product->is_active) {
+            return back()->withErrors(['cart' => 'Produk sudah tidak aktif atau tidak tersedia.']);
+        }
+
+        $mergeStock = (bool) ($cart[$key]['merge_stock'] ?? false);
+        $availableStock = $mergeStock
+            ? $this->getAvailableStockByPartNumber($partNumber)
+            : $this->getBatchStock($batch);
+
+        if ($qty > $availableStock) {
             return back()->withErrors(['cart' => "Stok {$cart[$key]['product_name']} tidak cukup."]);
         }
 
@@ -105,17 +325,129 @@ class CashierTransactionController extends Controller
             return back()->withErrors(['cart' => 'Harga jual tidak boleh kurang dari 0.']);
         }
 
+        $allocations = $this->normalizeStockAllocations($cart[$key]);
         $cart[$key]['qty'] = $qty;
-        $cart[$key]['price'] = $price;
+        if ((bool) ($cart[$key]['merge_stock'] ?? false)) {
+            $cart[$key]['merged_subtotal'] = $price;
+            $cart[$key]['price'] = $qty > 0 ? ($price / $qty) : $price;
+            $currentAllocated = array_sum($allocations);
+            $delta = $qty - $currentAllocated;
+
+            if ($delta > 0) {
+                $allocations[(int) $batch->id] = ($allocations[(int) $batch->id] ?? 0) + $delta;
+            } elseif ($delta < 0) {
+                $remainingToRemove = abs($delta);
+                $preferredBatchId = (int) ($cart[$key]['product_batch_id'] ?? $batch->id);
+                if (isset($allocations[$preferredBatchId])) {
+                    $remove = min($allocations[$preferredBatchId], $remainingToRemove);
+                    $allocations[$preferredBatchId] -= $remove;
+                    $remainingToRemove -= $remove;
+                    if ($allocations[$preferredBatchId] <= 0) {
+                        unset($allocations[$preferredBatchId]);
+                    }
+                }
+
+                if ($remainingToRemove > 0) {
+                    foreach (array_keys($allocations) as $allocationBatchId) {
+                        if ($remainingToRemove <= 0) {
+                            break;
+                        }
+
+                        $remove = min($allocations[$allocationBatchId], $remainingToRemove);
+                        $allocations[$allocationBatchId] -= $remove;
+                        $remainingToRemove -= $remove;
+
+                        if ($allocations[$allocationBatchId] <= 0) {
+                            unset($allocations[$allocationBatchId]);
+                        }
+                    }
+                }
+            }
+
+            $cart[$key]['stock_allocations'] = $allocations;
+        } else {
+            $cart[$key]['price'] = $price;
+            unset($cart[$key]['merged_subtotal']);
+            $cart[$key]['stock_allocations'] = [(int) $batch->id => $qty];
+        }
         $request->session()->put('cashier_cart', $cart);
 
         return back();
     }
 
+    public function toggleMergeStock(Request $request, ProductBatch $batch): RedirectResponse
+    {
+        $cart = (array) $request->session()->get('cashier_cart', []);
+        $key = $this->findCartItemKeyByBatchId($cart, (int) $batch->id);
+
+        if ($key === null) {
+            return back()->withErrors(['cart' => 'Item tidak ditemukan di keranjang.']);
+        }
+
+        if ((bool) ($cart[$key]['merge_stock'] ?? false)) {
+            return back()->with('success', 'Stok ini sudah digabung.');
+        }
+
+        $partNumber = $this->getBatchPartNumber($batch);
+        $sameKeys = [];
+        $totalQty = 0;
+        $totalSubtotal = 0.0;
+        $mergedAllocations = [];
+
+        foreach ($cart as $cartKey => $item) {
+            if (strtoupper(trim((string) ($item['part_number'] ?? ''))) !== strtoupper(trim($partNumber))) {
+                continue;
+            }
+
+            $sameKeys[] = (string) $cartKey;
+            $totalQty += (int) ($item['qty'] ?? 0);
+            $itemPrice = (float) ($item['price'] ?? 0);
+            $itemQty = (int) ($item['qty'] ?? 0);
+            $totalSubtotal += (float) ($item['merged_subtotal'] ?? ($itemPrice * $itemQty));
+
+            $allocations = $this->normalizeStockAllocations($item);
+            foreach ($allocations as $allocationBatchId => $allocationQty) {
+                $mergedAllocations[$allocationBatchId] = ($mergedAllocations[$allocationBatchId] ?? 0) + $allocationQty;
+            }
+        }
+
+        $availableStock = $this->getAvailableStockByPartNumber($partNumber);
+        if ($totalQty > $availableStock) {
+            return back()->withErrors(['cart' => 'Stok gabungan tidak mencukupi.']);
+        }
+
+        $cart[$key]['merge_stock'] = true;
+        $cart[$key]['qty'] = $totalQty;
+        $cart[$key]['merged_subtotal'] = $totalSubtotal;
+        $cart[$key]['price'] = $totalQty > 0 ? ($totalSubtotal / $totalQty) : (float) ($cart[$key]['price'] ?? 0);
+        $cart[$key]['stock_allocations'] = $mergedAllocations;
+
+        foreach ($sameKeys as $cartKey) {
+            if ($cartKey !== $key) {
+                unset($cart[$cartKey]);
+            }
+        }
+
+        $request->session()->put('cashier_cart', $cart);
+
+        return back()->with('success', 'Stok berhasil digabung.');
+    }
+
     public function remove(Request $request, ProductBatch $batch): RedirectResponse
     {
         $cart = (array) $request->session()->get('cashier_cart', []);
-        unset($cart[(string) $batch->id]);
+        $batchKey = (string) $batch->id;
+
+        if (isset($cart[$batchKey])) {
+            unset($cart[$batchKey]);
+        } else {
+            $partKey = $this->getBatchPartNumber($batch);
+            $legacyKey = $this->findCartItemKeyByPartNumber($cart, $partKey);
+            if ($legacyKey !== null) {
+                unset($cart[$legacyKey]);
+            }
+        }
+
         $request->session()->put('cashier_cart', $cart);
 
         return back();
@@ -169,7 +501,7 @@ class CashierTransactionController extends Controller
             ->latest('id')
             ->paginate(15);
 
-        return view('cashier.drafts', [
+        return view('admin.transaksi.drafts', [
             'user' => $request->user(),
             'drafts' => $drafts,
         ]);
@@ -190,7 +522,7 @@ class CashierTransactionController extends Controller
         }
 
         $items = collect((array) $draft->items)
-            ->keyBy(fn (array $item): string => (string) ($item['product_batch_id'] ?? uniqid('draft_', true)))
+            ->keyBy(fn (array $item): string => (string) ($item['part_number'] ?? $item['product_batch_id'] ?? uniqid('draft_', true)))
             ->all();
 
         $request->session()->put('cashier_cart', $items);
@@ -247,8 +579,12 @@ class CashierTransactionController extends Controller
                 'items' => $cart->map(fn (array $item): array => [
                     'product_id' => (int) $item['product_id'],
                     'product_batch_id' => (int) $item['product_batch_id'],
+                    'product_name' => (string) ($item['product_name'] ?? ''),
+                    'part_number' => (string) ($item['part_number'] ?? ''),
+                    'merge_stock' => (bool) ($item['merge_stock'] ?? false),
                     'qty' => (int) $item['qty'],
                     'price' => (float) ($item['price'] ?? 0),
+                    'stock_allocations' => is_array($item['stock_allocations'] ?? null) ? $item['stock_allocations'] : [],
                 ])->all(),
             ]);
         } catch (ValidationException $exception) {
@@ -268,13 +604,14 @@ class CashierTransactionController extends Controller
     public function history(Request $request): View
     {
         $user = $request->user();
+        $viewAll = $this->canViewAllTransactions($request);
 
         $sales = Sale::query()
             ->withCount('items')
             ->withSum('items as sold_qty', 'qty')
             ->withSum('returnedItems as returned_qty', 'qty_return')
             ->withSum('returns as total_return_refund', 'refund_amount')
-            ->where('user_id', $user->id)
+            ->when(! $viewAll, fn ($query) => $query->where('user_id', $user->id))
             ->latest('id')
             ->paginate(15);
 
@@ -285,7 +622,7 @@ class CashierTransactionController extends Controller
                 'sale.user:id,name',
                 'items',
             ])
-            ->where('user_id', $user->id)
+            ->when(! $viewAll, fn ($query) => $query->where('user_id', $user->id))
             ->latest('id')
             ->limit(20)
             ->get();
@@ -294,7 +631,7 @@ class CashierTransactionController extends Controller
         $editLogs = Schema::hasTable('sale_edit_logs')
             ? SaleEditLog::query()
                 ->with('editor:id,name')
-                ->where('edited_by_user_id', $user->id)
+                ->when(! $viewAll, fn ($query) => $query->where('edited_by_user_id', $user->id))
                 ->latest('id')
                 ->limit(20)
                 ->get()
@@ -303,7 +640,7 @@ class CashierTransactionController extends Controller
         $deleteLogs = Schema::hasTable('sale_delete_logs')
             ? SaleDeleteLog::query()
                 ->with('deleter:id,name')
-                ->where('deleted_by_user_id', $user->id)
+                ->when(! $viewAll, fn ($query) => $query->where('deleted_by_user_id', $user->id))
                 ->latest('id')
                 ->limit(20)
                 ->get()
@@ -311,7 +648,7 @@ class CashierTransactionController extends Controller
 
         $installmentPaidMap = $this->getSaleInstallmentPaidMap($sales->getCollection()->pluck('id')->all());
 
-        return view('cashier.history', [
+        return view('admin.transaksi.history', [
             'user' => $user,
             'sales' => $sales,
             'returns' => $returns,
@@ -323,7 +660,7 @@ class CashierTransactionController extends Controller
 
     public function installmentForm(Request $request, Sale $sale): View
     {
-        if ((int) $sale->user_id !== (int) $request->user()->id) {
+        if (! $this->canAccessSale($request, $sale)) {
             abort(403, 'Anda tidak berhak memproses cicilan transaksi ini.');
         }
 
@@ -333,7 +670,7 @@ class CashierTransactionController extends Controller
         $remainingCredit = max(0, (float) ($sale->credit_amount ?? 0));
         $history = $sale->installments()->with('user:id,name')->latest('paid_at')->latest('id')->get();
 
-        return view('cashier.installment-form', [
+        return view('admin.transaksi.installment-form', [
             'user' => $request->user(),
             'sale' => $sale,
             'installmentPaid' => $installmentPaid,
@@ -344,7 +681,7 @@ class CashierTransactionController extends Controller
 
     public function storeInstallment(Request $request, Sale $sale): RedirectResponse
     {
-        if ((int) $sale->user_id !== (int) $request->user()->id) {
+        if (! $this->canAccessSale($request, $sale)) {
             abort(403, 'Anda tidak berhak memproses cicilan transaksi ini.');
         }
 
@@ -407,7 +744,7 @@ class CashierTransactionController extends Controller
 
     public function installmentReceipt(Request $request, Sale $sale, SaleInstallment $installment): View|Response
     {
-        if ((int) $sale->user_id !== (int) $request->user()->id || (int) $installment->sale_id !== (int) $sale->id) {
+        if (! $this->canAccessSale($request, $sale) || (int) $installment->sale_id !== (int) $sale->id) {
             abort(403, 'Anda tidak berhak melihat nota cicilan ini.');
         }
 
@@ -425,22 +762,24 @@ class CashierTransactionController extends Controller
         ];
 
         if ($request->boolean('pdf')) {
-            $pdf = Pdf::loadView('cashier.installment-receipt', $viewData)->setPaper('a4', 'portrait');
+            $pdf = Pdf::loadView('admin.transaksi.installment-receipt', $viewData)->setPaper('a4', 'portrait');
 
             return $pdf->download("cicilan-{$sale->invoice_number}-{$installment->id}.pdf");
         }
 
-        return response()->view('cashier.installment-receipt', $viewData)
+        return response()->view('admin.transaksi.installment-receipt', $viewData)
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
     }
 
     public function historyBySupplier(Request $request): View
     {
         $user = $request->user();
+        $viewAll = $this->canViewAllTransactions($request);
+        $userId = (int) $user->id;
 
-        return view('cashier.history-supplier', [
+        return view('admin.transaksi.history-supplier', [
             'user' => $user,
-            'groups' => $this->getPtCvGroupsForCashier((int) $user->id),
+            'groups' => $this->getPtCvGroupsForCashier($viewAll ? null : $userId),
         ]);
     }
 
@@ -453,13 +792,13 @@ class CashierTransactionController extends Controller
             abort(404, 'Nama PT/CV tidak ditemukan.');
         }
 
-        $group = $this->getPtCvDetailForCashier((int) $user->id, $ptName);
+        $group = $this->getPtCvDetailForCashier($this->canViewAllTransactions($request) ? null : (int) $user->id, $ptName);
 
         if ($group === null) {
             abort(404, 'Riwayat PT/CV tidak ditemukan.');
         }
 
-        return view('cashier.history-supplier-detail', [
+        return view('admin.transaksi.history-supplier-detail', [
             'user' => $user,
             'group' => $group,
         ]);
@@ -472,7 +811,7 @@ class CashierTransactionController extends Controller
      *
      * @return array<int, array<string, mixed>>
      */
-    private function getPtCvGroupsForCashier(int $userId): array
+    private function getPtCvGroupsForCashier(?int $userId): array
     {
         $rows = $this->getPtCvRowsForCashier($userId);
         $now = Carbon::now();
@@ -506,7 +845,7 @@ class CashierTransactionController extends Controller
      *
      * @return array<string, mixed>|null
      */
-    private function getPtCvDetailForCashier(int $userId, string $ptName): ?array
+    private function getPtCvDetailForCashier(?int $userId, string $ptName): ?array
     {
         $group = collect($this->getPtCvGroupsForCashier($userId))
             ->first(function (array $group) use ($ptName): bool {
@@ -523,7 +862,7 @@ class CashierTransactionController extends Controller
     /**
      * Ambil data transaksi PT/CV berdasarkan customer_name pada sales.
      */
-    private function getPtCvRowsForCashier(int $userId)
+    private function getPtCvRowsForCashier(?int $userId)
     {
         $itemsAgg = DB::table('sale_items')
             ->selectRaw('sale_id, COUNT(*) as items_count, COALESCE(SUM(qty), 0) as qty, COALESCE(SUM(subtotal), 0) as subtotal')
@@ -533,7 +872,7 @@ class CashierTransactionController extends Controller
             ->leftJoinSub($itemsAgg, 'sale_items_agg', function ($join): void {
                 $join->on('sale_items_agg.sale_id', '=', 'sales.id');
             })
-            ->where('sales.user_id', $userId)
+            ->when($userId !== null, fn ($query) => $query->where('sales.user_id', $userId))
             ->whereNotNull('sales.customer_name')
             ->whereRaw("TRIM(sales.customer_name) <> ''")
             ->where(function ($query): void {
@@ -627,21 +966,21 @@ class CashierTransactionController extends Controller
 
     public function editHistory(Request $request, Sale $sale): View
     {
-        if ((int) $sale->user_id !== (int) $request->user()->id) {
+        if (! $this->canAccessSale($request, $sale) || ! $request->user()->isAdmin()) {
             abort(403, 'Anda tidak berhak mengubah transaksi ini.');
         }
 
         $sale->loadMissing(['items.productBatch', 'returns']);
 
         if ($sale->returns->isNotEmpty()) {
-            return view('cashier.history-edit', [
+            return view('admin.transaksi.history-edit', [
                 'user' => $request->user(),
                 'sale' => $sale,
                 'blockedByReturn' => true,
             ]);
         }
 
-        return view('cashier.history-edit', [
+        return view('admin.transaksi.history-edit', [
             'user' => $request->user(),
             'sale' => $sale,
             'blockedByReturn' => false,
@@ -650,7 +989,7 @@ class CashierTransactionController extends Controller
 
     public function updateHistory(Request $request, Sale $sale): RedirectResponse
     {
-        if ((int) $sale->user_id !== (int) $request->user()->id) {
+        if (! $this->canAccessSale($request, $sale) || ! $request->user()->isAdmin()) {
             abort(403, 'Anda tidak berhak mengubah transaksi ini.');
         }
 
@@ -900,7 +1239,7 @@ class CashierTransactionController extends Controller
 
     public function destroyHistory(Request $request, Sale $sale): RedirectResponse
     {
-        if ((int) $sale->user_id !== (int) $request->user()->id) {
+        if (! $this->canAccessSale($request, $sale) || ! $request->user()->isAdmin()) {
             abort(403, 'Anda tidak berhak menghapus transaksi ini.');
         }
 
@@ -977,7 +1316,7 @@ class CashierTransactionController extends Controller
 
     public function returnForm(Request $request, Sale $sale): View
     {
-        if ((int) $sale->user_id !== (int) $request->user()->id) {
+        if (! $this->canAccessSale($request, $sale) || ! $request->user()->isAdmin()) {
             abort(403, 'Anda tidak berhak memproses retur transaksi ini.');
         }
 
@@ -1016,7 +1355,7 @@ class CashierTransactionController extends Controller
             ->values()
             ->all();
 
-        return view('cashier.return-form', [
+        return view('admin.transaksi.return-form', [
             'user' => $request->user(),
             'sale' => $sale,
             'returnedQtyMap' => $returnedQtyMap,
@@ -1026,7 +1365,7 @@ class CashierTransactionController extends Controller
 
     public function storeReturn(Request $request, Sale $sale): RedirectResponse
     {
-        if ((int) $sale->user_id !== (int) $request->user()->id) {
+        if (! $this->canAccessSale($request, $sale) || ! $request->user()->isAdmin()) {
             abort(403, 'Anda tidak berhak memproses retur transaksi ini.');
         }
 
@@ -1064,14 +1403,14 @@ class CashierTransactionController extends Controller
     {
         $salesReturn->loadMissing(['sale.user:id,name', 'items.replacementBatch.product']);
 
-        if ((int) $salesReturn->sale->user_id !== (int) $request->user()->id) {
+        if (! $this->canAccessSale($request, $salesReturn->sale)) {
             abort(403, 'Anda tidak berhak melihat nota retur ini.');
         }
 
         if ($request->boolean('pdf')) {
-            $pdf = Pdf::loadView('cashier.return-receipt', [
+            $pdf = Pdf::loadView('admin.transaksi.return-receipt', [
                 'salesReturn' => $salesReturn,
-                'storeName' => config('app.name', 'Toko Pak Paul'),
+                'storeName' => config('app.name', 'Surya Duta Multindo'),
                 'historyUrl' => route('cashier.history'),
                 'saleUrl' => route('cashier.receipt', $salesReturn->sale),
             ])->setPaper('a4', 'portrait');
@@ -1079,9 +1418,9 @@ class CashierTransactionController extends Controller
             return $pdf->download("{$salesReturn->return_number}.pdf");
         }
 
-        return view('cashier.return-receipt', [
+        return view('admin.transaksi.return-receipt', [
             'salesReturn' => $salesReturn,
-            'storeName' => config('app.name', 'Toko Pak Paul'),
+            'storeName' => config('app.name', 'Surya Duta Multindo'),
             'historyUrl' => route('cashier.history'),
             'saleUrl' => route('cashier.receipt', $salesReturn->sale),
         ]);
@@ -1090,8 +1429,18 @@ class CashierTransactionController extends Controller
     public function receipt(Request $request, Sale $sale): View|Response
     {
         $fromReturn = $request->boolean('from_return') || $request->query('from') === 'return';
+        $isAdminBesarContext = $request->routeIs('admin.admin-besar.*')
+            || str_starts_with($request->path(), 'admin/admin-besar');
 
-        if ((int) $sale->user_id !== (int) $request->user()->id && ! $fromReturn) {
+        $historyUrl = $isAdminBesarContext
+            ? route('admin.admin-besar.index')
+            : route('cashier.history');
+        $historyLabel = $isAdminBesarContext ? 'Kembali ke Admin Besar' : 'Kembali ke History';
+        $newTransactionUrl = $isAdminBesarContext
+            ? route('admin.admin-besar.index')
+            : route('cashier.dashboard');
+
+        if (! $this->canAccessSale($request, $sale) && ! $fromReturn) {
             abort(403, 'Anda tidak berhak melihat nota ini.');
         }
 
@@ -1103,22 +1452,24 @@ class CashierTransactionController extends Controller
         ]);
 
         if ($request->boolean('pdf')) {
-            $pdf = Pdf::loadView('cashier.receipt', [
+            $pdf = Pdf::loadView('admin.transaksi.receipt', [
                 'sale' => $sale,
-                'storeName' => config('app.name', 'Toko Pak Paul'),
-                'historyUrl' => route('cashier.history'),
-                'newTransactionUrl' => route('cashier.dashboard'),
+                'storeName' => config('app.name', 'Surya Duta Multindo'),
+                'historyUrl' => $historyUrl,
+                'historyLabel' => $historyLabel,
+                'newTransactionUrl' => $newTransactionUrl,
             ])->setPaper('a4', 'portrait');
 
             return $pdf->download("{$sale->invoice_number}.pdf");
         }
 
         return response()
-            ->view('cashier.receipt', [
+            ->view('admin.transaksi.receipt', [
                 'sale' => $sale,
-                'storeName' => config('app.name', 'Toko Pak Paul'),
-                'historyUrl' => route('cashier.history'),
-                'newTransactionUrl' => route('cashier.dashboard'),
+                'storeName' => config('app.name', 'Surya Duta Multindo'),
+                'historyUrl' => $historyUrl,
+                'historyLabel' => $historyLabel,
+                'newTransactionUrl' => $newTransactionUrl,
             ])
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
     }

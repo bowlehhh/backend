@@ -39,7 +39,7 @@ class OfflineBackupService
 
         $spreadsheet = new Spreadsheet();
         $spreadsheet->getProperties()
-            ->setCreator('Toko Pak Paul')
+            ->setCreator('Surya Duta Multindo')
             ->setTitle('Backup Nota dan Track Record')
             ->setSubject('Backup Excel Offline')
             ->setDescription('Backup semua nota, riwayat barang, penjualan, kredit, dan retur.');
@@ -109,13 +109,13 @@ class OfflineBackupService
             }
 
             if (is_dir($desktop) || @mkdir($desktop, 0775, true) || is_dir($desktop)) {
-                $backupRoot = $desktop . DIRECTORY_SEPARATOR . 'Backup Toko Pak Paul';
+                $backupRoot = $desktop . DIRECTORY_SEPARATOR . 'Backup Surya Duta Multindo';
                 File::ensureDirectoryExists($backupRoot);
                 return $backupRoot;
             }
         }
 
-        $fallback = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'Backup Toko Pak Paul';
+        $fallback = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'Backup Surya Duta Multindo';
         File::ensureDirectoryExists($fallback);
 
         return $fallback;
@@ -284,7 +284,7 @@ class OfflineBackupService
         $sheet->mergeCells('A3:N3');
 
         $headers = [
-            'Waktu', 'Invoice', 'Part Number', 'Part Name', 'Customer / PT', 'Kasir',
+            'Waktu', 'Invoice', 'Part Number', 'Part Name', 'Customer / PT', 'Admin',
             'Metode', 'Qty', 'Harga', 'Subtotal', 'Kredit', 'Jatuh Tempo', 'Status', 'Retur',
         ];
         $sheet->fromArray([$headers], null, 'A5');
@@ -367,7 +367,7 @@ class OfflineBackupService
         $sheet->mergeCells('A3:M3');
 
         $headers = [
-            'Tanggal', 'Invoice', 'Return Number', 'Part Number', 'Part Name', 'Customer / PT', 'Kasir', 'Qty', 'Refund', 'Alasan', 'Tipe', 'Status', 'Catatan',
+            'Tanggal', 'Invoice', 'Return Number', 'Part Number', 'Part Name', 'Customer / PT', 'Admin', 'Qty', 'Refund', 'Alasan', 'Tipe', 'Status', 'Catatan',
         ];
         $sheet->fromArray([$headers], null, 'A5');
 
@@ -671,7 +671,7 @@ class OfflineBackupService
         foreach ($sales as $sale) {
             $viewData = [
                 'sale' => $sale,
-                'storeName' => config('app.name', 'Toko Pak Paul'),
+                'storeName' => config('app.name', 'Surya Duta Multindo'),
                 'historyUrl' => route('cashier.history'),
                 'newTransactionUrl' => route('cashier.dashboard'),
                 'pdf' => true,
@@ -758,7 +758,7 @@ class OfflineBackupService
         foreach ($returns as $salesReturn) {
             $viewData = [
                 'salesReturn' => $salesReturn,
-                'storeName' => config('app.name', 'Toko Pak Paul'),
+                'storeName' => config('app.name', 'Surya Duta Multindo'),
                 'historyUrl' => route('cashier.history'),
                 'saleUrl' => route('cashier.receipt', $salesReturn->sale),
                 'pdf' => true,
@@ -809,7 +809,7 @@ class OfflineBackupService
         ];
 
         return [
-            'storeName' => config('app.name', 'Toko Pak Paul'),
+            'storeName' => config('app.name', 'Surya Duta Multindo'),
             'partNumber' => (string) ($group['part_number'] ?? '-'),
             'partName' => (string) ($group['part_name'] ?? '-'),
             'product' => $product,

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreDashboardProductRequest;
 use App\Http\Requests\Admin\UpdateDashboardProductRequest;
+use App\Models\AdminActivityLog;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
@@ -57,6 +58,9 @@ class AdminDashboardProductController extends Controller
                 'product_id' => $product->id,
                 'supplier_id' => $supplier->id,
                 'batch_code' => ($payload['batch_code'] ?? '') ?: $this->generateBatchCode($product),
+                'supplier_invoice_number' => Schema::hasColumn('product_batches', 'supplier_invoice_number')
+                    ? (($payload['supplier_invoice_number'] ?? '') ?: null)
+                    : null,
                 'condition' => ($payload['condition'] ?? '') ?: null,
                 'processed_by' => Schema::hasColumn('product_batches', 'processed_by')
                     ? ($this->resolveProcessedBy($payload, $request->user()?->name) ?: null)
@@ -86,6 +90,23 @@ class AdminDashboardProductController extends Controller
                     'description' => 'Initial stock added from admin dashboard.',
                 ]);
             }
+
+            AdminActivityLog::create([
+                'actor_user_id' => $request->user()->id,
+                'action' => 'product_created',
+                'subject_type' => Product::class,
+                'subject_id' => $product->id,
+                'title' => 'Tambah Barang',
+                'description' => 'Menambahkan barang baru dan stok awal dari dashboard admin.',
+                'meta' => [
+                    'product_name' => $product->name,
+                    'batch_code' => $batch->batch_code,
+                    'supplier_name' => $supplier->name,
+                    'stock' => (int) $payload['stock'],
+                    'purchase_price' => (float) $payload['purchase_price'],
+                    'selling_price' => (float) $payload['selling_price'],
+                ],
+            ]);
 
             return $product->fresh(['category', 'brand', 'latestBatch.supplier']);
         });
@@ -155,6 +176,9 @@ class AdminDashboardProductController extends Controller
             $batch->fill([
                 'supplier_id' => $supplier->id,
                 'batch_code' => ($payload['batch_code'] ?? '') ?: ($batch->batch_code ?: $this->generateBatchCode($product)),
+                'supplier_invoice_number' => Schema::hasColumn('product_batches', 'supplier_invoice_number')
+                    ? (($payload['supplier_invoice_number'] ?? '') ?: null)
+                    : null,
                 'condition' => ($payload['condition'] ?? '') ?: null,
                 'processed_by' => Schema::hasColumn('product_batches', 'processed_by')
                     ? ($this->resolveProcessedBy($payload, $request->user()?->name) ?: null)
@@ -186,6 +210,24 @@ class AdminDashboardProductController extends Controller
                     'description' => 'Stock adjusted from admin dashboard.',
                 ]);
             }
+
+            AdminActivityLog::create([
+                'actor_user_id' => $request->user()->id,
+                'action' => 'product_updated',
+                'subject_type' => Product::class,
+                'subject_id' => $product->id,
+                'title' => 'Edit Barang',
+                'description' => 'Memperbarui data barang dari dashboard admin.',
+                'meta' => [
+                    'product_name' => $product->name,
+                    'batch_code' => $batch->batch_code,
+                    'supplier_name' => $supplier->name,
+                    'stock_before' => $stockBefore,
+                    'stock_after' => $stockAfter,
+                    'purchase_price' => (float) $payload['purchase_price'],
+                    'selling_price' => (float) $payload['selling_price'],
+                ],
+            ]);
 
             return $product->fresh(['category', 'brand', 'latestBatch.supplier']);
         });
@@ -257,6 +299,7 @@ class AdminDashboardProductController extends Controller
             'supplier_note' => $batch?->supplier?->note,
             'batch_id' => $batch?->id,
             'batch_code' => $batch?->batch_code,
+            'supplier_invoice_number' => $batch?->supplier_invoice_number,
             'condition' => $batch?->condition,
             'processed_by' => $batch?->processed_by,
             'payment_type' => $batch?->payment_type ?? 'LUNAS',

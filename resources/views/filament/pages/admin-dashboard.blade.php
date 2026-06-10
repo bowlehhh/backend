@@ -107,8 +107,8 @@
 
     <style>
       :root {
-        --sf-topbar-h: 58px;
-        --sf-sidebar-w: 220px;
+        --sf-topbar-h: 52px;
+        --sf-sidebar-w: 208px;
       }
       .sf-wrap {
         font-family: 'Hanken Grotesk', sans-serif;
@@ -116,7 +116,7 @@
         max-width: 100vw;
         margin-left: calc(50% - 50vw);
         margin-right: calc(50% - 50vw);
-        font-size: 14px;
+        font-size: 13px;
       }
       .material-symbols-outlined {
         font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -189,25 +189,31 @@
         overflow-y: auto;
       }
       .sf-nav-item { font-size: 13px; }
-      .sf-nav-item .material-symbols-outlined { font-size: 17px; }
-      .sf-title { font-size: 30px; line-height: 36px; }
-      .sf-value { font-size: 30px; line-height: 36px; letter-spacing: -0.02em; }
+      .sf-nav-item .material-symbols-outlined { font-size: 16px; }
+      .sf-title { font-size: 26px !important; line-height: 32px !important; }
+      .sf-value { font-size: 26px !important; line-height: 32px !important; letter-spacing: -0.02em; }
+      .sf-wrap .text-headline-lg { font-size: 24px !important; line-height: 30px !important; }
+      .sf-wrap .text-headline-md { font-size: 18px !important; line-height: 24px !important; }
+      .sf-wrap .text-body-md { font-size: 13px !important; line-height: 20px !important; }
+      .sf-wrap .text-label-md { font-size: 13px !important; line-height: 18px !important; }
       .sf-wrap .custom-shadow { box-shadow: 0 1px 3px rgba(0,0,0,.03); }
-      .sf-wrap .rounded-xl { border-radius: 10px !important; }
-      .sf-wrap .rounded-2xl { border-radius: 12px !important; }
-      .sf-wrap .p-6 { padding: 1rem !important; }
-      .sf-wrap .p-4 { padding: .8rem !important; }
-      .sf-wrap .px-6 { padding-left: 1rem !important; padding-right: 1rem !important; }
-      .sf-wrap .py-4 { padding-top: .7rem !important; padding-bottom: .7rem !important; }
+      .sf-wrap .rounded-xl { border-radius: 9px !important; }
+      .sf-wrap .rounded-2xl { border-radius: 11px !important; }
+      .sf-wrap .p-6 { padding: .9rem !important; }
+      .sf-wrap .p-5 { padding: .85rem !important; }
+      .sf-wrap .p-4 { padding: .7rem !important; }
+      .sf-wrap .px-6 { padding-left: .9rem !important; padding-right: .9rem !important; }
+      .sf-wrap .py-4 { padding-top: .62rem !important; padding-bottom: .62rem !important; }
+      .sf-wrap .py-3 { padding-top: .58rem !important; padding-bottom: .58rem !important; }
       .sf-wrap .h-16 { height: var(--sf-topbar-h) !important; }
       .sf-wrap input,
       .sf-wrap select,
-      .sf-wrap textarea { min-height: 40px; }
+      .sf-wrap textarea { min-height: 36px; }
       .sf-wrap table th,
       .sf-wrap table td { padding-top: .65rem !important; padding-bottom: .65rem !important; }
-      .sf-wrap .text-\[34px\] { font-size: 28px !important; line-height: 34px !important; }
-      .sf-wrap .text-\[40px\] { font-size: 32px !important; line-height: 38px !important; }
-      .sf-modal-panel { max-height: calc(100vh - 2rem); overflow: hidden; display: flex; flex-direction: column; }
+      .sf-wrap .text-\[34px\] { font-size: 26px !important; line-height: 32px !important; }
+      .sf-wrap .text-\[40px\] { font-size: 30px !important; line-height: 36px !important; }
+      .sf-modal-panel { max-height: calc(100dvh - 5rem); overflow: hidden; display: flex; flex-direction: column; }
       .sf-modal-form { overflow-y: auto; -webkit-overflow-scrolling: touch; }
       .sf-modal-form::-webkit-scrollbar { width: 8px; }
       .sf-modal-form::-webkit-scrollbar-thumb { background: #bccac0; border-radius: 10px; }
@@ -268,8 +274,8 @@
       @media (max-width: 767px) {
         .sf-wrap header { height: 56px !important; padding-left: 14px !important; padding-right: 14px !important; }
         .sf-wrap .sf-content { padding: 12px !important; }
-        .sf-wrap .sf-title { font-size: 24px !important; line-height: 30px !important; }
-        .sf-wrap .sf-value { font-size: 26px !important; line-height: 32px !important; }
+        .sf-wrap .sf-title { font-size: 22px !important; line-height: 28px !important; }
+        .sf-wrap .sf-value { font-size: 24px !important; line-height: 30px !important; }
         .sf-wrap .custom-shadow { box-shadow: 0 1px 2px rgba(0,0,0,.03); }
         .sf-wrap .sf-header-actions .material-symbols-outlined { font-size: 20px; }
         .sf-wrap .sf-header-actions > div { width: 30px !important; height: 30px !important; font-size: 10px !important; }
@@ -286,12 +292,13 @@
         .sf-wrap #productTable td p.font-bold { font-size: 13px; }
         .sf-wrap #productTable td p.text-xs { font-size: 11px; }
         .sf-wrap .sf-modal-panel { width: 100%; max-width: 100%; }
-        .sf-wrap .sf-modal-panel .px-6 { padding-left: 1rem !important; padding-right: 1rem !important; }
-        .sf-wrap .sf-modal-panel .py-5 { padding-top: .9rem !important; padding-bottom: .9rem !important; }
-        .sf-wrap .sf-modal-panel .text-headline-md { font-size: 18px !important; line-height: 24px !important; }
+        .sf-wrap .sf-modal-panel .px-6 { padding-left: .9rem !important; padding-right: .9rem !important; }
+        .sf-wrap .sf-modal-panel .py-5 { padding-top: .8rem !important; padding-bottom: .8rem !important; }
+        .sf-wrap .sf-modal-panel .text-headline-md { font-size: 16px !important; line-height: 20px !important; }
         .sf-wrap .sf-export { margin-left: 0 !important; align-items: flex-start !important; }
-        .sf-wrap .sf-modal-panel { max-height: calc(100vh - 1rem); border-radius: 1rem; }
-        .sf-wrap .sf-modal-form { padding-left: 1rem; padding-right: 1rem; padding-bottom: 1rem; }
+        .sf-wrap .sf-modal-panel { max-height: calc(100dvh - 4rem); border-radius: .9rem; }
+        .sf-wrap .sf-modal-form { padding-left: .9rem; padding-right: .9rem; padding-bottom: .9rem; }
+        .sf-wrap .sf-modal-form { gap: .75rem; }
       }
       @media (max-width: 1023px) {
         html.sf-dashboard-page,
@@ -360,86 +367,61 @@
       </style>
 
     <div class="sf-wrap bg-background text-on-surface antialiased min-h-screen overflow-x-hidden">
-      <header class="bg-surface-container-lowest text-primary border-b border-outline-variant shadow-sm flex justify-between items-center px-6 h-16 w-full sticky top-0 z-50">
+      <header class="bg-surface-container-lowest text-primary border-b border-outline-variant shadow-sm flex justify-between items-center px-5 h-16 w-full sticky top-0 z-50">
         <div class="flex items-center gap-3 md:gap-4">
-          <button id="mobileSidebarBtn" type="button" class="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container" aria-label="Buka navigasi">
+          <button id="mobileSidebarBtn" type="button" class="lg:hidden inline-flex h-9 w-9 items-center justify-center rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container" aria-label="Buka navigasi">
             <span class="material-symbols-outlined">menu</span>
           </button>
-          <span class="font-display text-headline-md font-bold text-primary">Toko Pak Paul</span>
+          <span class="font-display text-[18px] font-bold text-primary leading-none">Surya Duta Multindo</span>
         </div>
-        <div class="sf-header-actions relative flex items-center gap-4">
-          @php
-            $lowStockCount = count($lowStockProducts ?? []);
-          @endphp
-          <button id="headerNotificationsBtn" type="button" class="relative material-symbols-outlined p-1 rounded-full hover:bg-surface-container transition-colors" title="Notifikasi">notifications
-            @if($lowStockCount > 0)
-              <span class="absolute -right-1 -top-1 inline-flex min-h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white">{{ $lowStockCount > 99 ? '99+' : $lowStockCount }}</span>
-            @endif
-          </button>
-          <button id="headerSettingsBtn" type="button" class="material-symbols-outlined p-1 rounded-full hover:bg-surface-container transition-colors" title="Pengaturan Dashboard">settings</button>
-          <button id="headerProfileBtn" type="button" class="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold hover:brightness-95">AP</button>
-
-          <div id="notificationsPopup" class="absolute right-0 top-11 z-50 hidden w-[320px] rounded-xl border border-outline-variant bg-surface-container-lowest p-3 shadow-xl">
-            <div class="mb-2 flex items-center justify-between">
-              <h3 class="text-sm font-semibold text-on-surface">Notifikasi Stok</h3>
-              <button type="button" class="rounded p-1 hover:bg-surface-container" data-close-popup="notificationsPopup"><span class="material-symbols-outlined text-sm">close</span></button>
-            </div>
-            <div id="notificationsPopupList" class="max-h-64 space-y-2 overflow-y-auto"></div>
-          </div>
-
-          <div id="settingsPopup" class="absolute right-0 top-11 z-50 hidden w-[300px] rounded-xl border border-outline-variant bg-surface-container-lowest p-3 shadow-xl">
-            <div class="mb-2 flex items-center justify-between">
-              <h3 class="text-sm font-semibold text-on-surface">Pengaturan Dashboard</h3>
-              <button type="button" class="rounded p-1 hover:bg-surface-container" data-close-popup="settingsPopup"><span class="material-symbols-outlined text-sm">close</span></button>
-            </div>
-            <div class="space-y-2">
-              <button type="button" class="w-full rounded-lg border border-outline-variant px-3 py-2 text-left text-sm text-on-surface hover:bg-surface-container" data-settings-action="reset-filters">Reset Semua Filter</button>
-              <button type="button" class="w-full rounded-lg border border-outline-variant px-3 py-2 text-left text-sm text-on-surface hover:bg-surface-container" data-settings-action="open-products">Buka Halaman Data Barang</button>
-            </div>
-          </div>
-
-          <div id="profilePopup" class="absolute right-0 top-11 z-50 hidden w-[250px] rounded-xl border border-outline-variant bg-surface-container-lowest p-3 shadow-xl">
-            <div class="mb-3 border-b border-outline-variant pb-2">
-              <p class="text-sm font-semibold text-on-surface">Admin Panel</p>
-              <p class="text-xs text-on-surface-variant">Akses manajemen toko</p>
-            </div>
-            <div class="space-y-2">
-              <a href="{{ url('/admin/admin-dashboard') }}" class="flex items-center gap-2 rounded-lg border border-outline-variant px-3 py-2 text-sm text-on-surface hover:bg-surface-container"><span class="material-symbols-outlined text-base">dashboard</span>Dashboard</a>
-              <button type="button" onclick="confirmLogout()" class="flex w-full items-center gap-2 rounded-lg border border-red-200 px-3 py-2 text-sm text-red-700 hover:bg-red-50"><span class="material-symbols-outlined text-base">logout</span>Logout</button>
-            </div>
-          </div>
-        </div>
+        <div></div>
       </header>
 
       <div class="sf-shell">
         <div class="sf-layout">
           <div id="mobileSidebarBackdrop" class="sf-mobile-sidebar-backdrop lg:hidden"></div>
           <aside class="sf-sidebar flex flex-col w-full p-4 bg-surface">
-            <div class="mb-4 rounded-lg border border-outline-variant bg-surface-container-low p-3">
+            <div class="mb-3 rounded-lg border border-outline-variant bg-surface-container-low p-3">
               <div class="flex items-center gap-2">
-                <div class="h-8 w-8 rounded-lg bg-primary text-on-primary flex items-center justify-center">
-                  <span class="material-symbols-outlined text-sm">inventory</span>
+                <div class="h-7 w-7 rounded-lg bg-primary text-on-primary flex items-center justify-center">
+                  <span class="material-symbols-outlined text-[14px]">inventory</span>
                 </div>
                 <div>
-                  <p class="text-sm font-semibold text-primary">Admin Panel</p>
+                  <p class="text-[13px] font-semibold text-primary leading-tight">Admin Panel</p>
                   <p class="text-[10px] uppercase tracking-wide text-on-surface-variant">Management Mode</p>
                 </div>
               </div>
             </div>
             <nav class="flex-1 flex flex-col space-y-1 overflow-y-auto pr-1">
-              <a class="sf-nav-item flex items-center gap-3 bg-primary text-on-primary rounded-lg px-3 py-2 font-medium" href="{{ url('/admin/products') }}">
+              <a class="sf-nav-item flex items-center gap-2.5 bg-primary text-on-primary rounded-lg px-3 py-2 font-medium" href="{{ url('/admin/products') }}">
                 <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">inventory_2</span>
                 <span>Barang</span>
               </a>
-              <a class="sf-nav-item w-full flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/suppliers') }}"><span class="material-symbols-outlined">local_shipping</span><span>Supplier</span></a>
-              <a class="sf-nav-item w-full flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=credits') }}"><span class="material-symbols-outlined">credit_card</span><span>Kredit &amp; Utang Saya</span></a>
-              <a class="sf-nav-item w-full flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=supplier-transactions') }}"><span class="material-symbols-outlined">account_tree</span><span>Transaksi PT</span></a>
-              <a class="sf-nav-item w-full flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=reports') }}"><span class="material-symbols-outlined">analytics</span><span>Laporan</span></a>
-              <a class="sf-nav-item w-full flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=users') }}"><span class="material-symbols-outlined">group</span><span>User</span></a>
-              <a class="sf-nav-item w-full mt-auto flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=product-groups') }}"><span class="material-symbols-outlined">inventory_2</span><span>Kelompok Barang</span></a>
+              <a class="sf-nav-item w-full flex items-center gap-2.5 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/suppliers') }}"><span class="material-symbols-outlined">local_shipping</span><span>Supplier</span></a>
+              <a class="sf-nav-item w-full flex items-center gap-2.5 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=credits') }}"><span class="material-symbols-outlined">credit_card</span><span>Kredit &amp; Utang Saya</span></a>
+              <a class="sf-nav-item w-full flex items-center gap-2.5 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=supplier-transactions') }}"><span class="material-symbols-outlined">account_tree</span><span>Transaksi PT</span></a>
+              <a class="sf-nav-item w-full flex items-center gap-2.5 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=reports') }}"><span class="material-symbols-outlined">analytics</span><span>Laporan</span></a>
+              <a class="sf-nav-item w-full flex items-center gap-2.5 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=users') }}"><span class="material-symbols-outlined">group</span><span>User</span></a>
+              <div class="mt-auto space-y-1">
+                <a class="sf-nav-item w-full flex items-center gap-2.5 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=product-groups') }}"><span class="material-symbols-outlined">inventory_2</span><span>Kelompok Barang</span></a>
+                <div class="ml-3 border-l border-outline-variant pl-3 py-1 space-y-1">
+                  <a class="sf-nav-item w-full flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-medium {{ request()->routeIs('admin.transaksi.dashboard') ? 'bg-primary-container text-on-primary' : 'text-on-surface-variant hover:bg-surface-container-high' }}" href="{{ route('admin.transaksi.dashboard') }}">
+                    <span class="material-symbols-outlined text-[18px]">point_of_sale</span>
+                    <span>Daftar Barang Jual</span>
+                  </a>
+                  <a class="sf-nav-item w-full flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-medium {{ request()->routeIs('admin.transactions.drafts') ? 'bg-primary-container text-on-primary' : 'text-on-surface-variant hover:bg-surface-container-high' }}" href="{{ route('admin.transactions.drafts') }}">
+                    <span class="material-symbols-outlined text-[18px]">draft</span>
+                    <span>Draft Tertunda</span>
+                  </a>
+                  <a class="sf-nav-item w-full flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-medium {{ request()->routeIs('admin.transactions.history*') ? 'bg-primary-container text-on-primary' : 'text-on-surface-variant hover:bg-surface-container-high' }}" href="{{ route('admin.transactions.history') }}">
+                    <span class="material-symbols-outlined text-[18px]">receipt_long</span>
+                    <span>History &amp; Nota</span>
+                  </a>
+                </div>
+              </div>
             </nav>
             <div class="pt-3 border-t border-outline-variant">
-              <button type="button" onclick="confirmLogout()" class="sf-nav-item w-full flex items-center gap-3 text-error px-3 py-2 hover:bg-error-container/20 transition-all rounded-lg font-medium text-left">
+              <button type="button" onclick="confirmLogout()" class="sf-nav-item w-full flex items-center gap-2.5 text-error px-3 py-2 hover:bg-error-container/20 transition-all rounded-lg font-medium text-left">
                 <span class="material-symbols-outlined">logout</span>
                 <span>Logout</span>
               </button>
@@ -447,25 +429,25 @@
           </aside>
 
           <main class="sf-content min-h-screen p-4 md:p-6">
-            <div class="flex flex-col md:flex-row md:items-end justify-between gap-3 md:gap-4 mb-5 md:mb-6">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-3 md:gap-4 mb-4 md:mb-5">
               <div>
                 <h1 class="sf-title font-display text-headline-lg text-on-surface mb-1">Daftar Barang</h1>
-                <p class="text-on-surface-variant text-body-md">Kelola seluruh stok inventaris Anda di satu tempat.</p>
+                <p class="text-on-surface-variant text-[13px] leading-5">Kelola seluruh stok inventaris Anda di satu tempat.</p>
               </div>
               <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                <button type="button" wire:click="createOfflineBackup" wire:loading.attr="disabled" class="w-full md:w-auto bg-surface text-primary border border-outline-variant px-5 md:px-7 py-3 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-surface-container-high transition-all active:scale-95">
+                <button type="button" wire:click="createOfflineBackup" wire:loading.attr="disabled" class="w-full md:w-auto bg-surface text-primary border border-outline-variant px-4 md:px-5 py-2.5 rounded-xl text-[13px] font-medium flex items-center justify-center gap-2 hover:bg-surface-container-high transition-all active:scale-95">
                   <span wire:loading.remove wire:target="createOfflineBackup" class="material-symbols-outlined">folder_zip</span>
                   <span wire:loading wire:target="createOfflineBackup" class="material-symbols-outlined animate-spin">sync</span>
                   <span wire:loading.remove wire:target="createOfflineBackup">Backup Excel</span>
                   <span wire:loading wire:target="createOfflineBackup">Membuat Backup...</span>
                 </button>
-                <button type="button" onclick="openCreateModal()" class="w-full md:w-auto bg-primary text-on-primary px-5 md:px-8 py-3 rounded-xl font-medium flex items-center justify-center gap-2 hover:brightness-90 transition-all active:scale-95">
+                <button type="button" onclick="openCreateModal()" class="w-full md:w-auto bg-primary text-on-primary px-4 md:px-6 py-2.5 rounded-xl text-[13px] font-medium flex items-center justify-center gap-2 hover:brightness-90 transition-all active:scale-95">
                   <span class="material-symbols-outlined">add</span>Tambah Barang
                 </button>
               </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 md:gap-6 mb-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 md:gap-5 mb-5">
               @foreach ($stats as $index => $stat)
                 @php
                   $variant = $stat['variant'] ?? 'secondary';
@@ -479,26 +461,26 @@
                   };
                   $isLowStockCard = ($variant === 'warning');
                 @endphp
-                <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant custom-shadow {{ $isLowStockCard ? 'cursor-pointer hover:shadow-md transition-shadow' : '' }}" @if($isLowStockCard) onclick="openLowStockModal()" @endif>
-                  <div class="flex items-center gap-3 mb-2">
+                <div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant custom-shadow {{ $isLowStockCard ? 'cursor-pointer hover:shadow-md transition-shadow' : '' }}" @if($isLowStockCard) onclick="openLowStockModal()" @endif>
+                  <div class="flex items-center gap-2.5 mb-2">
                     <div class="p-1 rounded-lg {{ explode(' ', $variantClass)[1] }}">
                       <span class="material-symbols-outlined {{ explode(' ', $variantClass)[0] }}">{{ $stat['icon'] ?? 'inventory_2' }}</span>
                     </div>
-                    <span class="text-on-surface-variant font-medium">{{ $stat['label'] ?? '-' }}</span>
+                    <span class="text-on-surface-variant text-[13px] font-medium">{{ $stat['label'] ?? '-' }}</span>
                   </div>
                   <div class="sf-value {{ explode(' ', $variantClass)[0] }} font-bold leading-tight">{{ $stat['value'] ?? '0' }}</div>
-                  <p class="text-sm mt-1 font-medium {{ explode(' ', $variantClass)[0] }}">{{ $stat['description'] ?? '-' }}</p>
+                  <p class="text-[12px] mt-1 font-medium {{ explode(' ', $variantClass)[0] }}">{{ $stat['description'] ?? '-' }}</p>
                 </div>
               @endforeach
             </div>
 
-            <div class="sf-toolbar bg-surface-container-lowest p-3 md:p-4 rounded-t-xl border-x border-t border-outline-variant flex flex-wrap items-center gap-3 md:gap-4">
+            <div class="sf-toolbar bg-surface-container-lowest p-3 md:p-3.5 rounded-t-xl border-x border-t border-outline-variant flex flex-wrap items-center gap-3 md:gap-4">
               <div class="flex flex-col gap-1 min-w-0 flex-1">
-                <label class="text-[11px] font-bold text-on-surface-variant uppercase ml-1">Search</label>
-                <input id="globalSearchInput" type="text" value="{{ $viewData['search'] ?? '' }}" placeholder="Cari part number, nama barang, kategori, merek, barcode..." class="bg-surface border border-outline-variant rounded-lg px-4 py-2 text-label-md focus:ring-primary focus:border-primary" autocomplete="off" spellcheck="false">
+                <label class="text-[10px] font-bold text-on-surface-variant uppercase ml-1">Search</label>
+                <input id="globalSearchInput" type="text" value="{{ $viewData['search'] ?? '' }}" placeholder="Cari part number, nama barang, kategori, merek, barcode..." class="bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[13px] focus:ring-primary focus:border-primary" autocomplete="off" spellcheck="false">
               </div>
               <div class="sf-export flex flex-col gap-1 ml-auto">
-                <label class="text-[11px] font-bold text-on-surface-variant uppercase text-right mr-1">Export</label>
+                <label class="text-[10px] font-bold text-on-surface-variant uppercase text-right mr-1">Export</label>
                 <div class="flex gap-2">
                   <button type="button" class="p-2 bg-surface border border-outline-variant rounded-lg hover:bg-surface-container-high transition-colors" onclick="exportToCSV()"><span class="material-symbols-outlined text-on-surface-variant">download</span></button>
                   <button type="button" class="p-2 bg-surface border border-outline-variant rounded-lg hover:bg-surface-container-high transition-colors" onclick="window.print()"><span class="material-symbols-outlined text-on-surface-variant">print</span></button>
@@ -508,21 +490,23 @@
 
             <div class="bg-surface-container-lowest border border-outline-variant rounded-b-xl overflow-hidden custom-shadow">
               <div class="overflow-x-auto table-container">
-                <table class="w-full text-left border-collapse" id="productTable">
+                <table class="min-w-[1500px] w-full text-left border-collapse" id="productTable">
                   <thead>
                     <tr class="bg-surface-container text-on-surface-variant border-b border-outline-variant">
-                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Part Number</th>
-                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Kondisi</th>
-                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Waktu Input</th>
-                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Kategori</th>
-                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Merek</th>
-                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Berat</th>
-                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Unit</th>
-                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Stok</th>
-                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Harga Beli</th>
-                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Harga Jual</th>
-                      <th class="px-6 py-4 font-medium uppercase tracking-wider">Biaya Ekspedisi</th>
-                      <th class="px-6 py-4 font-medium uppercase tracking-wider text-right">Aksi</th>
+                      <th class="px-5 py-3.5 font-medium uppercase tracking-wider">Part Number</th>
+                      <th class="px-5 py-3.5 font-medium uppercase tracking-wider">Kondisi</th>
+                      <th class="px-5 py-3.5 font-medium uppercase tracking-wider">Waktu Input</th>
+                      <th class="px-5 py-3.5 font-medium uppercase tracking-wider">Kategori</th>
+                      <th class="px-5 py-3.5 font-medium uppercase tracking-wider">Merek</th>
+                      <th class="px-5 py-3.5 font-medium uppercase tracking-wider">Berat</th>
+                      <th class="px-5 py-3.5 font-medium uppercase tracking-wider">Unit</th>
+                      <th class="px-5 py-3.5 font-medium uppercase tracking-wider">Stok</th>
+                      <th class="px-5 py-3.5 font-medium uppercase tracking-wider">Harga Beli</th>
+                      <th class="px-5 py-3.5 font-medium uppercase tracking-wider">Harga Jual</th>
+                      <th class="px-5 py-3.5 font-medium uppercase tracking-wider">Biaya Ekspedisi</th>
+                      <th class="px-5 py-3.5 font-medium uppercase tracking-wider">Supplier</th>
+                      <th class="px-5 py-3.5 font-medium uppercase tracking-wider">No Inv Supplier</th>
+                      <th class="px-5 py-3.5 font-medium uppercase tracking-wider text-right">Aksi</th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-outline-variant" id="productTableBody">
@@ -544,9 +528,9 @@
                             : 'Rp 0';
                       @endphp
                       <tr class="hover:bg-surface-container-low transition-colors group" data-product-id="{{ (int) ($product['id'] ?? 0) }}">
-                        <td class="px-6 py-4">
-                          <div class="flex items-center gap-3">
-                            <div class="h-12 w-12 rounded-lg bg-surface flex-shrink-0 border border-outline-variant overflow-hidden flex items-center justify-center">
+                        <td class="px-5 py-3.5">
+                          <div class="flex items-center gap-2.5">
+                            <div class="h-11 w-11 rounded-lg bg-surface flex-shrink-0 border border-outline-variant overflow-hidden flex items-center justify-center">
                               @if (!empty($product['image_url']))
                                 <button type="button" class="h-full w-full" onclick='openImagePreview(@json($product["image_url"]), @json($product["name"] ?? "Foto barang"))'>
                                   <img src="{{ $product['image_url'] }}" alt="{{ $product['name'] ?? 'Foto barang' }}" class="h-full w-full object-cover">
@@ -561,21 +545,23 @@
                             </div>
                           </div>
                         </td>
-                        <td class="px-6 py-4 text-body-md">{{ $condition !== '' ? $condition : '-' }}</td>
-                        <td class="px-6 py-4 text-body-md">{{ $product['created_at'] ?? '-' }}</td>
-                        <td class="px-6 py-4 text-body-md">{{ $product['category'] ?? '-' }}</td>
-                        <td class="px-6 py-4 text-body-md">{{ $product['brand'] ?? '-' }}</td>
-                        <td class="px-6 py-4 text-body-md">{{ $weightDisplay }}</td>
-                        <td class="px-6 py-4 text-body-md">{{ $unit }}</td>
-                        <td class="px-6 py-4">
-                          <span class="px-3 py-1 rounded-full {{ $low ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700' }} text-label-sm font-semibold inline-flex items-center gap-1">
+                        <td class="px-5 py-3.5 text-[13px]">{{ $condition !== '' ? $condition : '-' }}</td>
+                        <td class="px-5 py-3.5 text-[13px]">{{ $product['created_at'] ?? '-' }}</td>
+                        <td class="px-5 py-3.5 text-[13px]">{{ $product['category'] ?? '-' }}</td>
+                        <td class="px-5 py-3.5 text-[13px]">{{ $product['brand'] ?? '-' }}</td>
+                        <td class="px-5 py-3.5 text-[13px]">{{ $weightDisplay }}</td>
+                        <td class="px-5 py-3.5 text-[13px]">{{ $unit }}</td>
+                        <td class="px-5 py-3.5">
+                          <span class="px-2.5 py-1 rounded-full {{ $low ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700' }} text-[11px] font-semibold inline-flex items-center gap-1">
                             <span class="w-1.5 h-1.5 rounded-full {{ $low ? 'bg-red-500' : 'bg-emerald-500' }}"></span>{{ $stock }} {{ $stockUnit }}
                           </span>
                         </td>
-                        <td class="px-6 py-4 text-body-md">{{ $product['purchase_price'] ?? 'Rp 0' }}</td>
-                        <td class="px-6 py-4 text-body-md">{{ $product['selling_price'] ?? 'Rp 0' }}</td>
-                        <td class="px-6 py-4 text-body-md">{{ $expeditionCostDisplay }}</td>
-                        <td class="px-6 py-4 text-right">
+                        <td class="px-5 py-3.5 text-[13px]">{{ $product['purchase_price'] ?? 'Rp 0' }}</td>
+                        <td class="px-5 py-3.5 text-[13px]">{{ $product['selling_price'] ?? 'Rp 0' }}</td>
+                        <td class="px-5 py-3.5 text-[13px]">{{ $expeditionCostDisplay }}</td>
+                        <td class="px-5 py-3.5 text-[13px]">{{ $product['supplier_name'] ?? '-' }}</td>
+                        <td class="px-5 py-3.5 text-[13px]">{{ $product['supplier_invoice_number'] ?? '-' }}</td>
+                        <td class="px-5 py-3.5 text-right">
                           <div class="flex justify-end gap-2">
                             <button type="button" class="p-1 hover:bg-surface-container rounded-lg text-primary transition-colors" onclick='openEditModal(@json($product))'><span class="material-symbols-outlined">edit</span></button>
                             <button type="button" class="p-1 hover:bg-error-container/20 rounded-lg text-error transition-colors" onclick='deleteProduct({{ (int) ($product['id'] ?? 0) }}, @json($product['name'] ?? "-"))'><span class="material-symbols-outlined">delete</span></button>
@@ -584,14 +570,14 @@
                       </tr>
                     @empty
                       <tr id="emptyProductRow">
-                        <td colspan="12" class="px-6 py-10 text-center text-on-surface-variant">Belum ada barang.</td>
+                        <td colspan="14" class="px-6 py-10 text-center text-on-surface-variant">Belum ada barang.</td>
                       </tr>
                     @endforelse
                   </tbody>
                 </table>
               </div>
 
-              <div class="px-6 py-4 border-t border-outline-variant flex items-center justify-between bg-surface-container-lowest">
+              <div class="px-5 py-3.5 border-t border-outline-variant flex items-center justify-between bg-surface-container-lowest">
                 <p class="text-label-sm text-on-surface-variant" id="productCountText">Menampilkan {{ $pagination['from'] ?? 0 }}-{{ $pagination['to'] ?? 0 }} dari {{ $pagination['total'] ?? count($products) }} barang</p>
                 <div class="flex items-center gap-1">
                   <button type="button" class="p-1 rounded hover:bg-surface-container transition-colors disabled:opacity-30" {{ empty($pagination['has_prev']) ? 'disabled' : '' }} onclick="goToPage({{ (int) ($pagination['prev_page'] ?? 1) }})"><span class="material-symbols-outlined">chevron_left</span></button>
@@ -620,13 +606,13 @@
 
     <div id="dashboardToast" class="fixed right-6 top-6 z-50 hidden max-w-sm rounded-xl border bg-surface-container-lowest px-4 py-3 text-sm shadow-lg"></div>
     <div id="dashboardLoadingModal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-slate-950/45 px-4">
-      <div class="w-full max-w-sm rounded-2xl border border-outline-variant bg-surface-container-lowest px-6 py-5 text-center shadow-2xl">
+      <div class="w-full max-w-sm rounded-2xl border border-outline-variant bg-surface-container-lowest px-5 py-4 text-center shadow-2xl">
         <div class="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-4 border-outline-variant border-t-primary"></div>
         <p id="dashboardLoadingText" class="text-sm font-medium text-on-surface">Memproses data...</p>
       </div>
     </div>
     <div id="dashboardConfirmModal" class="fixed inset-0 z-[61] hidden items-center justify-center bg-slate-950/45 px-4">
-      <div class="w-full max-w-md rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 shadow-2xl">
+      <div class="w-full max-w-md rounded-2xl border border-outline-variant bg-surface-container-lowest p-5 shadow-2xl">
         <h3 id="dashboardConfirmTitle" class="text-headline-md text-on-surface">Konfirmasi</h3>
         <p id="dashboardConfirmMessage" class="mt-2 text-sm text-on-surface-variant">Apakah Anda yakin?</p>
         <div class="mt-5 flex justify-end gap-3">
@@ -638,26 +624,26 @@
     <form id="logoutForm" method="POST" action="{{ route('logout') }}" class="hidden">
       @csrf
     </form>
-    <div id="lowStockModal" class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-950/45 px-3 py-3 md:px-4 md:py-6">
-      <div class="sf-modal-panel w-full max-w-3xl rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-2xl">
-        <div class="flex items-center justify-between border-b border-outline-variant px-6 py-4">
+    <div id="lowStockModal" class="fixed inset-0 z-40 hidden items-start justify-center overflow-y-auto bg-slate-950/45 px-3 py-12 md:px-4 md:py-16">
+      <div class="sf-modal-panel w-full max-w-xl rounded-[1.1rem] border border-outline-variant bg-surface-container-lowest shadow-2xl">
+        <div class="flex items-start justify-between gap-4 border-b border-outline-variant px-4 py-3">
           <div>
-            <h2 class="text-headline-md text-on-surface">Daftar Stok Menipis</h2>
-            <p class="text-sm text-on-surface-variant">Barang yang perlu restock segera (stok <= 10).</p>
+            <h2 class="text-[18px] font-semibold leading-tight text-on-surface">Daftar Stok Menipis</h2>
+            <p class="mt-1 text-[13px] leading-5 text-on-surface-variant">Barang yang perlu restock segera (stok <= 10).</p>
           </div>
           <button type="button" class="rounded-lg p-2 hover:bg-surface-container" onclick="closeLowStockModal()">
             <span class="material-symbols-outlined">close</span>
           </button>
         </div>
-        <div class="sf-modal-form px-6 py-5">
+        <div class="sf-modal-form px-4 py-4">
           <div id="lowStockList" class="space-y-3"></div>
         </div>
       </div>
     </div>
-    <div id="imagePreviewModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 px-4 py-6">
-      <div class="w-full max-w-3xl rounded-2xl bg-white p-4">
-        <div class="mb-3 flex items-center justify-between">
-          <h3 id="imagePreviewTitle" class="text-base font-semibold text-on-surface">Preview Foto</h3>
+    <div id="imagePreviewModal" class="fixed inset-0 z-50 hidden items-start justify-center overflow-y-auto bg-black/75 px-4 py-12 md:py-16">
+      <div class="w-full max-w-xl rounded-2xl bg-white p-3.5 shadow-2xl">
+        <div class="mb-2.5 flex items-center justify-between gap-4">
+          <h3 id="imagePreviewTitle" class="text-[15px] font-semibold text-on-surface">Preview Foto</h3>
           <button type="button" class="rounded-lg p-2 hover:bg-surface-container" onclick="closeImagePreview()">
             <span class="material-symbols-outlined">close</span>
           </button>
@@ -668,52 +654,52 @@
       </div>
     </div>
 
-    <div id="createProductModal" class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-950/45 px-3 py-3 md:px-4 md:py-6">
-      <div class="sf-modal-panel w-full max-w-3xl rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-2xl">
-        <div class="flex items-center justify-between border-b border-outline-variant px-6 py-4">
+    <div id="createProductModal" class="fixed inset-0 z-40 hidden items-start justify-center overflow-y-auto bg-slate-950/45 px-3 py-12 md:px-4 md:py-16">
+      <div class="sf-modal-panel mt-0 w-full max-w-xl rounded-[1.1rem] border border-outline-variant bg-surface-container-lowest shadow-2xl">
+        <div class="flex items-start justify-between gap-4 border-b border-outline-variant px-4 py-4">
           <div>
-            <h2 class="text-headline-md text-on-surface">Tambah Barang</h2>
-            <p class="text-sm text-on-surface-variant">Simpan barang baru langsung dari dashboard.</p>
+            <h2 class="text-[18px] font-semibold leading-tight text-on-surface">Tambah Barang</h2>
+            <p class="mt-1 text-[13px] leading-5 text-on-surface-variant">Simpan barang baru langsung dari dashboard.</p>
           </div>
           <button type="button" class="rounded-lg p-2 hover:bg-surface-container" onclick="closeCreateModal()">
             <span class="material-symbols-outlined">close</span>
           </button>
         </div>
-        <form id="createProductForm" class="sf-modal-form space-y-5 px-6 py-5">
+        <form id="createProductForm" class="sf-modal-form space-y-3.5 px-4 py-4">
           <input type="hidden" name="supplier_id">
           <div id="createFormAlert" class="hidden rounded-xl border border-error bg-error-container px-4 py-3 text-sm text-on-error-container"></div>
           @include('filament.pages.partials.product-info-fields', ['isActiveDefault' => true])
           @include('filament.pages.partials.supplier-info-fields', ['supplierTypeOptions' => $supplierTypeOptions])
           @include('filament.pages.partials.batch-info-fields', ['batchCodePlaceholder' => 'Opsional, otomatis jika kosong'])
-          <div class="flex justify-end gap-3 border-t border-outline-variant pt-4">
-            <button type="button" class="rounded-xl border border-outline-variant px-5 py-3 text-sm font-medium text-on-surface hover:bg-surface-container" onclick="closeCreateModal()">Batal</button>
-            <button type="submit" class="rounded-xl bg-primary px-5 py-3 text-sm font-medium text-on-primary hover:brightness-90">Simpan Barang</button>
+          <div class="flex justify-end gap-3 border-t border-outline-variant pt-3">
+            <button type="button" class="rounded-xl border border-outline-variant px-4 py-2.5 text-sm font-medium text-on-surface hover:bg-surface-container" onclick="closeCreateModal()">Batal</button>
+            <button type="submit" class="rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-on-primary hover:brightness-90">Simpan Barang</button>
           </div>
         </form>
       </div>
     </div>
 
-    <div id="editProductModal" class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-950/45 px-3 py-3 md:px-4 md:py-6">
-      <div class="sf-modal-panel w-full max-w-3xl rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-2xl">
-        <div class="flex items-center justify-between border-b border-outline-variant px-6 py-4">
+    <div id="editProductModal" class="fixed inset-0 z-40 hidden items-start justify-center overflow-y-auto bg-slate-950/45 px-3 py-12 md:px-4 md:py-16">
+      <div class="sf-modal-panel mt-0 w-full max-w-xl rounded-[1.1rem] border border-outline-variant bg-surface-container-lowest shadow-2xl">
+        <div class="flex items-start justify-between gap-4 border-b border-outline-variant px-4 py-4">
           <div>
-            <h2 class="text-headline-md text-on-surface">Edit Barang</h2>
-            <p class="text-sm text-on-surface-variant">Perbarui data barang tanpa keluar dari dashboard.</p>
+            <h2 class="text-[18px] font-semibold leading-tight text-on-surface">Edit Barang</h2>
+            <p class="mt-1 text-[13px] leading-5 text-on-surface-variant">Perbarui data barang tanpa keluar dari dashboard.</p>
           </div>
           <button type="button" class="rounded-lg p-2 hover:bg-surface-container" onclick="closeEditModal()">
             <span class="material-symbols-outlined">close</span>
           </button>
         </div>
-        <form id="editProductForm" class="sf-modal-form space-y-5 px-6 py-5">
+        <form id="editProductForm" class="sf-modal-form space-y-3.5 px-4 py-4">
           <input type="hidden" name="product_id">
           <input type="hidden" name="supplier_id">
           <div id="editFormAlert" class="hidden rounded-xl border border-error bg-error-container px-4 py-3 text-sm text-on-error-container"></div>
           @include('filament.pages.partials.product-info-fields', ['isActiveDefault' => false])
           @include('filament.pages.partials.supplier-info-fields', ['supplierTypeOptions' => $supplierTypeOptions])
           @include('filament.pages.partials.batch-info-fields', ['batchCodePlaceholder' => ''])
-          <div class="flex justify-end gap-3 border-t border-outline-variant pt-4">
-            <button type="button" class="rounded-xl border border-outline-variant px-5 py-3 text-sm font-medium text-on-surface hover:bg-surface-container" onclick="closeEditModal()">Batal</button>
-            <button type="submit" class="rounded-xl bg-primary px-5 py-3 text-sm font-medium text-on-primary hover:brightness-90">Update Barang</button>
+          <div class="flex justify-end gap-3 border-t border-outline-variant pt-3">
+            <button type="button" class="rounded-xl border border-outline-variant px-4 py-2.5 text-sm font-medium text-on-surface hover:bg-surface-container" onclick="closeEditModal()">Batal</button>
+            <button type="submit" class="rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-on-primary hover:brightness-90">Update Barang</button>
           </div>
         </form>
       </div>
@@ -784,15 +770,8 @@
       function resetAllFilters() { window.location.search = ''; }
       function focusBrandFilter() { const target = document.getElementById('globalSearchInput'); if (!target) return; target.scrollIntoView({ behavior: 'smooth', block: 'center' }); target.focus(); }
       function focusCategoryFilter() { const target = document.getElementById('globalSearchInput'); if (!target) return; target.scrollIntoView({ behavior: 'smooth', block: 'center' }); target.focus(); }
-      const headerNotificationsBtn = document.getElementById('headerNotificationsBtn');
-      const headerSettingsBtn = document.getElementById('headerSettingsBtn');
-      const headerProfileBtn = document.getElementById('headerProfileBtn');
       const mobileSidebarBtn = document.getElementById('mobileSidebarBtn');
       const mobileSidebarBackdrop = document.getElementById('mobileSidebarBackdrop');
-      const notificationsPopup = document.getElementById('notificationsPopup');
-      const settingsPopup = document.getElementById('settingsPopup');
-      const profilePopup = document.getElementById('profilePopup');
-      const notificationsPopupList = document.getElementById('notificationsPopupList');
 
       function closeMobileSidebar() {
         document.body.classList.remove('sf-mobile-menu-open');
@@ -810,45 +789,6 @@
         }
       }
 
-      function closeHeaderPopups() {
-        [notificationsPopup, settingsPopup, profilePopup].forEach((el) => {
-          if (!el) return;
-          el.classList.add('hidden');
-        });
-      }
-
-      function togglePopup(popup) {
-        const isHidden = popup?.classList.contains('hidden');
-        closeHeaderPopups();
-        if (popup && isHidden) {
-          popup.classList.remove('hidden');
-        }
-      }
-
-      function showNotifications() {
-        if (!notificationsPopupList) return;
-        const lowStocks = productsForNotification.filter((item) => Number(item.stock || 0) <= 10);
-        if (!lowStocks.length) {
-          notificationsPopupList.innerHTML = '<div class="rounded-lg border border-outline-variant bg-surface px-3 py-3 text-xs text-on-surface-variant">Tidak ada notifikasi kritis. Semua stok aman.</div>';
-        } else {
-          notificationsPopupList.innerHTML = lowStocks.map((item) => `
-            <div class="rounded-lg border border-outline-variant bg-surface px-3 py-2">
-              <p class="text-sm font-semibold text-on-surface">${escapeHtml(item.sku || '-')}</p>
-              <p class="text-xs text-on-surface-variant mt-1">${escapeHtml(item.name || '-')}</p>
-              <p class="text-xs text-on-surface-variant mt-1">Stok tersisa: ${Number(item.stock || 0)} unit</p>
-            </div>
-          `).join('');
-        }
-        togglePopup(notificationsPopup);
-      }
-
-      function openAdminSettings() {
-        togglePopup(settingsPopup);
-      }
-
-      headerNotificationsBtn?.addEventListener('click', showNotifications);
-      headerSettingsBtn?.addEventListener('click', openAdminSettings);
-      headerProfileBtn?.addEventListener('click', () => togglePopup(profilePopup));
       mobileSidebarBtn?.addEventListener('click', toggleMobileSidebar);
       mobileSidebarBackdrop?.addEventListener('click', closeMobileSidebar);
       document.querySelectorAll('.sf-sidebar a').forEach((link) => {
@@ -857,33 +797,6 @@
         });
       });
 
-      document.querySelectorAll('[data-close-popup]').forEach((button) => {
-        button.addEventListener('click', () => {
-          const targetId = button.getAttribute('data-close-popup');
-          const target = targetId ? document.getElementById(targetId) : null;
-          target?.classList.add('hidden');
-        });
-      });
-
-      document.querySelectorAll('[data-settings-action]').forEach((button) => {
-        button.addEventListener('click', () => {
-          const action = button.getAttribute('data-settings-action');
-          if (action === 'reset-filters') {
-            resetAllFilters();
-            return;
-          }
-          if (action === 'open-products') {
-            window.location.href = '{{ url('/admin/products') }}';
-          }
-        });
-      });
-
-      document.addEventListener('click', (event) => {
-        const headerArea = event.target.closest('.sf-header-actions');
-        if (!headerArea) {
-          closeHeaderPopups();
-        }
-      });
       function openLowStockModal() {
         if (!lowStockModal || !lowStockList) return;
         renderLowStockList();
@@ -1066,14 +979,11 @@
         const paymentTypeInput = form.querySelector('[name="payment_type"]');
         const creditDaysWrap = form.querySelector('[data-credit-days-wrap]');
         const creditDueWrap = form.querySelector('[data-credit-due-wrap]');
-        const downPaymentWrap = form.querySelector('[data-down-payment-wrap]');
         const creditDaysInput = form.querySelector('[name="credit_days"]');
         const creditDueInput = form.querySelector('[name="credit_due_date"]');
-        const downPaymentInput = form.querySelector('[name="down_payment_amount"]');
         const showCredit = (paymentTypeInput?.value || 'LUNAS') === 'KREDIT';
         creditDaysWrap?.classList.toggle('hidden', !showCredit);
         creditDueWrap?.classList.toggle('hidden', !showCredit);
-        downPaymentWrap?.classList.toggle('hidden', !showCredit);
         if (creditDueInput) {
           creditDueInput.readOnly = showCredit;
           creditDueInput.classList.toggle('bg-surface-container-low', showCredit);
@@ -1081,7 +991,6 @@
         if (!showCredit) {
           if (creditDaysInput) creditDaysInput.value = '';
           if (creditDueInput) creditDueInput.value = '';
-          if (downPaymentInput) downPaymentInput.value = '';
           updateCreditDueHuman(form, null);
           updateCreditPaymentSummary(form, null);
           return;
@@ -1168,29 +1077,10 @@
       }
 
       function updateCreditPaymentSummary(form, totalOverride = null) {
-        const hint = form.querySelector('[data-down-payment-hint]');
         const paymentType = form.querySelector('[name="payment_type"]')?.value || 'LUNAS';
-        const downPaymentInput = form.querySelector('[name="down_payment_amount"]');
-        if (!hint) return;
         if (paymentType !== 'KREDIT') {
-          hint.textContent = '';
           return;
         }
-
-        const totalInput = form.querySelector('[name="total_purchase_display"]');
-        const total = Number.isFinite(totalOverride)
-          ? Number(totalOverride)
-          : parseCurrencyToNumber(totalInput?.value || 0);
-        let downPayment = parseCurrencyToNumber(downPaymentInput?.value || 0);
-        if (downPayment > total) {
-          downPayment = total;
-          if (downPaymentInput) {
-            downPaymentInput.value = formatRupiahInput(String(downPayment));
-          }
-        }
-
-        const remaining = Math.max(0, total - downPayment);
-        hint.textContent = `Sisa kredit otomatis: Rp ${Number.isFinite(remaining) ? remaining.toLocaleString('id-ID') : '0'}`;
       }
 
       function syncCreditDueDateFromDays(form) {
@@ -1237,6 +1127,7 @@
         form.querySelector('[name="supplier_address"]').value = product.supplier_address || '';
         form.querySelector('[name="supplier_note"]').value = product.supplier_note || '';
         form.querySelector('[name="batch_code"]').value = product.batch_code || '';
+        form.querySelector('[name="supplier_invoice_number"]').value = product.supplier_invoice_number || '';
         form.querySelector('[name="condition"]').value = product.condition || '';
         const processedByField = form.querySelector('[name="processed_by"]');
         if (processedByField) processedByField.value = product.processed_by || '';
@@ -1247,10 +1138,6 @@
         form.querySelector('[name="payment_type"]').value = product.payment_type || 'LUNAS';
         form.querySelector('[name="credit_days"]').value = product.credit_days || '';
         form.querySelector('[name="credit_due_date"]').value = product.credit_due_date || '';
-        const downPaymentField = form.querySelector('[name="down_payment_amount"]');
-        if (downPaymentField) {
-          downPaymentField.value = formatRupiahInput(product.down_payment_amount_value ?? product.down_payment_amount ?? '');
-        }
         updateCreditDueHuman(form, dateFromIso(product.credit_due_date), product.credit_days || null);
         const expiredAtField = form.querySelector('[name="expired_at"]');
         if (expiredAtField) expiredAtField.value = product.expired_at || '';
@@ -1294,7 +1181,7 @@
         return Number(digits || 0);
       }
       function bindCurrencyFormatter(form) {
-        ['purchase_price', 'expedition_cost', 'selling_price', 'down_payment_amount'].forEach((fieldName) => {
+        ['purchase_price', 'expedition_cost', 'selling_price'].forEach((fieldName) => {
           const input = form.querySelector(`[name="${fieldName}"]`);
           if (!input) return;
           input.addEventListener('input', () => {
@@ -1302,8 +1189,6 @@
             input.value = formatted;
             if (fieldName === 'purchase_price' || fieldName === 'expedition_cost') {
               updatePurchaseTotal(form);
-            } else if (fieldName === 'down_payment_amount') {
-              updateCreditPaymentSummary(form);
             }
           });
         });
@@ -1335,6 +1220,7 @@
         formData.append('supplier_address', form.querySelector('[name="supplier_address"]').value || '');
         formData.append('supplier_note', form.querySelector('[name="supplier_note"]').value || '');
         formData.append('batch_code', form.querySelector('[name="batch_code"]').value || '');
+        formData.append('supplier_invoice_number', form.querySelector('[name="supplier_invoice_number"]')?.value || '');
         formData.append('condition', form.querySelector('[name="condition"]').value || '');
         formData.append('processed_by', form.querySelector('[name="processed_by"]')?.value || '');
         formData.append('purchase_price', String(parseCurrencyToNumber(form.querySelector('[name="purchase_price"]').value || '')));
@@ -1344,7 +1230,6 @@
         formData.append('payment_type', form.querySelector('[name="payment_type"]').value || 'LUNAS');
         formData.append('credit_days', form.querySelector('[name="credit_days"]').value || '');
         formData.append('credit_due_date', form.querySelector('[name="credit_due_date"]').value || '');
-        formData.append('down_payment_amount', String(parseCurrencyToNumber(form.querySelector('[name="down_payment_amount"]')?.value || '')));
         const expiredAtField = form.querySelector('[name="expired_at"]');
         if (expiredAtField) {
           formData.append('expired_at', expiredAtField.value || '');
@@ -1434,6 +1319,8 @@
             <td class="px-6 py-4 text-body-md">${escapeHtml(product.purchase_price || 'Rp 0')}</td>
             <td class="px-6 py-4 text-body-md">${escapeHtml(product.selling_price || 'Rp 0')}</td>
             <td class="px-6 py-4 text-body-md">${escapeHtml(expeditionCost)}</td>
+            <td class="px-6 py-4 text-body-md">${escapeHtml(product.supplier_name || '-')}</td>
+            <td class="px-6 py-4 text-body-md">${escapeHtml(product.supplier_invoice_number || '-')}</td>
             <td class="px-6 py-4 text-right"><div class="flex justify-end gap-2"><button type="button" class="p-1 hover:bg-surface-container rounded-lg text-primary transition-colors" onclick='openEditModal(JSON.parse(decodeURIComponent("${encodedProduct}")))'><span class="material-symbols-outlined">edit</span></button><button type="button" class="p-1 hover:bg-error-container/20 rounded-lg text-error transition-colors" onclick='deleteProduct(${product.id}, ${JSON.stringify(product.name || "-")})'><span class="material-symbols-outlined">delete</span></button></div></td>
           </tr>
         `;

@@ -35,15 +35,17 @@
     $dueDateDisplay = $dueDate
         ? (((int) ($batch->credit_days ?? 0) > 0 ? ((int) $batch->credit_days . ' hari ') : '') . '(' . $dueDateText . ')')
         : '-';
+    $supplierInvoiceNumber = $batch->supplier_invoice_number ?: '-';
 @endphp
 <div class="sheet">
-    <div class="row">
-        <div>
-            <h1 class="title">NOTA CICILAN KREDIT</h1>
-            <p class="sub"><strong>Supplier:</strong> {{ $batch->supplier?->name ?? '-' }}</p>
-            <p class="sub"><strong>Part Number:</strong> {{ $batch->product?->barcode ?? '-' }}</p>
-            <p class="sub"><strong>Part Name:</strong> {{ $batch->product?->name ?? '-' }}</p>
-        </div>
+        <div class="row">
+            <div>
+                <h1 class="title">NOTA CICILAN KREDIT</h1>
+                <p class="sub"><strong>Supplier:</strong> {{ $batch->supplier?->name ?? '-' }}</p>
+                <p class="sub"><strong>No. Inv Supplier:</strong> {{ $supplierInvoiceNumber }}</p>
+                <p class="sub"><strong>Part Number:</strong> {{ $batch->product?->barcode ?? '-' }}</p>
+                <p class="sub"><strong>Part Name:</strong> {{ $batch->product?->name ?? '-' }}</p>
+            </div>
         <div>
             <p class="sub"><strong>Cicilan Ke:</strong> {{ $installmentNumber ?? 1 }}</p>
             <p class="sub"><strong>Tanggal Bayar:</strong> {{ optional($installment->paid_at)->format('d M Y') ?? '-' }}</p>

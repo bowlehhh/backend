@@ -13,14 +13,19 @@ class AdminSalesController extends Controller
 {
     public function receipt(Request $request, Sale $sale): View|Response
     {
-        $sale->loadMissing(['items', 'user:id,name', 'returns']);
+        $sale->loadMissing(['items.product:id,name,barcode,unit', 'user:id,name', 'returns']);
+        $isAdminBesar = (bool) $request->user()?->isAdminBesar();
+        $historyUrl = $isAdminBesar
+            ? url('/admin/admin-besar/history')
+            : url('/admin/products');
+        $historyLabel = $isAdminBesar ? 'Kembali ke History' : 'Kembali ke Barang';
 
         if ($request->boolean('pdf')) {
             $pdf = Pdf::loadView('cashier.receipt', [
                 'sale' => $sale,
-                'storeName' => config('app.name', 'Toko Pak Paul'),
-                'historyUrl' => url('/admin/products'),
-                'historyLabel' => 'Kembali ke Barang',
+                'storeName' => config('app.name', 'Surya Duta Multindo'),
+                'historyUrl' => $historyUrl,
+                'historyLabel' => $historyLabel,
                 'newTransactionUrl' => url('/admin/products'),
                 'showNewTransactionButton' => false,
             ])->setPaper('a4', 'portrait');
@@ -31,9 +36,9 @@ class AdminSalesController extends Controller
         return response()
             ->view('cashier.receipt', [
                 'sale' => $sale,
-                'storeName' => config('app.name', 'Toko Pak Paul'),
-                'historyUrl' => url('/admin/products'),
-                'historyLabel' => 'Kembali ke Barang',
+                'storeName' => config('app.name', 'Surya Duta Multindo'),
+                'historyUrl' => $historyUrl,
+                'historyLabel' => $historyLabel,
                 'newTransactionUrl' => url('/admin/products'),
                 'showNewTransactionButton' => false,
             ])

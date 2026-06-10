@@ -13,11 +13,11 @@
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
             <h1 class="text-2xl font-extrabold">Form Retur Transaksi</h1>
-            <p class="text-sm text-slate-500">Invoice: {{ $sale->invoice_number }} | Kasir: {{ $user?->name }}</p>
+            <p class="text-sm text-slate-500">Invoice: {{ $sale->invoice_number }} | Admin: {{ $user?->name }}</p>
         </div>
         <div class="flex gap-2">
             <a href="{{ route('cashier.receipt', $sale) }}" class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">Lihat Nota</a>
-            <a href="{{ route('cashier.history') }}" class="rounded-xl border border-emerald-700 px-4 py-2 text-sm font-semibold text-emerald-700">Kembali ke History</a>
+            <a href="{{ route('cashier.history') }}" class="rounded-xl border border-emerald-700 px-4 py-2 text-sm font-semibold text-emerald-700">Kembali ke Riwayat</a>
         </div>
     </div>
 

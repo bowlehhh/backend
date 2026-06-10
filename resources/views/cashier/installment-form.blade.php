@@ -13,7 +13,7 @@
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
             <h1 class="text-2xl font-extrabold">Cicilan Transaksi</h1>
-            <p class="text-sm text-slate-500">Invoice: {{ $sale->invoice_number }} | Kasir: {{ $sale->cashier_display_name }}</p>
+            <p class="text-sm text-slate-500">Invoice: {{ $sale->invoice_number }} | Admin: {{ $sale->cashier_display_name }}</p>
         </div>
         <div class="flex gap-2">
             <a href="{{ route('cashier.receipt', $sale) }}" class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">Lihat Nota</a>
@@ -81,7 +81,7 @@
                         <tr>
                             <th class="px-4 py-3 text-left font-semibold text-slate-600">Tanggal</th>
                             <th class="px-4 py-3 text-left font-semibold text-slate-600">Nominal</th>
-                            <th class="px-4 py-3 text-left font-semibold text-slate-600">Kasir</th>
+                            <th class="px-4 py-3 text-left font-semibold text-slate-600">Admin</th>
                             <th class="px-4 py-3 text-right font-semibold text-slate-600">Aksi</th>
                         </tr>
                     </thead>

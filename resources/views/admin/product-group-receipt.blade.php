@@ -1,5 +1,5 @@
 @php
-    $storeName = config('app.name', 'Toko Pak Paul');
+    $storeName = config('app.name', 'Surya Duta Multindo');
     $partNumber = strtoupper((string) ($product->barcode ?? '-'));
     $partName = strtoupper((string) ($product->name ?? '-'));
     $categoryName = strtoupper((string) ($product->category?->name ?? '-'));
@@ -572,7 +572,7 @@
                     <div class="muted">{{ $purchaseSummary['value'] }} total nilai beli</div>
                 </td>
                 <td>
-                    <span class="label">Transaksi Kasir</span>
+                    <span class="label">Transaksi Admin</span>
                     <div class="value blue">{{ number_format((int) $salesSummary['count'], 0, ',', '.') }}</div>
                     <div class="muted">{{ $salesSummary['value'] }} total nilai jual</div>
                 </td>
@@ -586,7 +586,7 @@
                     <div class="muted">Pembelian lunas dan transaksi kredit</div>
                 </td>
                 <td>
-                    <span class="label">Retur Kasir</span>
+                    <span class="label">Retur Transaksi</span>
                     <div class="value red">{{ number_format((int) $salesSummary['retur'], 0, ',', '.') }}</div>
                     <div class="muted">Retur yang tercatat pada barang ini</div>
                 </td>
@@ -660,7 +660,7 @@
 
         <div class="report-section">
             <div class="section-head">
-                <h2 class="section-title">Transaksi Kasir</h2>
+                <h2 class="section-title">Transaksi Admin</h2>
                 <p class="section-desc">Riwayat barang ini terjual ke siapa di kasir, termasuk retur jika ada.</p>
             </div>
             <div>
@@ -686,7 +686,7 @@
                                         <th>Tanggal</th>
                                         <th>Invoice</th>
                                         <th>Customer / PT</th>
-                                        <th>Kasir</th>
+                                        <th>Admin</th>
                                         <th class="center">Qty</th>
                                         <th class="num">Subtotal</th>
                                         <th>Metode</th>

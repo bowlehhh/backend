@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AdminActivityLog;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,17 +20,31 @@ class AdminUserController extends Controller
         $payload = $request->validate([
             'name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'role' => ['required', Rule::in([User::ROLE_ADMIN, User::ROLE_CASHIER])],
+            'role' => ['required', Rule::in([User::ROLE_ADMIN, User::ROLE_ADMIN_BESAR])],
             'is_active' => ['nullable', 'boolean'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
-        User::create([
+        $newUser = User::create([
             'name' => $payload['name'],
             'email' => $payload['email'],
             'role' => $payload['role'],
             'is_active' => (bool) ($payload['is_active'] ?? true),
             'password' => $payload['password'],
+        ]);
+
+        AdminActivityLog::create([
+            'actor_user_id' => $request->user()->id,
+            'action' => 'user_created',
+            'subject_type' => User::class,
+            'subject_id' => $newUser->id,
+            'title' => 'Tambah User',
+            'description' => 'Menambahkan akun user baru dari modul user admin.',
+            'meta' => [
+                'name' => $payload['name'],
+                'email' => $payload['email'],
+                'role' => $payload['role'],
+            ],
         ]);
 
         return redirect()->to(url('/admin/admin-module?type=users'))->with('success', 'Akun user berhasil ditambahkan.');
@@ -44,7 +59,7 @@ class AdminUserController extends Controller
         $payload = $request->validate([
             'name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
-            'role' => ['required', Rule::in([User::ROLE_ADMIN, User::ROLE_CASHIER])],
+            'role' => ['required', Rule::in([User::ROLE_ADMIN, User::ROLE_ADMIN_BESAR])],
             'is_active' => ['nullable', 'boolean'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ]);
@@ -60,6 +75,20 @@ class AdminUserController extends Controller
 
         $user->save();
 
+        AdminActivityLog::create([
+            'actor_user_id' => $request->user()->id,
+            'action' => 'user_updated',
+            'subject_type' => User::class,
+            'subject_id' => $user->id,
+            'title' => 'Edit User',
+            'description' => 'Memperbarui data user dari modul user admin.',
+            'meta' => [
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+            ],
+        ]);
+
         return redirect()->to(url('/admin/admin-module?type=users'))->with('success', 'Akun user berhasil diperbarui.');
     }
 
@@ -70,6 +99,20 @@ class AdminUserController extends Controller
         }
 
         $user->delete();
+
+        AdminActivityLog::create([
+            'actor_user_id' => $request->user()->id,
+            'action' => 'user_deleted',
+            'subject_type' => User::class,
+            'subject_id' => $user->id,
+            'title' => 'Hapus User',
+            'description' => 'Menghapus akun user dari modul user admin.',
+            'meta' => [
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+            ],
+        ]);
 
         return redirect()->to(url('/admin/admin-module?type=users'))->with('success', 'Akun user berhasil dihapus.');
     }

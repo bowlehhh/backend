@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard Kasir - Toko Pak Paul</title>
+    <title>Dashboard Transaksi - Surya Duta Multindo</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
@@ -52,18 +52,19 @@
 <body class="cashier-compact text-slate-900">
 @php
     $creditDaysValue = old('credit_days', '');
+    $isTransactionDashboard = request()->routeIs('cashier.dashboard', 'admin.transaksi.dashboard');
 @endphp
 <div class="h-screen overflow-hidden bg-[#f7f9fb]">
     <aside class="hidden lg:flex fixed inset-y-0 left-0 z-30 w-[340px] flex-col border-r border-slate-300 bg-white">
         <div class="px-5 py-5 border-b border-slate-200">
-            <h1 class="text-3xl font-extrabold text-emerald-700">Toko Pak Paul</h1>
-            <p class="text-xs text-slate-500">Kasir Terminal - Station 01</p>
+            <h1 class="text-3xl font-extrabold text-emerald-700">Surya Duta Multindo</h1>
+            <p class="text-xs text-slate-500">Admin Transaksi - Station 01</p>
         </div>
         <div class="min-h-0 flex-1 overflow-y-auto custom-scrollbar px-4 py-4 space-y-4">
             <nav class="space-y-2">
-                <a href="{{ route('cashier.dashboard') }}" class="flex items-center gap-3 rounded-xl {{ request()->routeIs('cashier.dashboard') ? 'bg-indigo-500 text-white' : 'text-slate-600 hover:bg-slate-100' }} px-3 py-2">
+                <a href="{{ route('cashier.dashboard') }}" class="flex items-center gap-3 rounded-xl {{ $isTransactionDashboard ? 'bg-indigo-500 text-white' : 'text-slate-600 hover:bg-slate-100' }} px-3 py-2">
                     <span class="material-symbols-outlined">point_of_sale</span>
-                    <span class="font-semibold">Register</span>
+                    <span class="font-semibold">Transaksi</span>
                 </a>
                 <a href="{{ route('cashier.history') }}" class="flex w-full items-center gap-3 rounded-xl {{ request()->routeIs('cashier.history') ? 'bg-indigo-500 text-white' : 'text-slate-600 hover:bg-slate-100' }} px-3 py-2">
                     <span class="material-symbols-outlined">history</span>
@@ -81,6 +82,23 @@
                     @endif
                 </a>
             </nav>
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3">
+                <p class="px-1 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Master Data</p>
+                <div class="mt-2 space-y-1">
+                    <a href="{{ url('/admin/products') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-white">
+                        <span class="material-symbols-outlined">inventory_2</span>
+                        <span class="font-semibold">Barang</span>
+                    </a>
+                    <a href="{{ url('/admin/suppliers') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-white">
+                        <span class="material-symbols-outlined">local_shipping</span>
+                        <span class="font-semibold">Supplier</span>
+                    </a>
+                    <a href="{{ url('/admin/admin-module?type=product-groups') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-white">
+                        <span class="material-symbols-outlined">inventory_2</span>
+                        <span class="font-semibold">Kelompok Barang</span>
+                    </a>
+                </div>
+            </div>
             <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
                     <h2 class="text-base font-bold text-slate-900">Keranjang Belanja</h2>
@@ -93,21 +111,53 @@
                     @forelse($cartItems as $item)
                         <div class="rounded-xl border border-slate-200 p-3">
                             <p class="text-sm font-semibold">{{ $item['product_name'] }}</p>
+                            <p class="mt-1 text-xs text-slate-500">Part No: {{ $item['part_number'] }}</p>
+                            <p class="mt-1 text-xs text-slate-500">
+                                Stok batch: {{ number_format((int) ($item['batch_stock'] ?? 0), 0, ',', '.') }}
+                                @if((int) ($item['available_stock'] ?? 0) > (int) ($item['batch_stock'] ?? 0))
+                                    | total gabungan: {{ number_format((int) ($item['available_stock'] ?? 0), 0, ',', '.') }}
+                                @endif
+                            </p>
                             <div class="mt-2 flex justify-between text-sm">
-                                <form method="POST" action="{{ route('cashier.cart.update', $item['product_batch_id']) }}" class="flex flex-col gap-2" data-cart-item-form>
+                                <form method="POST" action="{{ route('cashier.cart.update', $item['product_batch_id']) }}" class="flex flex-col gap-2" data-cart-item-form data-merge-stock="{{ !empty($item['merge_stock']) ? '1' : '0' }}">
                                     @csrf
                                     <div class="flex items-center gap-2">
                                         <label class="text-xs text-slate-500">Qty</label>
-                                        <input type="number" min="0" name="qty" value="{{ $item['qty'] }}" class="w-16 rounded-lg border border-slate-300 px-2 py-1" data-cart-qty />
+                                        <input type="number" min="0" max="{{ (int) ($item['max_qty'] ?? 0) }}" name="qty" value="{{ $item['qty'] }}" class="w-16 rounded-lg border border-slate-300 px-2 py-1" data-cart-qty data-max-stock="{{ (int) ($item['max_qty'] ?? 0) }}" />
                                     </div>
                                     <div class="flex items-center gap-2">
-                                        <label class="text-xs text-slate-500">Harga</label>
-                                        <input type="text" inputmode="numeric" name="price" value="{{ number_format((float) $item['price'], 0, ',', '.') }}" class="w-28 rounded-lg border border-slate-300 px-2 py-1" data-rupiah-input data-cart-price />
+                                        <label class="text-xs text-slate-500">{{ !empty($item['merge_stock']) ? 'Total Harga' : 'Harga' }}</label>
+                                        <input
+                                            type="text"
+                                            inputmode="numeric"
+                                            name="price"
+                                            value="{{ number_format((float) ($item['merge_stock'] ? ($item['line_total'] ?? ((float) $item['price'] * (int) $item['qty'])) : $item['price']), 0, ',', '.') }}"
+                                            class="w-28 rounded-lg border border-slate-300 px-2 py-1"
+                                            data-rupiah-input
+                                            data-cart-price
+                                        />
                                     </div>
-                                    <button type="submit" class="w-fit rounded-lg border border-slate-300 px-2 py-1 text-xs">Update</button>
+                                    <div class="flex flex-wrap gap-2">
+                                        <button type="submit" class="w-fit rounded-lg border border-slate-300 px-2 py-1 text-xs">Update</button>
+                                        @if((int) ($item['can_merge_stock'] ?? 0) === 1)
+                                            @if(empty($item['merge_stock']))
+                                                <button
+                                                    type="submit"
+                                                    formaction="{{ route('cashier.cart.merge', $item['product_batch_id']) }}"
+                                                    class="w-fit rounded-lg border border-amber-300 bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100"
+                                                >
+                                                    Gabung Stok
+                                                </button>
+                                            @else
+                                                <span class="inline-flex w-fit items-center rounded-lg border border-emerald-300 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">
+                                                    Stok digabung
+                                                </span>
+                                            @endif
+                                        @endif
+                                    </div>
                                 </form>
                                 <div class="text-right">
-                                    <span class="block font-bold" data-cart-line-total>Rp {{ number_format((float) $item['price'] * (int) $item['qty'], 0, ',', '.') }}</span>
+                                    <span class="block font-bold" data-cart-line-total>Rp {{ number_format((float) ($item['line_total'] ?? ((float) $item['price'] * (int) $item['qty'])), 0, ',', '.') }}</span>
                                     <form method="POST" action="{{ route('cashier.cart.remove', $item['product_batch_id']) }}">
                                         @csrf
                                         <button type="submit" class="text-xs text-red-500">Hapus</button>
@@ -121,15 +171,6 @@
                 </div>
             </div>
         </div>
-        <div class="p-4 border-t border-slate-200">
-            <form method="POST" action="{{ route('logout') }}" class="js-logout-form">
-                @csrf
-                <button type="submit" class="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-red-50 hover:text-red-600">
-                    <span class="material-symbols-outlined">lock_clock</span>
-                    <span class="font-semibold">Close Shift</span>
-                </button>
-            </form>
-        </div>
     </aside>
 
     <main class="lg:ml-[340px] h-full flex flex-col">
@@ -137,8 +178,8 @@
             <div class="px-4 lg:px-6 py-3">
                 <div class="flex items-center justify-between lg:hidden">
                     <div>
-                        <h1 class="text-3xl font-extrabold text-emerald-700 leading-none">Toko Pak Paul</h1>
-                        <p class="mt-1 text-[10px] text-slate-500">Kasir Terminal - Station 01</p>
+                        <h1 class="text-3xl font-extrabold text-emerald-700 leading-none">Surya Duta Multindo</h1>
+                        <p class="mt-1 text-[10px] text-slate-500">Admin Transaksi - Station 01</p>
                     </div>
                     <div class="flex items-center gap-2 text-slate-600">
                         <a href="{{ route('cashier.history') }}" class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">
@@ -150,6 +191,12 @@
                         <a href="{{ route('cashier.history.supplier') }}" class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">
                             <span class="material-symbols-outlined text-[18px]">local_shipping</span>
                         </a>
+                        <form method="POST" action="{{ route('logout') }}" class="js-logout-form">
+                            @csrf
+                            <button type="submit" class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-red-50 text-red-600">
+                                <span class="material-symbols-outlined text-[18px]">logout</span>
+                            </button>
+                        </form>
                     </div>
                 </div>
                 <div class="mt-3 flex items-center gap-4">
@@ -158,9 +205,18 @@
                         <input id="product-search-input" type="text" name="q" value="{{ $search }}" placeholder="Cari produk berdasarkan nama atau barcode..." autocomplete="off" class="h-11 w-full rounded-xl border border-slate-300 bg-slate-50 pl-10 pr-4 text-sm focus:border-emerald-500 focus:ring-emerald-500" />
                         <div id="product-search-popup" class="absolute left-0 right-0 top-[48px] z-40 hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg"></div>
                     </form>
-                    <div class="hidden lg:block text-right">
-                        <p class="text-sm font-bold">{{ $user?->name ?? 'Kasir' }}</p>
-                        <p class="text-xs text-slate-500">Kasir</p>
+                    <div class="hidden lg:flex items-center gap-3">
+                        <div class="text-right">
+                            <p class="text-sm font-bold">{{ $user?->name ?? 'Admin' }}</p>
+                            <p class="text-xs text-slate-500">Admin</p>
+                        </div>
+                        <form method="POST" action="{{ route('logout') }}" class="js-logout-form">
+                            @csrf
+                            <button type="submit" class="inline-flex h-11 items-center gap-2 rounded-xl border border-red-200 bg-white px-4 text-sm font-semibold text-red-600 hover:bg-red-50">
+                                <span class="material-symbols-outlined text-[18px]">logout</span>
+                                Logout
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -183,7 +239,7 @@
                     @forelse($products as $product)
                         @php
                             $batch = $product->batches->first();
-                            $stock = $batch?->stock ?? 0;
+                            $stock = (int) ($product->display_stock ?? ($batch?->stock ?? 0));
                             $price = (float) ($batch?->selling_price ?? 0);
                             $image = $product->image_path ? asset('storage/' . ltrim($product->image_path, '/')) : null;
                         @endphp
@@ -205,7 +261,7 @@
                                 <h3 class="font-bold text-slate-900 text-xl md:text-base line-clamp-1">{{ $product->name }}</h3>
                                 <div class="mt-3 flex items-center justify-between">
                                     <p class="text-2xl md:text-2xl font-extrabold text-emerald-700">Rp {{ number_format($price, 0, ',', '.') }}</p>
-                                    <form method="POST" action="{{ route('cashier.cart.add', $product) }}">
+                                    <form method="POST" action="{{ route('cashier.cart.add', $batch) }}">
                                         @csrf
                                         <button type="submit" class="inline-flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-xl bg-emerald-700 text-white hover:bg-emerald-600">
                                             <span class="material-symbols-outlined">add</span>
@@ -279,10 +335,8 @@
                             </div>
                             <p class="text-[11px] font-medium text-slate-500" data-credit-due-preview>Jatuh tempo otomatis akan dihitung dari hari ini.</p>
                         </div>
-                        <input type="text" name="cashier_service_name" maxlength="100" value="{{ old('cashier_service_name', '') }}" autocomplete="off" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Nama pelayan / kasir" />
-                        <input type="text" name="cashier_phone" maxlength="30" value="{{ old('cashier_phone', '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="No. telepon kasir" />
+                        <input type="text" name="cashier_service_name" maxlength="100" value="{{ old('cashier_service_name', '') }}" autocomplete="off" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Nama petugas / admin" />
                         <input type="text" name="customer_name" maxlength="100" value="{{ old('customer_name', '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Nama pembeli (opsional)" />
-                        <input type="text" name="customer_phone" maxlength="30" value="{{ old('customer_phone', '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="No. telepon pembeli (opsional)" />
                         <button type="submit" data-normal-submit class="w-full rounded-2xl bg-emerald-700 py-4 text-xl font-extrabold text-white">KONFIRMASI PENJUALAN</button>
                     </form>
                 </div>
@@ -313,9 +367,7 @@
         <input type="hidden" name="credit_days" value="" />
         <input type="hidden" name="credit_due_date" value="{{ old('credit_due_date', '') }}" />
         <input type="hidden" name="cashier_service_name" value="" />
-        <input type="hidden" name="cashier_phone" value="{{ old('cashier_phone', '') }}" />
         <input type="hidden" name="customer_name" value="{{ old('customer_name', '') }}" />
-        <input type="hidden" name="customer_phone" value="{{ old('customer_phone', '') }}" />
         <div class="flex gap-2">
             <button type="button" data-print-btn class="w-12 rounded-xl border border-slate-300 bg-white text-slate-700">
                 <span class="material-symbols-outlined text-[18px]">print</span>
@@ -372,10 +424,8 @@
                 </div>
                 <p id="mobile-confirm-credit-preview" class="text-[11px] font-medium text-slate-500">Jatuh tempo otomatis akan dihitung dari hari ini.</p>
             </div>
-            <input id="mobile-confirm-cashier-name" type="text" maxlength="100" value="{{ old('cashier_service_name', '') }}" autocomplete="off" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Nama pelayan / kasir" />
-            <input id="mobile-confirm-cashier-phone" type="text" maxlength="30" value="{{ old('cashier_phone', '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="No. telepon kasir" />
+            <input id="mobile-confirm-cashier-name" type="text" maxlength="100" value="{{ old('cashier_service_name', '') }}" autocomplete="off" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Nama petugas / admin" />
             <input id="mobile-confirm-customer-name" type="text" maxlength="100" value="{{ old('customer_name', '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Nama pembeli (opsional)" />
-            <input id="mobile-confirm-customer-phone" type="text" maxlength="30" value="{{ old('customer_phone', '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="No. telepon pembeli (opsional)" />
         </div>
 
         <div class="mt-4 space-y-1 rounded-xl bg-slate-50 p-3 text-sm">
@@ -414,9 +464,7 @@
     const mobileConfirmCreditPreview = document.getElementById('mobile-confirm-credit-preview');
     const mobileCreditDaysWrap = document.getElementById('mobile-credit-days-wrap');
     const mobileConfirmCashierName = document.getElementById('mobile-confirm-cashier-name');
-    const mobileConfirmCashierPhone = document.getElementById('mobile-confirm-cashier-phone');
     const mobileConfirmCustomerName = document.getElementById('mobile-confirm-customer-name');
-    const mobileConfirmCustomerPhone = document.getElementById('mobile-confirm-customer-phone');
     const cancelBtn = document.getElementById('cancel-confirm-btn');
     const submitBtn = document.getElementById('submit-confirm-btn');
     const desktopPaymentMethod = desktopCheckoutForm?.querySelector('[data-payment-method]');
@@ -442,6 +490,24 @@
         return digits === '' ? '' : new Intl.NumberFormat('id-ID').format(Number(digits));
     };
     const getNumericInputValue = (input) => Number(sanitizeRupiahValue(input?.value || 0));
+    const clampQtyInput = (input) => {
+        if (!input) {
+            return;
+        }
+
+        const maxStock = Number(input.dataset.maxStock || 0);
+        let value = Number(input.value || 0);
+
+        if (Number.isNaN(value) || value < 0) {
+            value = 0;
+        }
+
+        if (maxStock > 0 && value > maxStock) {
+            value = maxStock;
+        }
+
+        input.value = String(value);
+    };
     const formatCurrencyLabel = (value) => `Rp ${toRupiah(value)}`;
     const pad2 = (value) => String(value).padStart(2, '0');
     const formatDisplayDate = (value) => {
@@ -508,7 +574,8 @@
             const priceInput = form.querySelector('[data-cart-price]');
             const qty = Number(qtyInput?.value || 0);
             const price = Number(sanitizeRupiahValue(priceInput?.value || 0));
-            const lineTotal = qty * price;
+            const isMerged = form.dataset.mergeStock === '1';
+            const lineTotal = isMerged ? price : qty * price;
             nextTotal += lineTotal;
 
             const lineTotalEl = form.closest('.rounded-xl')?.querySelector('[data-cart-line-total]');
@@ -522,8 +589,21 @@
         syncSummaryValues();
     };
 
-    document.querySelectorAll('[data-cart-qty], [data-cart-price]').forEach((input) => {
+    document.querySelectorAll('[data-cart-price]').forEach((input) => {
         input.addEventListener('input', recalculateCartSummary);
+    });
+
+    document.querySelectorAll('[data-cart-qty]').forEach((input) => {
+        clampQtyInput(input);
+        input.addEventListener('input', () => {
+            clampQtyInput(input);
+            recalculateCartSummary();
+        });
+
+        input.addEventListener('blur', () => {
+            clampQtyInput(input);
+            recalculateCartSummary();
+        });
     });
 
     recalculateCartSummary();
@@ -637,9 +717,7 @@
                 mobileConfirmPaidAmount.value = formatRupiahInputValue(form.querySelector('input[name="paid_amount"]')?.value || (mobileConfirmPaymentMethod.value === 'credit' ? 0 : liveTotal));
                 mobileConfirmCreditDays.value = form.querySelector('[name="credit_days"]')?.value || '';
                 mobileConfirmCashierName.value = form.querySelector('input[name="cashier_service_name"]')?.value || '';
-                mobileConfirmCashierPhone.value = form.querySelector('input[name="cashier_phone"]')?.value || '';
                 mobileConfirmCustomerName.value = form.querySelector('input[name="customer_name"]')?.value || '';
-                mobileConfirmCustomerPhone.value = form.querySelector('input[name="customer_phone"]')?.value || '';
             }
             itemsBox.innerHTML = cartItems.map((item) => {
                 const qty = Number(item.qty || 0);
@@ -682,9 +760,7 @@
             activeCheckoutForm.querySelector('input[name="credit_days"]').value = (mobileConfirmPaymentMethod?.value === 'credit' ? (mobileConfirmCreditDays?.value || '') : '');
             activeCheckoutForm.querySelector('input[name="credit_due_date"]').value = (mobileConfirmPaymentMethod?.value === 'credit' ? computeDueDateFromDays(getCreditDaysValue(mobileConfirmCreditDays)) : '');
             activeCheckoutForm.querySelector('input[name="cashier_service_name"]').value = mobileConfirmCashierName?.value || '';
-            activeCheckoutForm.querySelector('input[name="cashier_phone"]').value = mobileConfirmCashierPhone?.value || '';
             activeCheckoutForm.querySelector('input[name="customer_name"]').value = mobileConfirmCustomerName?.value || '';
-            activeCheckoutForm.querySelector('input[name="customer_phone"]').value = mobileConfirmCustomerPhone?.value || '';
         } else if (activeCheckoutForm) {
             const paidInput = activeCheckoutForm.querySelector('input[name="paid_amount"]');
             if (paidInput) {

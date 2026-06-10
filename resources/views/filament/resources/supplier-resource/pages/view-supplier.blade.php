@@ -76,7 +76,7 @@
           <button id="mobileSidebarBtn" type="button" class="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#bccac0] bg-white text-[#3d4a42] hover:bg-[#f1f4f2]" aria-label="Buka navigasi">
             <span class="material-symbols-outlined">menu</span>
           </button>
-          <span class="text-[34px] font-bold text-[#006948]">Toko Pak Paul</span>
+          <span class="text-[34px] font-bold text-[#006948]">Surya Duta Multindo</span>
         </div>
         <div class="relative flex items-center gap-4">
           <span class="material-symbols-outlined p-1 rounded-full hover:bg-[#eceef0] transition-colors">notifications</span>
@@ -207,7 +207,6 @@
                     <th class="px-4 py-2.5 font-medium uppercase tracking-wider">Harga Beli</th>
                     <th class="px-4 py-2.5 font-medium uppercase tracking-wider">Subtotal</th>
                     <th class="px-4 py-2.5 font-medium uppercase tracking-wider">Metode</th>
-                    <th class="px-4 py-2.5 font-medium uppercase tracking-wider">DP / Uang Muka</th>
                     <th class="px-4 py-2.5 font-medium uppercase tracking-wider">Total Dibayar</th>
                     <th class="px-4 py-2.5 font-medium uppercase tracking-wider">Jatuh Tempo</th>
                     <th class="px-4 py-2.5 font-medium uppercase tracking-wider">Status</th>
@@ -236,7 +235,6 @@
                       <td class="px-4 py-2.5">{{ $row['harga_beli'] }}</td>
                       <td class="px-4 py-2.5 font-semibold">{{ $row['subtotal'] }}</td>
                       <td class="px-4 py-2.5">{{ $row['payment_type'] }}</td>
-                      <td class="px-4 py-2.5">{{ $row['down_payment'] ?? '-' }}</td>
                       <td class="px-4 py-2.5">{{ $row['total_dibayar'] ?? $row['sudah_dibayar'] ?? '-' }}</td>
                       <td class="px-4 py-2.5">{{ $row['payment_type'] === 'KREDIT' ? ($row['credit_days'] . ' hari (' . $row['credit_due_date'] . ')') : '-' }}</td>
                       <td class="px-4 py-2.5"><span class="inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold {{ $statusClass }}">{{ $row['status'] }}</span></td>
@@ -252,7 +250,7 @@
                     </tr>
                   @empty
                     <tr>
-                      <td colspan="19" class="px-4 py-8 text-center text-[#52615a]">Belum ada riwayat pembelian untuk supplier ini.</td>
+                      <td colspan="18" class="px-4 py-8 text-center text-[#52615a]">Belum ada riwayat pembelian untuk supplier ini.</td>
                     </tr>
                   @endforelse
                 </tbody>

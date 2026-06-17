@@ -63,6 +63,38 @@
             background: rgba(255, 255, 255, 0.88);
             backdrop-filter: blur(14px);
         }
+
+        /* Responsive sizing for login form on large screens
+           Scales down proportionally without cutting off content */
+        @media (min-width: 1400px) {
+            main {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+            }
+
+            main > section:first-child {
+                max-width: 520px;
+                margin: 0 auto;
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+        }
+
+        @media (min-width: 1600px) {
+            main > section:first-child {
+                max-width: 550px;
+                padding-left: 24px;
+                padding-right: 24px;
+            }
+        }
+
+        @media (min-width: 1920px) {
+            main > section:first-child {
+                max-width: 580px;
+                padding-left: 28px;
+                padding-right: 28px;
+            }
+        }
     </style>
 </head>
 <body class="bg-background text-on-surface font-sans overflow-x-hidden">

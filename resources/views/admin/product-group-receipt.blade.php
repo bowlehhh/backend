@@ -48,22 +48,27 @@
 
         @page {
             size: A4 landscape;
-            margin: 5mm;
+            margin: 3mm;
         }
 
         * { box-sizing: border-box; }
+        html { overflow-x: hidden; }
         body {
             margin: 0;
+            padding: 0;
             background: #eef3f7;
             color: var(--ink);
             font-family: Arial, Helvetica, sans-serif;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
+            width: 100%;
+            overflow-x: hidden;
         }
 
         .paper {
-            max-width: 1260px;
-            margin: 14px auto;
+            max-width: 280mm;
+            max-width: calc(100vw - 16px);
+            margin: 8px auto;
             background: var(--paper);
             border: 1px solid var(--line);
             border-radius: 16px;
@@ -395,30 +400,38 @@
         @media print {
             body {
                 background: #fff;
+                margin: 0;
+                padding: 0;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
 
             .paper {
                 margin: 0;
                 max-width: none;
-                border: 0;
+                border: 1px solid var(--line);
                 border-radius: 0;
                 box-shadow: none;
+                padding: 0;
+                page-break-after: avoid;
             }
 
             .topbar {
-                padding: 10px 12px 8px;
+                padding: 8px 10px;
+                page-break-inside: avoid;
             }
 
             .store-name {
-                font-size: 24px;
+                font-size: 18px;
+                margin: 0;
             }
 
             .doc-title {
-                font-size: 11px;
+                font-size: 10px;
             }
 
             .doc-sub {
-                font-size: 10px;
+                font-size: 9px;
             }
 
             .hero-note {
@@ -426,76 +439,86 @@
             }
 
             .doc-meta {
-                font-size: 10px;
-                line-height: 1.4;
+                font-size: 9px;
+                line-height: 1.3;
             }
 
             .meta-table,
             .summary-table {
-                width: calc(100% - 24px);
-                margin: 8px 12px 0;
+                width: calc(100% - 20px);
+                margin: 6px 10px 0;
+                page-break-inside: avoid;
             }
 
             .meta-table td,
             .summary-table td {
-                padding: 6px 8px;
+                padding: 2px 3px;
+                font-size: 8px;
+                border: 1px solid var(--line);
             }
 
             .label {
-                font-size: 9px;
+                font-size: 8px;
+                background: #f3f4f6;
             }
 
             .value {
-                font-size: 14px;
-                margin-top: 4px;
+                font-size: 10px;
+                margin-top: 2px;
             }
 
             .value.small {
-                font-size: 12px;
+                font-size: 9px;
             }
 
             .report-section {
-                margin: 10px 12px 0;
-                border-radius: 10px;
+                margin: 6px 10px 0;
+                border-radius: 0;
+                page-break-inside: avoid;
             }
 
             .section-head {
-                padding: 10px 12px 8px;
+                padding: 6px 10px;
+                page-break-inside: avoid;
             }
 
             .section-title {
-                font-size: 15px;
+                font-size: 11px;
             }
 
             .section-desc {
-                font-size: 10px;
-                margin-top: 4px;
+                font-size: 8px;
+                margin-top: 2px;
             }
 
             .month-title {
-                padding: 10px 12px;
+                padding: 6px 10px;
+                page-break-inside: avoid;
             }
 
             .month-label {
-                font-size: 9px;
+                font-size: 8px;
             }
 
             .month-name {
-                font-size: 15px;
+                font-size: 11px;
             }
 
             .chip {
-                padding: 4px 8px;
-                font-size: 9px;
+                padding: 2px 5px;
+                font-size: 8px;
             }
 
             th, td {
-                padding: 6px 7px;
-                font-size: 9px;
+                padding: 2px 3px;
+                font-size: 8px;
+                border: 1px solid var(--line);
             }
 
             th {
-                font-size: 9px;
+                font-size: 8px;
+                background: #e5e7eb;
+                font-weight: 700;
             }
 
             .actions {

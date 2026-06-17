@@ -19,7 +19,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->middleware('role:admin,admin_besar');
 
     Route::prefix('pos')
-        ->middleware('role:admin,admin_besar')
+        ->middleware('role:admin_besar')
         ->group(function (): void {
             Route::get('/products/search', [ProductSearchController::class, 'index']);
             Route::get('/dashboard', [CashierDashboardController::class, 'show']);

@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nota Retur {{ $salesReturn->return_number }}</title>
     <style>
-        body { font-family: Arial, Helvetica, sans-serif; margin: 0; background: #f3f4f6; color: #111827; }
-        .wrap { width: 190mm; margin: 12px auto; background: #fff; border: 2px solid #111827; padding: 14px; box-sizing: border-box; }
+        @page { size: A4 portrait; margin: 8mm; }
+        * { box-sizing: border-box; }
+        html { overflow-x: hidden; }
+        body { font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 0; background: #f3f4f6; color: #111827; width: 100%; overflow-x: hidden; }
+        .wrap { width: 190mm; max-width: calc(100vw - 16px); margin: 8px auto; background: #fff; border: 2px solid #111827; padding: 14px; box-sizing: border-box; }
         table { width: 100%; border-collapse: collapse; }
         .title { display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px; }
         .title h1 { margin: 0; font-size: 22px; }
@@ -21,7 +24,29 @@
         .actions { margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap; }
         .btn { border: 1px solid #0f766e; background: #0f766e; color: #fff; padding: 10px 14px; border-radius: 8px; font-weight: 700; text-decoration: none; }
         .btn.secondary { background: #fff; color: #0f766e; }
-        @media print { .actions { display: none; } body { background: #fff; } .wrap { margin: 0 auto; } }
+        .foot-table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
+        .foot-table td { border: 1px solid #111827; padding: 8px 10px; vertical-align: top; font-size: 12px; }
+        .foot-table .note-col { width: 56%; line-height: 1.35; }
+        .foot-table .sign-col { width: 44%; text-align: right; }
+        .sign-box { min-height: 112px; }
+        .sign-box .sign-bottom { margin-top: 56px; }
+        .return-page + .return-page { margin-top: 10px; }
+        @media print {
+            @page { size: A4 portrait; margin: 8mm; }
+            .actions { display: none !important; }
+            body { background: #fff; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .wrap { margin: 0; width: auto; border: 1px solid #111827; padding: 5mm; page-break-after: avoid; }
+            .return-page { page-break-after: always; }
+            .return-page:last-of-type { page-break-after: auto; }
+            .title { margin-bottom: 6px; page-break-inside: avoid; }
+            .title h1 { font-size: 22px; }
+            .meta, .items, .totals, .foot-table { page-break-inside: avoid; }
+            .meta td, .items td, .items th, .totals td { padding: 4px 5px; font-size: 10px; line-height: 1.2; border: 1px solid #111827; }
+            .items th { background: #e5e7eb; font-weight: 700; }
+            .foot-table td { padding: 5px 6px; font-size: 10px; line-height: 1.25; }
+            .sign-box { min-height: 92px; }
+            .sign-box .sign-bottom { margin-top: 38px; }
+        }
     </style>
 </head>
 <body>
@@ -51,6 +76,10 @@
     $extraPaymentChangeAmount = (float) ($salesReturn->extra_payment_change_amount ?? 0);
     $settlementRemaining = $priceDifferenceTotal > 0 ? max(0, $priceDifferenceTotal - $extraPaymentAmount) : 0;
     $refundRemaining = $priceDifferenceTotal < 0 ? max(0, abs($priceDifferenceTotal) - $extraPaymentAmount) : 0;
+    $returnItemPages = collect($salesReturn->items ?? [])->chunk(35)->values();
+    if ($returnItemPages->isEmpty()) {
+        $returnItemPages = collect([collect([])]);
+    }
 @endphp
 <div class="wrap">
     <div class="title">
@@ -92,6 +121,8 @@
         </tr>
     </table>
 
+    @foreach($returnItemPages as $pageIndex => $itemPage)
+    <div class="return-page">
     <table class="items">
         <thead>
         <tr>
@@ -103,13 +134,13 @@
         </tr>
         </thead>
         <tbody>
-        @foreach($salesReturn->items as $index => $item)
+        @foreach($itemPage as $index => $item)
             @php
                 $replacementDetails = $item->replacementDetailsResolved ?? [];
                 $replacementQtyTotal = collect($replacementDetails)->sum(fn (array $replacement): int => (int) ($replacement['qty'] ?? 0));
             @endphp
             <tr>
-                <td style="text-align:center;">{{ $index + 1 }}</td>
+                <td style="text-align:center;">{{ ($pageIndex * 35) + $index + 1 }}</td>
                 <td>
                     <div style="font-weight:700;">{{ $item->product_name }}</div>
                     @if(! empty($replacementDetails))
@@ -149,6 +180,7 @@
         </tbody>
     </table>
 
+    @if($loop->last)
     <table class="totals">
         <tr>
             <td class="label">TOTAL RETUR BARANG</td>
@@ -210,6 +242,27 @@
         </div>
     @endif
 
+    <table class="foot-table">
+        <tr>
+            <td class="note-col">
+                <strong>Catatan:</strong>
+                <div style="margin-top: 4px; padding-left: 10px; font-size: 10px; line-height: 1.35;">
+                    <div>1. Simpan nota retur ini sebagai bukti retur resmi.</div>
+                    <div>2. Pastikan jumlah retur, barang pengganti, dan selisih sudah sesuai.</div>
+                </div>
+            </td>
+            <td class="sign-col">
+                <div class="sign-box" style="text-align: right;">
+                    <div style="font-size: 10px; font-weight: 700;">Yang Menyerahkan</div>
+                    <div class="sign-bottom">
+                        <strong style="font-size: 10px;">{{ $cashierDisplayName }}</strong><br>
+                        <span style="font-size: 9px;">{{ $sale->cashier_phone ?: 'Admin' }}</span>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </table>
+
     @if(! ($pdf ?? false))
         <div class="actions">
             <button type="button" class="btn" onclick="window.print()">Print Nota Retur</button>
@@ -217,6 +270,9 @@
             <a href="{{ $historyUrl }}" class="btn secondary">Kembali ke History</a>
         </div>
     @endif
+    @endif
+    </div>
+    @endforeach
 </div>
 </body>
 </html>

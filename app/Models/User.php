@@ -20,6 +20,8 @@ class User extends Authenticatable implements FilamentUser
 
     public const ROLE_ADMIN_BESAR = 'admin_besar';
 
+    public const ROLE_CASHIER = self::ROLE_ADMIN_BESAR;
+
     protected $fillable = [
         'name',
         'email',
@@ -60,6 +62,11 @@ class User extends Authenticatable implements FilamentUser
     public function isAdminBesar(): bool
     {
         return strtolower((string) $this->role) === self::ROLE_ADMIN_BESAR;
+    }
+
+    public function isCashier(): bool
+    {
+        return $this->isAdminBesar();
     }
 
     public function setRoleAttribute(mixed $value): void

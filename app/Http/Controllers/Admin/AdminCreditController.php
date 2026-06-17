@@ -189,6 +189,7 @@ class AdminCreditController extends Controller
             'remainingCredit' => $remaining,
             'paymentHistory' => $paymentHistory,
             'printedAt' => now(),
+            'pdf' => $request->boolean('pdf'),
         ];
 
         if ($request->boolean('pdf')) {
@@ -231,6 +232,7 @@ class AdminCreditController extends Controller
             'totalPaid' => $paid,
             'remainingCredit' => $remaining,
             'printedAt' => now(),
+            'pdf' => $request->boolean('pdf'),
         ];
 
         if ($request->boolean('pdf')) {

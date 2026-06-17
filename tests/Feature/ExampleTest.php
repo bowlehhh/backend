@@ -7,10 +7,10 @@ use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
-    public function test_root_redirects_to_admin_panel(): void
+    public function test_guest_root_redirects_to_login_page(): void
     {
         $response = $this->get('/');
 
-        $response->assertRedirect('/admin');
+        $response->assertRedirect('/login');
     }
 }

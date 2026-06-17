@@ -6,7 +6,27 @@
     <title>Nota Cicilan - {{ $sale->invoice_number }}</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <style>body { background-color: #f7f9fb; font-family: "Hanken Grotesk", sans-serif; }</style>
+    <style>
+        body { background-color: #f7f9fb; font-family: "Hanken Grotesk", sans-serif; }
+        @page { size: A4 portrait; margin: 8mm; }
+        * { box-sizing: border-box; }
+        html { overflow-x: hidden; }
+        .foot-wrap { border: 1px solid #e2e8f0; border-radius: 16px; background: #fff; margin-top: 16px; display: grid; grid-template-columns: minmax(0, 1fr) 300px; }
+        .foot-note, .foot-sign { padding: 16px 18px; }
+        .foot-note { border-right: 1px solid #e2e8f0; }
+        .foot-sign { text-align: right; }
+        .foot-sign .sign-bottom { margin-top: 64px; }
+        @media print {
+            @page { size: A4 portrait; margin: 8mm; }
+            body { background: #fff; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; width: 100%; overflow-x: hidden; }
+            main { margin: 0; width: auto; max-width: none; padding: 5mm; page-break-after: avoid; }
+            .no-print, .actions { display: none !important; }
+            .foot-wrap { margin-top: 10px; border-color: #0f172a; page-break-inside: avoid; }
+            .foot-note, .foot-sign { padding: 10px 12px; }
+            .foot-note { border-right-color: #0f172a; }
+            .foot-sign .sign-bottom { margin-top: 42px; }
+        }
+    </style>
 </head>
 <body class="text-slate-900">
 @php
@@ -93,6 +113,23 @@
                         @endforeach
                     </tbody>
                 </table>
+            </div>
+        </div>
+
+        <div class="foot-wrap">
+            <div class="foot-note">
+                <p class="text-sm font-bold text-slate-900">Catatan:</p>
+                <div class="mt-2 text-sm leading-6 text-slate-700">
+                    <div>1. Simpan nota cicilan ini sebagai bukti pembayaran resmi.</div>
+                    <div>2. Pastikan nominal cicilan dan sisa kredit sudah sesuai.</div>
+                </div>
+            </div>
+            <div class="foot-sign">
+                <p class="text-sm font-bold text-slate-900">Yang Menyerahkan</p>
+                <div class="sign-bottom">
+                    <strong class="text-sm">{{ $sale->cashier_display_name }}</strong><br>
+                    <span class="text-xs text-slate-600">{{ $sale->cashier_phone ?: 'Admin' }}</span>
+                </div>
             </div>
         </div>
 

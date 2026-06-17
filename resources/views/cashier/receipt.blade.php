@@ -5,63 +5,100 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nota {{ $sale->invoice_number }}</title>
     <style>
-        :root { --sheet-width: 176mm; --sheet-border: 1.2px; --sheet-pad: 7px; }
-        body { font-family: Arial, Helvetica, sans-serif; color: #111827; margin: 0; background: #f3f4f6; }
-        .wrap { width: var(--sheet-width); margin: 12px auto; background: #fff; border: var(--sheet-border) solid #111827; padding: var(--sheet-pad); box-sizing: border-box; }
-        .header-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 8px; }
+        :root { --sheet-width: 198mm; --sheet-border: 1.2px; --sheet-pad: 10px; }
+        * { box-sizing: border-box; }
+        html { overflow-x: hidden; }
+        body { font-family: Arial, Helvetica, sans-serif; color: #111827; margin: 0; padding: 0; background: #f3f4f6; width: 100%; overflow-x: hidden; }
+        .wrap { width: var(--sheet-width); max-width: calc(100vw - 16px); margin: 8px auto; background: #fff; border: var(--sheet-border) solid #111827; padding: var(--sheet-pad); box-sizing: border-box; }
+        .header-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 10px; }
         .header-table td { border: 0; padding: 0; vertical-align: top; }
         .header-title { width: 100%; text-align: center; }
-        .invoice-title { border: 1.2px solid #111827; padding: 4px 12px; font-size: 24px; font-weight: 800; letter-spacing: 0.6px; text-align: center; }
-        .meta-table { width: 100%; border-collapse: collapse; margin-top: 6px; border: 1px solid #111827; table-layout: fixed; }
-        .meta-table td { border: 1px solid #111827; padding: 4px 5px; font-size: 11px; }
+        .invoice-title { border: 1.2px solid #111827; padding: 6px 12px; font-size: 28px; font-weight: 800; letter-spacing: 0.6px; text-align: center; }
+        .meta-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 8px; border: 1px solid #111827; outline: 1px solid #111827; outline-offset: -1px; table-layout: fixed; }
+        .meta-table td { border-top: 1px solid #111827; border-left: 1px solid #111827; padding: 5px 6px; font-size: 12px; overflow-wrap: anywhere; word-break: break-word; }
+        .meta-table tr > *:last-child { border-right: 1px solid #111827; }
+        .meta-table tbody tr:last-child > * { border-bottom: 1px solid #111827; }
         .meta-table .label { font-weight: 700; background: #f9fafb; width: 15%; }
-        table { width: 100%; border-collapse: collapse; margin-top: 6px; border: 1px solid #111827; table-layout: fixed; }
-        th, td { border: 1px solid #111827; padding: 2px 3px; font-size: 10px; vertical-align: top; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 6px; border: 1px solid #111827; outline: 1px solid #111827; outline-offset: -1px; table-layout: fixed; }
+        th, td { border-top: 1px solid #111827; border-left: 1px solid #111827; padding: 4px 5px; font-size: 11px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word; }
+        tr > *:last-child { border-right: 1px solid #111827; }
+        tbody tr:last-child > * { border-bottom: 1px solid #111827; }
+        thead tr:last-child > * { border-bottom: 1px solid #111827; }
         th { background: #f3f4f6; font-weight: 700; text-align: center; }
         td.num { text-align: right; }
         .desc { min-height: 0; line-height: 1.15; }
         .item-table th, .item-table td { overflow-wrap: anywhere; word-break: break-word; }
-        .item-table .col-no { width: 4.5%; }
-        .item-table .col-name { width: 26%; }
-        .item-table .col-part { width: 18%; }
-        .item-table .col-qty { width: 5.5%; }
-        .item-table .col-unit { width: 5.5%; }
-        .item-table .col-price { width: 17%; }
-        .item-table .col-total { width: 26.5%; }
+        .item-table .col-no { width: 6%; }
+        .item-table .col-name { width: 27%; }
+        .item-table .col-part { width: 16%; }
+        .item-table .col-qty { width: 8%; }
+        .item-table .col-unit { width: 8%; }
+        .item-table .col-price { width: 16%; }
+        .item-table .col-total { width: 19%; }
         .totals { margin-top: 0; width: 100%; border-collapse: collapse; }
-        .totals td { border: 1px solid #111827; padding: 4px 5px; font-size: 10px; }
+        .totals td { border: 1px solid #111827; padding: 5px 6px; font-size: 11px; }
         .totals .label { text-align: right; font-weight: 700; background: #f9fafb; }
-        .totals .grand td { font-size: 14px; font-weight: 800; }
+        .totals .grand td { font-size: 16px; font-weight: 800; }
         .foot-table { width: 100%; border-collapse: collapse; margin-top: 6px; table-layout: fixed; }
-        .foot-table td { vertical-align: top; font-size: 10px; }
-        .foot-table .note-col { width: 72%; padding-right: 10px; line-height: 1.3; }
-        .foot-table .sign-col { width: 28%; text-align: center; }
-        .sign-box { min-height: 72px; }
-        .sign-box .sign-bottom { margin-top: 30px; }
+        .foot-table td { vertical-align: top; font-size: 11px; }
+        .foot-table .note-col { width: 58%; padding-right: 10px; line-height: 1.3; }
+        .foot-table .sign-col { width: 42%; text-align: right; }
+        .sign-box { min-height: 116px; }
+        .sign-box .sign-bottom { margin-top: 62px; }
         .actions { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
         .btn { border: 1px solid #0f766e; background: #0f766e; color: #fff; padding: 7px 10px; border-radius: 8px; font-weight: 700; cursor: pointer; text-decoration: none; font-size: 11px; }
         .btn.secondary { background: #fff; color: #0f766e; }
-        @page { size: A4 landscape; margin: 2.5mm; }
+        .receipt-page + .receipt-page { margin-top: 10px; }
+        @page { size: A4 portrait; margin: 6mm; }
         @media print {
-            body { background: #fff; }
-            .wrap { width: auto; margin: 0; border: var(--sheet-border) solid #111827; padding: 2.5mm; transform: none; transform-origin: initial; }
-            .actions { display: none; }
-            .header-table, .meta-table, .item-table, .totals, .foot-table { page-break-inside: auto; }
+            @page { size: A4 portrait; margin: 6mm; }
+            body { background: #fff; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .wrap {
+                width: 100%;
+                margin: 0;
+                border: 1px solid #111827;
+                max-width: none;
+                padding: 4.5mm;
+                transform: none;
+                transform-origin: initial;
+            }
+            .actions { display: none !important; }
+            .return-history, .installment-history { display: none !important; }
+            .receipt-page { page-break-after: always; }
+            .receipt-page:last-of-type { page-break-after: auto; }
+            .header-table { margin-bottom: 5px; page-break-inside: avoid; }
+            .invoice-title { font-size: 26px; padding: 5px 10px; margin: 0; line-height: 1.2; font-weight: 900; letter-spacing: 0.4px; border: 1px solid #111827; }
+            .meta-table { margin-top: 4px; margin-bottom: 4px; border: 1px solid #111827; outline: 1px solid #111827; outline-offset: -1px; page-break-inside: avoid; }
+            .meta-table tr { page-break-inside: avoid; }
+            .meta-table td { border-top: 1px solid #111827; border-left: 1px solid #111827; padding: 5px 6px; font-size: 11px; line-height: 1.25; }
+            .meta-table .label { width: 12%; font-weight: 700; background: #f3f4f6; }
+            .item-table { margin-top: 4px; margin-bottom: 0; border: 1px solid #111827; outline: 1px solid #111827; outline-offset: -1px; page-break-inside: avoid; }
             .item-table thead { display: table-header-group; }
             .item-table tr { break-inside: avoid; page-break-inside: avoid; }
-            .item-table th, .item-table td { padding-top: 1px; padding-bottom: 1px; font-size: 7.5px; line-height: 1.05; }
-            .meta-table td, .totals td { padding-top: 2px; padding-bottom: 2px; font-size: 8px; line-height: 1.05; }
-            .header-table td { padding: 0; }
-            .foot-table, .return-history, .installment-history, .footer-note-print { display: none !important; }
-            .invoice-title { font-size: 18px; padding: 2px 8px; }
-            .meta-table .label { width: 13%; }
-            .item-table .col-no { width: 3.5%; }
-            .item-table .col-name { width: 24%; }
-            .item-table .col-part { width: 15%; }
-            .item-table .col-qty { width: 5%; }
-            .item-table .col-unit { width: 5%; }
-            .item-table .col-price { width: 18%; }
-            .item-table .col-total { width: 32.5%; }
+            .item-table th { padding: 5px 5px; font-size: 10px; line-height: 1.2; background: #e5e7eb; font-weight: 700; text-transform: uppercase; }
+            .item-table td { padding: 5px 5px; font-size: 10px; line-height: 1.2; vertical-align: top; }
+            .item-table .col-no { width: 6%; text-align: center; }
+            .item-table .col-name { width: 27%; }
+            .item-table .col-part { width: 16%; }
+            .item-table .col-qty { width: 8%; text-align: center; }
+            .item-table .col-unit { width: 8%; text-align: center; }
+            .item-table .col-price { width: 16%; text-align: right; }
+            .item-table .col-total { width: 19%; text-align: right; }
+            .totals { margin-top: 0; margin-bottom: 0; border: 1px solid #111827; outline: 1px solid #111827; outline-offset: -1px; page-break-inside: avoid; }
+            .totals tr { page-break-inside: avoid; }
+            .totals td { padding: 5px 6px; font-size: 11px; line-height: 1.25; }
+            .totals .label { text-align: right; font-weight: 700; background: #f3f4f6; width: 75%; }
+            .totals .grand { background: #e5e7eb; }
+            .totals .grand td { font-size: 14px; font-weight: 900; padding: 5px 6px; letter-spacing: 0.2px; }
+            .foot-table { margin-top: 4px; border: 1px solid #111827; outline: 1px solid #111827; outline-offset: -1px; page-break-inside: avoid; }
+            .foot-table td { padding: 5px 6px; font-size: 10px; line-height: 1.25; vertical-align: top; }
+            .foot-table .note-col { width: 56%; padding-right: 3px; }
+            .foot-table .sign-col { width: 44%; text-align: right; }
+            .sign-box { min-height: 96px; padding: 2px; }
+            .sign-box div:first-child { font-size: 10px; font-weight: 700; margin-bottom: 2px; }
+            .sign-box .sign-bottom { margin-top: 40px; font-size: 10px; }
+            .desc { line-height: 1.1; }
+            .desc span { font-size: 9px; }
             * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
     </style>
@@ -137,6 +174,10 @@
             ];
         })
         ->values();
+    $displayItemPages = $displayItems->chunk(35)->values();
+    if ($displayItemPages->isEmpty()) {
+        $displayItemPages = collect([collect([])]);
+    }
     $paymentStatus = ($isCredit && $creditOutstanding > 0) ? 'BELUM LUNAS' : 'LUNAS';
     $finalGrandTotal = $isCredit ? $creditOutstanding : (float) $sale->total;
     $remainingAfterEntry = max(0, (float) $sale->total - $downPayment);
@@ -198,6 +239,8 @@
         </tr>
     </table>
 
+    @foreach($displayItemPages as $pageIndex => $itemPage)
+    <div class="receipt-page">
     <table class="item-table">
         <thead>
         <tr>
@@ -211,9 +254,9 @@
         </tr>
         </thead>
         <tbody>
-        @foreach($displayItems as $idx => $item)
+        @foreach($itemPage as $idx => $item)
             <tr>
-                <td class="col-no" style="text-align:center;">{{ $idx + 1 }}</td>
+                <td class="col-no" style="text-align:center;">{{ ($pageIndex * 35) + $idx + 1 }}</td>
                 <td class="desc col-name">
                     <strong>{{ $item['product_name'] }}</strong><br>
                     <span style="font-size: 9px; color: #64748b;">{{ $item['brand_name'] ?: '-' }}</span>
@@ -234,7 +277,7 @@
         </tbody>
     </table>
 
-    @if($hasReturnItems)
+    @if($loop->last && $hasReturnItems)
         <table style="margin-top: 6px; font-size: 9px;" class="return-history">
             <thead>
             <tr>
@@ -296,6 +339,7 @@
         </table>
     @endif
 
+    @if($loop->last)
     <table class="totals">
         <tr><td class="label">SUBTOTAL</td><td class="num">Rp {{ number_format((float) $sale->total, 0, ',', '.') }}</td></tr>
         @if($isCredit)
@@ -372,18 +416,18 @@
     <table class="foot-table">
         <tr>
             <td class="note-col footer-note-print">
-                <strong>Catatan:</strong>
-                <div style="margin-top: 4px; padding-left: 14px;">
+                <strong style="font-size: 9px;">Catatan:</strong>
+                <div style="margin-top: 2px; padding-left: 10px; font-size: 9px; line-height: 1.3;">
                     <div>1. Simpan faktur ini sebagai bukti transaksi resmi.</div>
                     <div>2. Barang yang sudah di beli tidak dapat di tukar, kecuali ada perjanjian.</div>
                 </div>
             </td>
             <td class="sign-col">
-                <div class="sign-box">
-                    <div>Yang Menyerahkan</div>
+                <div class="sign-box" style="text-align: right;">
+                    <div style="font-size: 10px;">Yang Menyerahkan</div>
                     <div class="sign-bottom">
-                        <strong>{{ $cashierDisplayName }}</strong><br>
-                        {{ $sale->cashier_phone ?: 'Admin' }}
+                        <strong style="font-size: 10px;">{{ $cashierDisplayName }}</strong><br>
+                        <span style="font-size: 9px;">{{ $sale->cashier_phone ?: 'Admin' }}</span>
                     </div>
                 </div>
             </td>
@@ -399,6 +443,9 @@
             @endif
         </div>
     @endif
+    @endif
+    </div>
+    @endforeach
 </div>
 @if(request()->boolean('print'))
     <script>

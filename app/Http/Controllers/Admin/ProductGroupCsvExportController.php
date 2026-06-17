@@ -23,7 +23,7 @@ class ProductGroupCsvExportController extends Controller
                 fputcsv($handle, $row);
             };
 
-            $writeRow(['TOKO PAK PAUL']);
+            $writeRow(['SURYA DUTA MULTINDO']);
             $writeRow(['Export Kelompok Barang - per part number, histori pembelian, dan histori penjualan']);
             $writeRow([]);
 

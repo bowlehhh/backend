@@ -305,7 +305,7 @@ class AdminCreditXlsxExportController extends Controller
         $this->setSummaryWidths($sheet);
 
         $row = 1;
-        $this->writeMergedRow($sheet, $row, 'N', 'TOKO PAK PAUL', $this->styleTitle());
+        $this->writeMergedRow($sheet, $row, 'N', 'SURYA DUTA MULTINDO', $this->styleTitle());
         $this->writeMergedRow($sheet, $row, 'N', 'Export Excel utang, cicilan, dan riwayat pelunasan yang rinci', $this->styleSubtitle());
         $row++;
 
@@ -417,7 +417,7 @@ class AdminCreditXlsxExportController extends Controller
         $this->setInstallmentWidths($sheet);
 
         $row = 1;
-        $this->writeMergedRow($sheet, $row, 'O', 'TOKO PAK PAUL', $this->styleTitle());
+        $this->writeMergedRow($sheet, $row, 'O', 'SURYA DUTA MULTINDO', $this->styleTitle());
         $this->writeMergedRow($sheet, $row, 'O', 'Detail cicilan per transaksi, termasuk pokok, DP, dan sisa setelah bayar', $this->styleSubtitle());
         $row++;
 
@@ -483,7 +483,7 @@ class AdminCreditXlsxExportController extends Controller
         $this->setSettlementWidths($sheet);
 
         $row = 1;
-        $this->writeMergedRow($sheet, $row, 'M', 'TOKO PAK PAUL', $this->styleTitle());
+        $this->writeMergedRow($sheet, $row, 'M', 'SURYA DUTA MULTINDO', $this->styleTitle());
         $this->writeMergedRow($sheet, $row, 'M', 'Riwayat pelunasan kredit yang sudah lunas', $this->styleSubtitle());
         $row++;
 

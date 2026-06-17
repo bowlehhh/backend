@@ -139,7 +139,7 @@ class OfflineBackupService
         $sheet->freezePane('A4');
         $sheet->setShowGridLines(false);
 
-        $sheet->setCellValue('A1', 'TOKO PAK PAUL');
+        $sheet->setCellValue('A1', 'SURYA DUTA MULTINDO');
         $sheet->mergeCells('A1:F1');
         $sheet->setCellValue('A2', 'BACKUP OFFLINE - SEMUA NOTA DAN TRACK RECORD');
         $sheet->mergeCells('A2:F2');
@@ -182,7 +182,7 @@ class OfflineBackupService
         $sheet->freezePane('A6');
         $sheet->setShowGridLines(false);
 
-        $sheet->setCellValue('A1', 'TOKO PAK PAUL');
+        $sheet->setCellValue('A1', 'SURYA DUTA MULTINDO');
         $sheet->mergeCells('A1:O1');
         $sheet->setCellValue('A2', 'PER PART NUMBER - RINGKASAN DAN TRACK RECORD');
         $sheet->mergeCells('A2:O2');
@@ -230,7 +230,7 @@ class OfflineBackupService
         $sheet->setTitle('Pembelian');
         $sheet->freezePane('A6');
         $sheet->setShowGridLines(false);
-        $sheet->setCellValue('A1', 'TOKO PAK PAUL');
+        $sheet->setCellValue('A1', 'SURYA DUTA MULTINDO');
         $sheet->mergeCells('A1:N1');
         $sheet->setCellValue('A2', 'SEMUA NOTA PEMBELIAN ADMIN');
         $sheet->mergeCells('A2:N2');
@@ -276,7 +276,7 @@ class OfflineBackupService
         $sheet->setTitle('Penjualan');
         $sheet->freezePane('A6');
         $sheet->setShowGridLines(false);
-        $sheet->setCellValue('A1', 'TOKO PAK PAUL');
+        $sheet->setCellValue('A1', 'SURYA DUTA MULTINDO');
         $sheet->mergeCells('A1:N1');
         $sheet->setCellValue('A2', 'SEMUA NOTA PENJUALAN KASIR');
         $sheet->mergeCells('A2:N2');
@@ -322,7 +322,7 @@ class OfflineBackupService
         $sheet->setTitle('Cicilan');
         $sheet->freezePane('A6');
         $sheet->setShowGridLines(false);
-        $sheet->setCellValue('A1', 'TOKO PAK PAUL');
+        $sheet->setCellValue('A1', 'SURYA DUTA MULTINDO');
         $sheet->mergeCells('A1:L1');
         $sheet->setCellValue('A2', 'RIWAYAT CICILAN KREDIT');
         $sheet->mergeCells('A2:L2');
@@ -359,7 +359,7 @@ class OfflineBackupService
         $sheet->setTitle('Retur');
         $sheet->freezePane('A6');
         $sheet->setShowGridLines(false);
-        $sheet->setCellValue('A1', 'TOKO PAK PAUL');
+        $sheet->setCellValue('A1', 'SURYA DUTA MULTINDO');
         $sheet->mergeCells('A1:M1');
         $sheet->setCellValue('A2', 'RIWAYAT RETUR KASIR');
         $sheet->mergeCells('A2:M2');

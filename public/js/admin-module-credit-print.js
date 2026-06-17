@@ -93,7 +93,7 @@
             <div class="header">
               <div>
                 <p class="title">Nota Pembelian Bulanan</p>
-                <p class="muted">Toko Pak Paul</p>
+                <p class="muted">Surya Duta Multindo</p>
                 <p class="muted">Periode: ${esc(monthGroup.month_label)}</p>
                 <p class="muted">Total transaksi: ${esc(summary.total_transaksi ?? 0)} | Total nilai: ${esc(summary.total_nilai ?? 'Rp 0')}</p>
               </div>

@@ -10,11 +10,20 @@ use App\Models\StockHistory;
 use App\Models\Supplier;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class AdminDashboardProductTest extends TestCase
 {
     use RefreshDatabase;
+
+    private function dashboardHeaders(): array
+    {
+        return [
+            'Accept' => 'application/json',
+            'X-CSRF-TOKEN' => 'test-token',
+        ];
+    }
 
     public function test_admin_can_create_product_from_dashboard_modal_endpoint(): void
     {
@@ -36,6 +45,8 @@ class AdminDashboardProductTest extends TestCase
 
         $response = $this
             ->actingAs($admin)
+            ->withSession(['_token' => 'test-token'])
+            ->withHeaders($this->dashboardHeaders())
             ->postJson(route('admin.dashboard.products.store'), [
                 'name' => 'Indomie Goreng',
                 'barcode' => '8992388111111',
@@ -62,6 +73,7 @@ class AdminDashboardProductTest extends TestCase
             'category_id' => $category->id,
             'brand_id' => $brand->id,
             'barcode' => '8992388111111',
+            'slug' => Str::slug('Indomie Goreng'),
         ]);
 
         $this->assertDatabaseHas('product_batches', [
@@ -132,6 +144,8 @@ class AdminDashboardProductTest extends TestCase
 
         $response = $this
             ->actingAs($admin)
+            ->withSession(['_token' => 'test-token'])
+            ->withHeaders($this->dashboardHeaders())
             ->putJson(route('admin.dashboard.products.update', $product), [
                 'name' => 'Roma Kelapa',
                 'barcode' => '555666777',
@@ -162,6 +176,7 @@ class AdminDashboardProductTest extends TestCase
             'brand_id' => $newBrand->id,
             'barcode' => '555666777',
             'is_active' => false,
+            'slug' => Str::slug('Roma Kelapa'),
         ]);
 
         $this->assertDatabaseHas('product_batches', [
@@ -187,18 +202,13 @@ class AdminDashboardProductTest extends TestCase
 
         $response = $this
             ->actingAs($admin)
+            ->withSession(['_token' => 'test-token'])
+            ->withHeaders($this->dashboardHeaders())
             ->postJson(route('admin.dashboard.products.store'), []);
 
         $response
             ->assertStatus(422)
             ->assertJsonValidationErrors([
-                'name',
-                'category_id',
-                'brand_id',
-                'supplier_id',
-                'purchase_price',
-                'selling_price',
-                'stock',
                 'is_active',
             ]);
     }

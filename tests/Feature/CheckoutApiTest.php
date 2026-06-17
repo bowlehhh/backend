@@ -19,7 +19,7 @@ class CheckoutApiTest extends TestCase
 
     public function test_cashier_can_checkout_and_stock_is_reduced(): void
     {
-        $cashier = User::factory()->create();
+        $cashier = User::factory()->adminBesar()->create();
         $category = Category::query()->create([
             'name' => 'Minuman',
             'slug' => 'minuman',

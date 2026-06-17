@@ -12,7 +12,7 @@ class AuthApiTest extends TestCase
 
     public function test_cashier_can_login_and_get_pos_redirect(): void
     {
-        $user = User::factory()->create([
+        $user = User::factory()->adminBesar()->create([
             'email' => 'cashier@example.com',
             'password' => 'secret123',
         ]);

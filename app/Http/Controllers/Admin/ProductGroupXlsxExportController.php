@@ -35,7 +35,7 @@ class ProductGroupXlsxExportController extends Controller
         $this->setColumnWidths($sheet);
 
         $row = 1;
-        $this->writeMergedRow($sheet, $row, self::LAST_COL, ['TOKO PAK PAUL'], $this->styleTitle());
+        $this->writeMergedRow($sheet, $row, self::LAST_COL, ['SURYA DUTA MULTINDO'], $this->styleTitle());
         $this->writeMergedRow($sheet, $row, self::LAST_COL, ['Export Kelompok Barang - per part number, histori pembelian, dan histori penjualan'], $this->styleSubtitle());
         $row++;
 

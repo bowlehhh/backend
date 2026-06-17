@@ -14,6 +14,22 @@ use Illuminate\Validation\ValidationException;
 
 class CheckoutService
 {
+    private function productLookupKeys(Product $product): array
+    {
+        $keys = [];
+        $barcodeKey = $this->normalizePartNumberKey($product->barcode, null);
+
+        if ($barcodeKey !== '') {
+            $keys[] = $barcodeKey;
+        }
+
+        if ($product->id !== null) {
+            $keys[] = $this->normalizePartNumberKey(null, (int) $product->id);
+        }
+
+        return array_values(array_unique(array_filter($keys)));
+    }
+
     private function findFallbackBatchForProduct($batches)
     {
         return $batches
@@ -35,7 +51,7 @@ class CheckoutService
 
     private function productPartNumberKey(Product $product): string
     {
-        return $this->normalizePartNumberKey($product->barcode, $product->id);
+        return $this->productLookupKeys($product)[0] ?? '';
     }
 
     private function normalizeStockAllocations(array $item): array
@@ -104,10 +120,21 @@ class CheckoutService
                     });
 
                 $products = $productQuery->get();
-                $productsByPart = $products->groupBy(fn (Product $product): string => $this->productPartNumberKey($product));
+                $productsByPart = $products
+                    ->flatMap(function (Product $product): array {
+                        $entries = [];
+
+                        foreach ($this->productLookupKeys($product) as $key) {
+                            $entries[] = [$key, $product];
+                        }
+
+                        return $entries;
+                    })
+                    ->groupBy(fn (array $entry): string => $entry[0])
+                    ->map(fn ($entries) => $entries->pluck(1)->unique('id')->values());
                 $productIds = $products->pluck('id')->all();
 
-                $batchesByPart = ProductBatch::query()
+                $productBatches = ProductBatch::query()
                     ->with('product:id,name,is_active,barcode,unit')
                     ->whereIn('product_id', $productIds)
                     ->where('is_active', true)
@@ -115,8 +142,19 @@ class CheckoutService
                     ->orderBy('id')
                     // Lock row batch agar dua kasir tidak mengurangi stok bersamaan secara race condition.
                     ->lockForUpdate()
-                    ->get()
-                    ->groupBy(fn (ProductBatch $batch): string => $this->productPartNumberKey($batch->product));
+                    ->get();
+                $batchesByPart = $productBatches
+                    ->flatMap(function (ProductBatch $batch): array {
+                        $entries = [];
+
+                        foreach ($this->productLookupKeys($batch->product) as $key) {
+                            $entries[] = [$key, $batch];
+                        }
+
+                        return $entries;
+                    })
+                    ->groupBy(fn (array $entry): string => $entry[0])
+                    ->map(fn ($entries) => $entries->pluck(1)->unique('id')->values());
                 $batchesById = $batchesByPart->flatten()->keyBy('id');
 
                 $saleItems = [];
@@ -391,6 +429,10 @@ class CheckoutService
 
     private function acquireInvoiceNumberLock(string $datePart): void
     {
+        if (! in_array(DB::getDriverName(), ['mysql', 'mariadb'], true)) {
+            return;
+        }
+
         $lockName = 'sales_invoice_number_' . $datePart;
         $result = DB::selectOne('SELECT GET_LOCK(?, 10) AS lock_acquired', [$lockName]);
 
@@ -403,6 +445,10 @@ class CheckoutService
 
     private function releaseInvoiceNumberLock(string $datePart): void
     {
+        if (! in_array(DB::getDriverName(), ['mysql', 'mariadb'], true)) {
+            return;
+        }
+
         $lockName = 'sales_invoice_number_' . $datePart;
 
         try {

@@ -71,6 +71,10 @@
         "pre-package-uninstall": [
             "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
         ]
+        ,
+        "seed-fresh": [
+            "@php artisan migrate:fresh --seed"
+        ]
     },
     "extra": {
         "laravel": {

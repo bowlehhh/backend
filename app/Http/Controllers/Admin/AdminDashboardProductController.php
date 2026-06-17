@@ -25,8 +25,8 @@ class AdminDashboardProductController extends Controller
     {
         $product = DB::transaction(function () use ($request): Product {
             $payload = $request->validated();
-            $category = $this->resolveCategory($payload['category'] ?? null);
-            $brand = $this->resolveBrand($payload['brand']);
+            $category = $this->resolveCategory($payload);
+            $brand = $this->resolveBrand($payload);
             $supplier = $this->resolveSupplier($payload);
             $name = trim((string) ($payload['name'] ?? '')) ?: 'Barang Baru';
             $purchasePrice = (float) ($payload['purchase_price'] ?? 0);
@@ -131,10 +131,8 @@ class AdminDashboardProductController extends Controller
             $supplier = $this->resolveSupplier($payload);
 
             $product->update([
-                // Kategori & brand dikunci di edit produk dashboard.
-                // Perubahan kategori/brand hanya boleh lewat modul Kategori & Brand.
-                'category_id' => $this->resolveCategory($payload['category'] ?? null)?->id,
-                'brand_id' => $product->brand_id,
+                'category_id' => $this->resolveCategory($payload)?->id,
+                'brand_id' => $this->resolveBrand($payload)?->id ?? $product->brand_id,
                 'name' => trim((string) ($payload['name'] ?? '')) ?: $product->name,
                 'slug' => $this->makeUniqueSlug(($payload['slug'] ?? '') ?: (trim((string) ($payload['name'] ?? '')) ?: $product->name), $product->id),
                 'barcode' => ($payload['barcode'] ?? '') ?: null,
@@ -368,9 +366,17 @@ class AdminDashboardProductController extends Controller
         return $file->storeAs('products', $fileName, 'public');
     }
 
-    private function resolveCategory(?string $name): Category
+    private function resolveCategory(array $payload): Category
     {
-        $name = trim((string) $name);
+        if (! empty($payload['category_id'])) {
+            $category = Category::query()->find((int) $payload['category_id']);
+
+            if ($category) {
+                return $category;
+            }
+        }
+
+        $name = trim((string) ($payload['category'] ?? ''));
 
         if ($name === '') {
             $name = 'Tanpa Kategori';
@@ -379,9 +385,17 @@ class AdminDashboardProductController extends Controller
         return $this->resolveNamedModel(Category::class, $name);
     }
 
-    private function resolveBrand(?string $name): Brand
+    private function resolveBrand(array $payload): Brand
     {
-        $name = trim((string) $name);
+        if (! empty($payload['brand_id'])) {
+            $brand = Brand::query()->find((int) $payload['brand_id']);
+
+            if ($brand) {
+                return $brand;
+            }
+        }
+
+        $name = trim((string) ($payload['brand'] ?? ''));
 
         if ($name === '') {
             $name = 'Tanpa Merek';

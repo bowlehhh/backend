@@ -43,6 +43,9 @@
             <a href="<?php echo e(route('admin.admin-besar.history.supplier')); ?>" class="flex items-center gap-3 rounded-xl px-4 py-3 text-slate-600 hover:bg-slate-100">
                 <span class="material-symbols-outlined">account_tree</span><span class="font-semibold">PT/CV</span>
             </a>
+            <a href="<?php echo e(url('/admin/admin-module?type=users')); ?>" class="flex items-center gap-3 rounded-xl px-4 py-3 text-slate-600 hover:bg-slate-100">
+                <span class="material-symbols-outlined">group</span><span class="font-semibold">Manajemen Akun</span>
+            </a>
         </nav>
         <div class="border-t border-slate-200 p-4">
             <form method="POST" action="<?php echo e(route('logout')); ?>">
@@ -297,7 +300,7 @@
             </div>
             </section>
 
-            <section class="grid gap-6 xl:grid-cols-[1.65fr_1fr]">
+            <section class="space-y-6">
             <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
                     <div>
@@ -358,13 +361,13 @@
                 </div>
             </div>
 
-            <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div class="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <div class="border-b border-slate-200 px-5 py-4">
                     <h2 class="text-lg font-bold text-slate-900">Log Aktivitas Admin Toko/Gudang</h2>
                     <p class="text-sm text-slate-500">Apa saja yang dilakukan role admin: stok masuk, stok keluar, edit transaksi, dan hapus transaksi.</p>
                 </div>
 
-                <div class="max-h-[900px] overflow-y-auto scrollbar p-4">
+                <div class="max-h-[540px] overflow-y-auto scrollbar p-4">
                     <div class="space-y-3">
                         <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $activityFeed; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
                             <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">

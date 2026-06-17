@@ -38,14 +38,14 @@ Route::middleware('guest')->group(function (): void {
 
 Route::middleware('auth')->post('/logout', [WebLoginController::class, 'destroy'])->name('logout');
 
-Route::middleware(['auth', 'role:admin'])->prefix('admin/dashboard')->group(function (): void {
+Route::middleware(['auth', 'role:admin,admin_besar'])->prefix('admin/dashboard')->group(function (): void {
     Route::post('/products', [AdminDashboardProductController::class, 'store'])
         ->name('admin.dashboard.products.store');
     Route::put('/products/{product}', [AdminDashboardProductController::class, 'update'])
         ->name('admin.dashboard.products.update');
 });
 
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function (): void {
+Route::middleware(['auth', 'role:admin,admin_besar'])->prefix('admin')->group(function (): void {
     Route::post('/users', [AdminUserController::class, 'store'])->name('admin.users.store');
     Route::put('/users/{user}', [AdminUserController::class, 'update'])->name('admin.users.update');
     Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
@@ -62,11 +62,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function (): v
     Route::get('/credits/{batch}/installments/{installment}/receipt', [AdminCreditController::class, 'installmentReceipt'])->name('admin.credits.installment.receipt');
 });
 
-Route::middleware(['auth', 'role:admin'])
+Route::middleware(['auth', 'role:admin,admin_besar'])
     ->get('/admin/transaksi', CashierDashboardController::class)
     ->name('admin.transaksi.dashboard');
 
-Route::middleware(['auth', 'role:admin'])
+Route::middleware(['auth', 'role:admin,admin_besar'])
     ->prefix('admin/transaksi')
     ->group(function (): void {
         Route::get('/history', [CashierTransactionController::class, 'history'])->name('admin.transactions.history');

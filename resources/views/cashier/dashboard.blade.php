@@ -113,13 +113,13 @@
                             <p class="text-sm font-semibold">{{ $item['product_name'] }}</p>
                             <p class="mt-1 text-xs text-slate-500">Part No: {{ $item['part_number'] }}</p>
                             <p class="mt-1 text-xs text-slate-500">
-                                Stok batch: {{ number_format((int) ($item['batch_stock'] ?? 0), 0, ',', '.') }}
+                                Stok INV: {{ number_format((int) ($item['batch_stock'] ?? 0), 0, ',', '.') }}
                                 @if((int) ($item['available_stock'] ?? 0) > (int) ($item['batch_stock'] ?? 0))
                                     | total gabungan: {{ number_format((int) ($item['available_stock'] ?? 0), 0, ',', '.') }}
                                 @endif
                             </p>
                             <div class="mt-2 flex justify-between text-sm">
-                                <form method="POST" action="{{ route('cashier.cart.update', $item['product_batch_id']) }}" class="flex flex-col gap-2" data-cart-item-form data-merge-stock="{{ !empty($item['merge_stock']) ? '1' : '0' }}">
+                                <form method="POST" action="{{ route('cashier.cart.update', $item['product_batch_id']) }}" class="flex flex-col gap-2" data-cart-item-form data-merge-stock="{{ !empty($item['merge_stock']) ? '1' : '0' }}" data-product-id="{{ (int) $item['product_id'] }}" data-product-batch-id="{{ (int) $item['product_batch_id'] }}" data-product-name="{{ $item['product_name'] }}" data-part-number="{{ $item['part_number'] }}">
                                     @csrf
                                     <div class="flex items-center gap-2">
                                         <label class="text-xs text-slate-500">Qty</label>
@@ -509,6 +509,53 @@
         input.value = String(value);
     };
     const formatCurrencyLabel = (value) => `Rp ${toRupiah(value)}`;
+    const collectLiveCartItems = () => Array.from(document.querySelectorAll('[data-cart-item-form]')).map((form) => {
+        const qty = Number(form.querySelector('[data-cart-qty]')?.value || 0);
+        const rawPrice = Number(sanitizeRupiahValue(form.querySelector('[data-cart-price]')?.value || 0));
+        const mergeStock = form.dataset.mergeStock === '1';
+        const lineTotal = mergeStock ? rawPrice : qty * rawPrice;
+        const unitPrice = mergeStock && qty > 0 ? (rawPrice / qty) : rawPrice;
+
+        return {
+            product_id: Number(form.dataset.productId || 0),
+            product_batch_id: Number(form.dataset.productBatchId || 0),
+            product_name: form.dataset.productName || '',
+            part_number: form.dataset.partNumber || '',
+            merge_stock: mergeStock,
+            qty,
+            price: unitPrice,
+            line_total: lineTotal,
+        };
+    }).filter((item) => item.qty > 0 && item.product_batch_id > 0);
+
+    const syncCheckoutFormItems = (form, items) => {
+        if (!form) {
+            return;
+        }
+
+        form.querySelectorAll('[data-checkout-item-input]').forEach((input) => input.remove());
+
+        items.forEach((item, index) => {
+            const fields = {
+                product_id: item.product_id,
+                product_batch_id: item.product_batch_id,
+                product_name: item.product_name,
+                part_number: item.part_number,
+                merge_stock: item.merge_stock ? '1' : '0',
+                qty: String(item.qty),
+                price: String(item.merge_stock ? item.line_total : item.price),
+            };
+
+            Object.entries(fields).forEach(([key, value]) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = `items[${index}][${key}]`;
+                input.value = String(value ?? '');
+                input.setAttribute('data-checkout-item-input', '1');
+                form.appendChild(input);
+            });
+        });
+    };
     const pad2 = (value) => String(value).padStart(2, '0');
     const formatDisplayDate = (value) => {
         if (!value) return '-';
@@ -702,7 +749,9 @@
         form.addEventListener('submit', (event) => {
             event.preventDefault();
 
-            if (!cartItems.length) {
+            const liveCartItems = collectLiveCartItems();
+
+            if (!liveCartItems.length) {
                 alert('Keranjang masih kosong.');
                 return;
             }
@@ -719,10 +768,10 @@
                 mobileConfirmCashierName.value = form.querySelector('input[name="cashier_service_name"]')?.value || '';
                 mobileConfirmCustomerName.value = form.querySelector('input[name="customer_name"]')?.value || '';
             }
-            itemsBox.innerHTML = cartItems.map((item) => {
+            itemsBox.innerHTML = liveCartItems.map((item) => {
                 const qty = Number(item.qty || 0);
                 const price = Number(item.price || 0);
-                const lineTotal = qty * price;
+                const lineTotal = Number(item.line_total || (qty * price));
                 return `
                     <div class="flex items-start justify-between gap-3 rounded-lg border border-slate-200 p-2">
                         <div>
@@ -739,6 +788,7 @@
             confirmCustomer.textContent = customerName !== '' ? customerName : '-';
             confirmSubtotal.textContent = `Rp ${toRupiah(liveSubtotal)}`;
             confirmTotal.textContent = `Rp ${toRupiah(liveTotal)}`;
+            syncCheckoutFormItems(form, liveCartItems);
             syncCreditDueVisibility();
             modal.classList.remove('hidden');
             modal.classList.add('flex');

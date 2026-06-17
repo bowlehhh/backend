@@ -12,6 +12,7 @@ use App\Models\Product;
 use App\Models\ProductBatch;
 use App\Models\StockHistory;
 use App\Models\Supplier;
+use App\Support\AdminBesarCache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -24,15 +25,19 @@ class AdminDashboardProductController extends Controller
     {
         $product = DB::transaction(function () use ($request): Product {
             $payload = $request->validated();
-            $category = $this->resolveCategory($payload['category']);
+            $category = $this->resolveCategory($payload['category'] ?? null);
             $brand = $this->resolveBrand($payload['brand']);
             $supplier = $this->resolveSupplier($payload);
+            $name = trim((string) ($payload['name'] ?? '')) ?: 'Barang Baru';
+            $purchasePrice = (float) ($payload['purchase_price'] ?? 0);
+            $sellingPrice = (float) ($payload['selling_price'] ?? 0);
+            $stock = (int) ($payload['stock'] ?? 0);
 
             $product = Product::create([
-                'category_id' => $category->id,
+                'category_id' => $category?->id,
                 'brand_id' => $brand->id,
-                'name' => $payload['name'],
-                'slug' => $this->makeUniqueSlug(($payload['slug'] ?? '') ?: $payload['name']),
+                'name' => $name,
+                'slug' => $this->makeUniqueSlug(($payload['slug'] ?? '') ?: $name),
                 'barcode' => ($payload['barcode'] ?? '') ?: null,
                 'unit' => ($payload['unit'] ?? '') ?: null,
                 'weight' => ($payload['weight'] ?? null) !== null ? (float) $payload['weight'] : null,
@@ -49,7 +54,7 @@ class AdminDashboardProductController extends Controller
 
             $creditDays = $paymentType === 'KREDIT' ? (int) ($payload['credit_days'] ?? 0) : null;
             $creditDueDate = $paymentType === 'KREDIT' ? ($payload['credit_due_date'] ?: null) : null;
-            $totalPurchase = ((float) $payload['purchase_price']) * ((int) $payload['stock']) + ((float) ($payload['expedition_cost'] ?? 0));
+            $totalPurchase = ($purchasePrice * $stock) + ((float) ($payload['expedition_cost'] ?? 0));
             $downPaymentAmount = $paymentType === 'KREDIT'
                 ? min($totalPurchase, max(0, (float) ($payload['down_payment_amount'] ?? 0)))
                 : 0.0;
@@ -65,11 +70,11 @@ class AdminDashboardProductController extends Controller
                 'processed_by' => Schema::hasColumn('product_batches', 'processed_by')
                     ? ($this->resolveProcessedBy($payload, $request->user()?->name) ?: null)
                     : null,
-                'purchase_price' => $payload['purchase_price'],
-                'expedition_cost' => $payload['expedition_cost'] ?? 0,
+                'purchase_price' => $purchasePrice,
+                'expedition_cost' => (float) ($payload['expedition_cost'] ?? 0),
                 'down_payment_amount' => $downPaymentAmount,
-                'selling_price' => $payload['selling_price'],
-                'stock' => $payload['stock'],
+                'selling_price' => $sellingPrice,
+                'stock' => $stock,
                 'payment_type' => $paymentType,
                 'credit_days' => $creditDays,
                 'credit_due_date' => $creditDueDate,
@@ -77,16 +82,16 @@ class AdminDashboardProductController extends Controller
                 'is_active' => true,
             ]);
 
-            if ((int) $payload['stock'] > 0) {
+            if ($stock > 0) {
                 StockHistory::create([
                     'product_id' => $product->id,
                     'product_batch_id' => $batch->id,
                     'user_id' => $request->user()->id,
                     'type' => StockHistory::TYPE_IN,
-                    'qty' => (int) $payload['stock'],
+                    'qty' => $stock,
                     'stock_before' => 0,
-                    'stock_after' => (int) $payload['stock'],
-                    'reference' => $batch->batch_code,
+                    'stock_after' => $stock,
+                    'reference' => $batch->display_inventory_code,
                     'description' => 'Initial stock added from admin dashboard.',
                 ]);
             }
@@ -100,16 +105,18 @@ class AdminDashboardProductController extends Controller
                 'description' => 'Menambahkan barang baru dan stok awal dari dashboard admin.',
                 'meta' => [
                     'product_name' => $product->name,
-                    'batch_code' => $batch->batch_code,
+                    'batch_code' => $batch->display_inventory_code,
                     'supplier_name' => $supplier->name,
-                    'stock' => (int) $payload['stock'],
-                    'purchase_price' => (float) $payload['purchase_price'],
-                    'selling_price' => (float) $payload['selling_price'],
+                    'stock' => $stock,
+                    'purchase_price' => $purchasePrice,
+                    'selling_price' => $sellingPrice,
                 ],
             ]);
 
             return $product->fresh(['category', 'brand', 'latestBatch.supplier']);
         });
+
+        AdminBesarCache::forgetToday();
 
         return response()->json([
             'message' => 'Barang berhasil ditambahkan.',
@@ -126,10 +133,10 @@ class AdminDashboardProductController extends Controller
             $product->update([
                 // Kategori & brand dikunci di edit produk dashboard.
                 // Perubahan kategori/brand hanya boleh lewat modul Kategori & Brand.
-                'category_id' => $product->category_id,
+                'category_id' => $this->resolveCategory($payload['category'] ?? null)?->id,
                 'brand_id' => $product->brand_id,
-                'name' => $payload['name'],
-                'slug' => $this->makeUniqueSlug(($payload['slug'] ?? '') ?: $payload['name'], $product->id),
+                'name' => trim((string) ($payload['name'] ?? '')) ?: $product->name,
+                'slug' => $this->makeUniqueSlug(($payload['slug'] ?? '') ?: (trim((string) ($payload['name'] ?? '')) ?: $product->name), $product->id),
                 'barcode' => ($payload['barcode'] ?? '') ?: null,
                 'unit' => ($payload['unit'] ?? '') ?: null,
                 'weight' => ($payload['weight'] ?? null) !== null ? (float) $payload['weight'] : null,
@@ -161,14 +168,14 @@ class AdminDashboardProductController extends Controller
             }
 
             $stockBefore = (int) $batch->stock;
-            $stockAfter = (int) $payload['stock'];
+            $stockAfter = (int) ($payload['stock'] ?? 0);
             $paymentType = strtoupper((string) ($payload['payment_type'] ?? 'LUNAS'));
             if (! in_array($paymentType, ['LUNAS', 'KREDIT'], true)) {
                 $paymentType = 'LUNAS';
             }
             $creditDays = $paymentType === 'KREDIT' ? (int) ($payload['credit_days'] ?? 0) : null;
             $creditDueDate = $paymentType === 'KREDIT' ? ($payload['credit_due_date'] ?: null) : null;
-            $totalPurchase = ((float) $payload['purchase_price']) * ((int) $payload['stock']) + ((float) ($payload['expedition_cost'] ?? 0));
+            $totalPurchase = ((float) ($payload['purchase_price'] ?? 0)) * $stockAfter + ((float) ($payload['expedition_cost'] ?? 0));
             $downPaymentAmount = $paymentType === 'KREDIT'
                 ? min($totalPurchase, max(0, (float) ($payload['down_payment_amount'] ?? 0)))
                 : 0.0;
@@ -183,10 +190,10 @@ class AdminDashboardProductController extends Controller
                 'processed_by' => Schema::hasColumn('product_batches', 'processed_by')
                     ? ($this->resolveProcessedBy($payload, $request->user()?->name) ?: null)
                     : null,
-                'purchase_price' => $payload['purchase_price'],
+                'purchase_price' => (float) ($payload['purchase_price'] ?? 0),
                 'expedition_cost' => $payload['expedition_cost'] ?? 0,
                 'down_payment_amount' => $downPaymentAmount,
-                'selling_price' => $payload['selling_price'],
+                'selling_price' => (float) ($payload['selling_price'] ?? 0),
                 'stock' => $stockAfter,
                 'payment_type' => $paymentType,
                 'credit_days' => $creditDays,
@@ -206,7 +213,7 @@ class AdminDashboardProductController extends Controller
                     'qty' => abs($stockAfter - $stockBefore),
                     'stock_before' => $stockBefore,
                     'stock_after' => $stockAfter,
-                    'reference' => $batch->batch_code,
+                    'reference' => $batch->display_inventory_code,
                     'description' => 'Stock adjusted from admin dashboard.',
                 ]);
             }
@@ -220,7 +227,7 @@ class AdminDashboardProductController extends Controller
                 'description' => 'Memperbarui data barang dari dashboard admin.',
                 'meta' => [
                     'product_name' => $product->name,
-                    'batch_code' => $batch->batch_code,
+                    'batch_code' => $batch->display_inventory_code,
                     'supplier_name' => $supplier->name,
                     'stock_before' => $stockBefore,
                     'stock_after' => $stockAfter,
@@ -231,6 +238,8 @@ class AdminDashboardProductController extends Controller
 
             return $product->fresh(['category', 'brand', 'latestBatch.supplier']);
         });
+
+        AdminBesarCache::forgetToday();
 
         return response()->json([
             'message' => 'Barang berhasil diperbarui.',
@@ -259,7 +268,7 @@ class AdminDashboardProductController extends Controller
 
     private function generateBatchCode(Product $product): string
     {
-        return sprintf('BATCH-%s-%04d', now()->format('YmdHis'), $product->id);
+        return sprintf('INV-%s-%04d', now()->format('YmdHis'), $product->id);
     }
 
     private function makeProductPayload(Product $product): array
@@ -298,7 +307,7 @@ class AdminDashboardProductController extends Controller
             'supplier_address' => $batch?->supplier?->address,
             'supplier_note' => $batch?->supplier?->note,
             'batch_id' => $batch?->id,
-            'batch_code' => $batch?->batch_code,
+            'batch_code' => $batch?->display_inventory_code,
             'supplier_invoice_number' => $batch?->supplier_invoice_number,
             'condition' => $batch?->condition,
             'processed_by' => $batch?->processed_by,
@@ -359,19 +368,34 @@ class AdminDashboardProductController extends Controller
         return $file->storeAs('products', $fileName, 'public');
     }
 
-    private function resolveCategory(string $name): Category
+    private function resolveCategory(?string $name): Category
     {
+        $name = trim((string) $name);
+
+        if ($name === '') {
+            $name = 'Tanpa Kategori';
+        }
+
         return $this->resolveNamedModel(Category::class, $name);
     }
 
-    private function resolveBrand(string $name): Brand
+    private function resolveBrand(?string $name): Brand
     {
+        $name = trim((string) $name);
+
+        if ($name === '') {
+            $name = 'Tanpa Merek';
+        }
+
         return $this->resolveNamedModel(Brand::class, $name);
     }
 
     private function resolveSupplier(array $payload): Supplier
     {
-        $name = trim($payload['supplier_name']);
+        $name = trim((string) ($payload['supplier_name'] ?? ''));
+        if ($name === '') {
+            $name = 'Tanpa Supplier';
+        }
         $normalized = $this->normalizeSupplierKey($name);
 
         $supplier = null;

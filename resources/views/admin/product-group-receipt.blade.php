@@ -1,4 +1,18 @@
 @php
+    $formatNotaDate = function ($value, bool $withTime = true): string {
+        if (empty($value)) {
+            return '-';
+        }
+
+        $date = $value instanceof \Carbon\CarbonInterface
+            ? $value
+            : \Carbon\Carbon::parse((string) $value);
+
+        return $withTime
+            ? $date->locale('id')->translatedFormat('d M Y H:i l')
+            : $date->locale('id')->translatedFormat('d M Y l');
+    };
+
     $storeName = config('app.name', 'Surya Duta Multindo');
     $partNumber = strtoupper((string) ($product->barcode ?? '-'));
     $partName = strtoupper((string) ($product->name ?? '-'));
@@ -522,7 +536,7 @@
                 </div>
             </div>
             <div class="doc-meta">
-                <div><span class="muted">Tanggal Cetak:</span> {{ $printedAt->format('d M Y H:i') }}</div>
+                <div><span class="muted">Tanggal Cetak:</span> {{ $formatNotaDate($printedAt) }}</div>
                 <div><span class="muted">Kategori:</span> {{ $categoryName }}</div>
                 <div><span class="muted">Merek:</span> {{ $brandName }}</div>
             </div>
@@ -559,7 +573,7 @@
                 </td>
                 <td colspan="2">
                     <span class="label">Aktivitas Terakhir</span>
-                    <div class="value small">{{ $latestActivityAt?->format('d M Y H:i') ?? '-' }}</div>
+                    <div class="value small">{{ $formatNotaDate($latestActivityAt) }}</div>
                 </td>
             </tr>
         </table>

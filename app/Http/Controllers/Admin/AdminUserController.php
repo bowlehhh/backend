@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AdminActivityLog;
 use App\Models\User;
+use App\Support\AdminBesarCache;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -46,6 +47,8 @@ class AdminUserController extends Controller
                 'role' => $payload['role'],
             ],
         ]);
+
+        AdminBesarCache::forgetToday();
 
         return redirect()->to(url('/admin/admin-module?type=users'))->with('success', 'Akun user berhasil ditambahkan.');
     }
@@ -89,6 +92,8 @@ class AdminUserController extends Controller
             ],
         ]);
 
+        AdminBesarCache::forgetToday();
+
         return redirect()->to(url('/admin/admin-module?type=users'))->with('success', 'Akun user berhasil diperbarui.');
     }
 
@@ -113,6 +118,8 @@ class AdminUserController extends Controller
                 'role' => $user->role,
             ],
         ]);
+
+        AdminBesarCache::forgetToday();
 
         return redirect()->to(url('/admin/admin-module?type=users'))->with('success', 'Akun user berhasil dihapus.');
     }

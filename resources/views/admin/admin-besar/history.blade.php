@@ -26,6 +26,9 @@
             <a href="{{ route('admin.admin-besar.history.supplier') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-slate-100">
                 <span class="material-symbols-outlined">account_tree</span><span class="font-semibold">PT/CV</span>
             </a>
+            <a href="{{ url('/admin/admin-module?type=users') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-slate-100">
+                <span class="material-symbols-outlined">group</span><span class="font-semibold">Manajemen Akun</span>
+            </a>
         </nav>
         <div class="p-4 border-t border-slate-200">
             <form method="POST" action="{{ route('logout') }}" class="js-logout-form">
@@ -55,7 +58,6 @@
                             <th class="px-4 py-3 text-left font-semibold text-slate-600">Pembeli</th>
                             <th class="px-4 py-3 text-left font-semibold text-slate-600">Waktu</th>
                             <th class="px-4 py-3 text-left font-semibold text-slate-600">Metode</th>
-                            <th class="px-4 py-3 text-left font-semibold text-slate-600">Item</th>
                             <th class="px-4 py-3 text-right font-semibold text-slate-600">Total</th>
                             <th class="px-4 py-3 text-right font-semibold text-slate-600">Sisa Kredit</th>
                             <th class="px-4 py-3 text-center font-semibold text-slate-600">Status</th>
@@ -69,7 +71,6 @@
                                 <td class="px-4 py-3">{{ $sale['customer_name'] }}</td>
                                 <td class="px-4 py-3">{{ $sale['created_at'] }}</td>
                                 <td class="px-4 py-3 uppercase">{{ $sale['payment_method'] }}</td>
-                                <td class="px-4 py-3">{{ number_format((int) $sale['sold_qty'], 0, ',', '.') }} qty</td>
                                 <td class="px-4 py-3 text-right font-bold">Rp {{ number_format((float) $sale['total'], 0, ',', '.') }}</td>
                                 <td class="px-4 py-3 text-right">{{ (float) $sale['remaining_credit'] > 0 ? 'Rp ' . number_format((float) $sale['remaining_credit'], 0, ',', '.') : '-' }}</td>
                                 <td class="px-4 py-3 text-center">
@@ -85,7 +86,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="9" class="px-4 py-8 text-center text-slate-500">Belum ada transaksi.</td></tr>
+                            <tr><td colspan="8" class="px-4 py-8 text-center text-slate-500">Belum ada transaksi.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

@@ -10,7 +10,7 @@ class StoreDashboardProductRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'category' => 'Alat Berat',
+            'category' => trim((string) $this->input('category', '')),
             'barcode' => strtoupper((string) $this->input('barcode', '')),
             'unit' => strtoupper((string) $this->input('unit', '')),
             'weight_unit' => strtolower(trim((string) $this->input('weight_unit', 'kg'))),
@@ -26,7 +26,7 @@ class StoreDashboardProductRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['nullable', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255', Rule::unique('products', 'slug')],
             'barcode' => ['nullable', 'string', 'max:100'],
             'unit' => ['nullable', 'string', 'max:30'],
@@ -35,10 +35,10 @@ class StoreDashboardProductRequest extends FormRequest
             'weight_unit_custom' => ['nullable', 'string', 'max:30', 'required_if:weight_unit,other'],
             'description' => ['nullable', 'string'],
             'image' => ['nullable', 'image', 'max:5120'],
-            'category' => ['required', 'string', 'max:255'],
-            'brand' => ['required', 'string', 'max:255'],
+            'category' => ['nullable', 'string', 'max:255'],
+            'brand' => ['nullable', 'string', 'max:255'],
             'supplier_id' => ['nullable', 'integer', 'exists:suppliers,id'],
-            'supplier_name' => ['required', 'string', 'max:255'],
+            'supplier_name' => ['nullable', 'string', 'max:255'],
             'supplier_branch' => ['nullable', 'string', 'max:255'],
             'supplier_phone' => ['nullable', 'string', 'max:255'],
             'supplier_address' => ['nullable', 'string'],
@@ -47,11 +47,11 @@ class StoreDashboardProductRequest extends FormRequest
             'supplier_invoice_number' => ['nullable', 'string', 'max:255'],
             'condition' => ['nullable', 'string', 'max:120'],
             'processed_by' => ['nullable', 'string', 'max:255'],
-            'purchase_price' => ['required', 'numeric', 'min:0'],
+            'purchase_price' => ['nullable', 'numeric', 'min:0'],
             'expedition_cost' => ['nullable', 'numeric', 'min:0'],
             'down_payment_amount' => ['nullable', 'numeric', 'min:0'],
-            'selling_price' => ['required', 'numeric', 'min:0'],
-            'stock' => ['required', 'integer', 'min:0'],
+            'selling_price' => ['nullable', 'numeric', 'min:0'],
+            'stock' => ['nullable', 'integer', 'min:0'],
             'payment_type' => ['nullable', Rule::in(['LUNAS', 'KREDIT'])],
             'credit_days' => ['nullable', 'integer', 'min:1', 'max:3650', 'required_if:payment_type,KREDIT'],
             'credit_due_date' => ['nullable', 'date', 'required_if:payment_type,KREDIT'],

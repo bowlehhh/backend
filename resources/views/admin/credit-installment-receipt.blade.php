@@ -37,6 +37,21 @@
         : '-';
     $supplierInvoiceNumber = $batch->supplier_invoice_number ?: '-';
 @endphp
+@php
+    $formatNotaDate = function ($value, bool $withTime = true): string {
+        if (empty($value)) {
+            return '-';
+        }
+
+        $date = $value instanceof \Carbon\CarbonInterface
+            ? $value
+            : \Carbon\Carbon::parse((string) $value);
+
+        return $withTime
+            ? $date->locale('id')->translatedFormat('d M Y H:i l')
+            : $date->locale('id')->translatedFormat('d M Y l');
+    };
+@endphp
 <div class="sheet">
         <div class="row">
             <div>
@@ -48,7 +63,7 @@
             </div>
         <div>
             <p class="sub"><strong>Cicilan Ke:</strong> {{ $installmentNumber ?? 1 }}</p>
-            <p class="sub"><strong>Tanggal Bayar:</strong> {{ optional($installment->paid_at)->format('d M Y') ?? '-' }}</p>
+            <p class="sub"><strong>Tanggal Bayar:</strong> {{ $formatNotaDate($installment->paid_at, false) }}</p>
             <p class="sub"><strong>Jatuh Tempo:</strong> {{ $dueDateDisplay }}</p>
             <p class="sub"><strong>Jam Input:</strong> {{ optional($installment->created_at)->format('H:i:s') ?? '-' }}</p>
             <p class="sub"><strong>Diproses Oleh:</strong> {{ $installment->processed_by ?? $installment->user?->name ?? '-' }}</p>

@@ -15,10 +15,11 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/me', [AuthController::class, 'me']);
 
     // Product API
-    Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+    Route::delete('/products/{id}', [ProductController::class, 'destroy'])
+        ->middleware('role:admin,admin_besar');
 
     Route::prefix('pos')
-        ->middleware('role:admin')
+        ->middleware('role:admin,admin_besar')
         ->group(function (): void {
             Route::get('/products/search', [ProductSearchController::class, 'index']);
             Route::get('/dashboard', [CashierDashboardController::class, 'show']);

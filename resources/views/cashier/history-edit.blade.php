@@ -114,7 +114,7 @@
                             <tr class="border-t border-slate-100">
                                 <td class="px-4 py-3">
                                     <div class="font-semibold">{{ $item->product_name }}</div>
-                                    <div class="text-xs text-slate-500">Batch: {{ $item->productBatch?->batch_code ?: '-' }}</div>
+                                    <div class="text-xs text-slate-500">INV: {{ $item->productBatch?->display_inventory_code ?: '-' }}</div>
                                     <input type="hidden" name="items[{{ $index }}][id]" value="{{ $item->id }}" />
                                 </td>
                                 <td class="px-4 py-3 text-right">{{ (int) ($item->productBatch?->stock ?? 0) }}</td>

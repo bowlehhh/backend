@@ -26,6 +26,21 @@
 </head>
 <body>
 @php
+    $formatNotaDate = function ($value, bool $withTime = true): string {
+        if (empty($value)) {
+            return '-';
+        }
+
+        $date = $value instanceof \Carbon\CarbonInterface
+            ? $value
+            : \Carbon\Carbon::parse((string) $value);
+
+        return $withTime
+            ? $date->locale('id')->translatedFormat('d M Y H:i l')
+            : $date->locale('id')->translatedFormat('d M Y l');
+    };
+@endphp
+@php
     $sale = $salesReturn->sale;
     $creditOutstanding = (float) ($sale->credit_amount ?? 0);
     $cashierDisplayName = $sale->cashier_display_name;
@@ -51,7 +66,7 @@
             <td class="label">No. Retur</td>
             <td>{{ $salesReturn->return_number }}</td>
             <td class="label">Tanggal</td>
-            <td>{{ $salesReturn->created_at?->format('d M Y H:i') }}</td>
+            <td>{{ $formatNotaDate($salesReturn->created_at) }}</td>
         </tr>
         <tr>
             <td class="label">Invoice Asal</td>

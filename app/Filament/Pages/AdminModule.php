@@ -172,7 +172,7 @@ class AdminModule extends Page
             ->limit(100)
             ->get()
             ->map(fn (ProductBatch $batch) => [
-                'kode' => $batch->batch_code ?: '-',
+                'kode' => $batch->display_inventory_code,
                 'barang' => $batch->product?->name ?: '-',
                 'supplier' => $batch->supplier?->name ?: '-',
                 'stok' => (int) $batch->stock,

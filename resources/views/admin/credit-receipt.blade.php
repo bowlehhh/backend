@@ -23,12 +23,27 @@
         ? (((int) ($batch->credit_days ?? 0) > 0 ? ((int) $batch->credit_days . ' hari ') : '') . '(' . $dueDateText . ')')
         : '-';
 @endphp
+@php
+    $formatNotaDate = function ($value, bool $withTime = true): string {
+        if (empty($value)) {
+            return '-';
+        }
+
+        $date = $value instanceof \Carbon\CarbonInterface
+            ? $value
+            : \Carbon\Carbon::parse((string) $value);
+
+        return $withTime
+            ? $date->locale('id')->translatedFormat('d M Y H:i l')
+            : $date->locale('id')->translatedFormat('d M Y l');
+    };
+@endphp
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $isCredit ? 'Nota Kredit' : 'Nota Pembelian Lunas' }} Batch #{{ $batch->id }}</title>
+    <title>{{ $isCredit ? 'Nota Kredit' : 'Nota Pembelian Lunas' }} {{ $batch->display_inventory_code }}</title>
     <style>
         :root { color-scheme: light; }
         body { margin: 0; background: #eef2f7; font-family: Arial, Helvetica, sans-serif; color: #0f172a; }
@@ -63,8 +78,7 @@
                 <p class="sub">No. Inv Supplier: <strong>{{ $supplierInvoiceNumber }}</strong></p>
             </div>
             <div class="meta">
-                <div>Tanggal Cetak: {{ $printedAt->format('d M Y H:i') }}</div>
-                <div>Nomor Inv: #{{ $batch->id }}</div>
+                <div>Tanggal Cetak: {{ $formatNotaDate($printedAt) }}</div>
                 <div>{{ $isCredit ? 'Jatuh Tempo: ' . $dueDateDisplay : 'Status: LUNAS' }}</div>
             </div>
         </div>

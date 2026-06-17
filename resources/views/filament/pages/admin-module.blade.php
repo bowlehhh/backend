@@ -229,8 +229,6 @@
             <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] rounded-lg font-medium" href="{{ url('/admin/suppliers') }}"><span class="material-symbols-outlined">local_shipping</span><span class="nav-label">Supplier</span></a>
             <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'credits' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=credits') }}"><span class="material-symbols-outlined">credit_card</span><span class="nav-label">Kredit &amp; Utang Saya</span></a>
             <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'supplier-transactions' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=supplier-transactions') }}"><span class="material-symbols-outlined">account_tree</span><span class="nav-label">Transaksi PT/CV</span></a>
-            <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'reports' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=reports') }}"><span class="material-symbols-outlined">analytics</span><span class="nav-label">Laporan</span></a>
-            <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'users' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=users') }}"><span class="material-symbols-outlined">group</span><span class="nav-label">User</span></a>
             <div class="mt-auto space-y-1">
               <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'product-groups' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=product-groups') }}"><span class="material-symbols-outlined">inventory_2</span><span class="nav-label">Kelompok Barang</span></a>
               <div class="ml-3 border-l border-[#d4dbd7] pl-3 py-1 space-y-1">
@@ -820,7 +818,19 @@
                   <div class="flex flex-col gap-4 px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
                     <div class="min-w-0">
                       <p class="text-xs uppercase tracking-[0.32em] text-[#52615a]">Part Number</p>
-                      <h2 class="truncate text-2xl font-semibold text-[#191c1e]">{{ $group['part_number'] }}</h2>
+                      @if (!empty($group['supplier_id']))
+                        <a
+                          href="{{ url('/admin/suppliers/' . $group['supplier_id']) }}#riwayat-pembelian"
+                          class="inline-flex max-w-full"
+                          title="Lihat detail supplier"
+                        >
+                          <h2 class="truncate text-2xl font-semibold text-[#191c1e] transition-colors hover:text-[#006948]">
+                            {{ $group['part_number'] }}
+                          </h2>
+                        </a>
+                      @else
+                        <h2 class="truncate text-2xl font-semibold text-[#191c1e]">{{ $group['part_number'] }}</h2>
+                      @endif
                       <p class="mt-1 text-sm text-[#52615a]">{{ $group['part_name'] }}</p>
                     </div>
                     <div class="flex items-center gap-3 flex-shrink-0">

@@ -169,6 +169,7 @@ class AdminDashboard extends Page
             'product_batches.id as batch_id',
             "products.{$nameColumn} as product_name",
             'product_batches.batch_code',
+            'product_batches.supplier_invoice_number',
             'product_batches.stock',
             'product_batches.selling_price',
         ];
@@ -180,7 +181,7 @@ class AdminDashboard extends Page
         return $query->limit(100)->get($selects)->map(fn ($row) => [
             'batch_id' => (int) $row->batch_id,
             'product_name' => $row->product_name ?? '-',
-            'batch_code' => $row->batch_code ?? '-',
+            'batch_code' => $row->supplier_invoice_number ?: (filled($row->batch_code ?? null) ? preg_replace('/^BATCH-/i', 'INV-', (string) $row->batch_code) : '-'),
             'stock' => (int) ($row->stock ?? 0),
             'supplier_name' => $row->supplier_name ?? '-',
             'selling_price' => 'Rp ' . number_format((float) ($row->selling_price ?? 0), 0, ',', '.'),
@@ -406,7 +407,7 @@ class AdminDashboard extends Page
             'supplier_address' => $batch?->supplier?->address,
             'supplier_note' => $batch?->supplier?->note,
             'batch_id' => $batch?->id,
-            'batch_code' => $batch?->batch_code,
+            'batch_code' => $batch?->display_inventory_code,
             'supplier_invoice_number' => $batch?->supplier_invoice_number,
             'condition' => $batch?->condition,
             'processed_by' => $batch?->processed_by,

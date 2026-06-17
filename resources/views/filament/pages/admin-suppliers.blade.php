@@ -91,17 +91,14 @@
               <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">local_shipping</span>
               <span>Supplier</span>
             </a>
+            <a class="sf-nav-item w-full flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium text-left" href="{{ route('admin.transaksi.dashboard') }}">
+              <span class="material-symbols-outlined">point_of_sale</span><span>Transaksi</span>
+            </a>
             <a class="sf-nav-item w-full flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=credits') }}">
               <span class="material-symbols-outlined">credit_card</span><span>Kredit &amp; Utang Saya</span>
             </a>
             <a class="sf-nav-item w-full flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=supplier-transactions') }}">
               <span class="material-symbols-outlined">account_tree</span><span>Transaksi PT</span>
-            </a>
-            <a class="sf-nav-item w-full flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=reports') }}">
-              <span class="material-symbols-outlined">analytics</span><span>Laporan</span>
-            </a>
-            <a class="sf-nav-item w-full flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=users') }}">
-              <span class="material-symbols-outlined">group</span><span>User</span>
             </a>
             <a class="sf-nav-item w-full mt-auto flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=product-groups') }}">
               <span class="material-symbols-outlined">inventory_2</span><span>Kelompok Barang</span>

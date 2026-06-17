@@ -9,6 +9,7 @@ use App\Models\SalesReturn;
 use App\Models\SalesReturnItem;
 use App\Models\StockHistory;
 use App\Models\User;
+use App\Support\AdminBesarCache;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -17,7 +18,7 @@ class SalesReturnService
 {
     public function create(User $cashier, Sale $sale, array $payload): SalesReturn
     {
-        return DB::transaction(function () use ($cashier, $sale, $payload): SalesReturn {
+        $salesReturn = DB::transaction(function () use ($cashier, $sale, $payload): SalesReturn {
             $reason = (string) ($payload['return_reason'] ?? 'barang_rusak');
             $requested = collect((array) ($payload['items'] ?? []))
                 ->map(fn (array $item): array => [
@@ -308,6 +309,9 @@ class SalesReturnService
 
             return $salesReturn->load(['sale.user:id,name', 'items']);
         });
+
+        AdminBesarCache::forgetToday();
+        return $salesReturn;
     }
 
     private function generateReturnNumber(): string

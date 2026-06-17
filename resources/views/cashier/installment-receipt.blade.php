@@ -9,6 +9,21 @@
     <style>body { background-color: #f7f9fb; font-family: "Hanken Grotesk", sans-serif; }</style>
 </head>
 <body class="text-slate-900">
+@php
+    $formatNotaDate = function ($value, bool $withTime = true): string {
+        if (empty($value)) {
+            return '-';
+        }
+
+        $date = $value instanceof \Carbon\CarbonInterface
+            ? $value
+            : \Carbon\Carbon::parse((string) $value);
+
+        return $withTime
+            ? $date->locale('id')->translatedFormat('d M Y H:i l')
+            : $date->locale('id')->translatedFormat('d M Y l');
+    };
+@endphp
 <main class="mx-auto max-w-3xl p-4 lg:p-6">
     <div class="mb-4 flex items-center justify-between gap-3">
         <div>
@@ -22,7 +37,7 @@
         <div class="grid gap-4 md:grid-cols-2">
             <div>
                 <p class="text-xs uppercase text-slate-500">Tanggal Bayar</p>
-                <p class="font-semibold">{{ $installment->paid_at?->format('d M Y H:i') ?: '-' }}</p>
+                <p class="font-semibold">{{ $formatNotaDate($installment->paid_at) }}</p>
             </div>
             <div>
                 <p class="text-xs uppercase text-slate-500">Admin</p>
@@ -62,7 +77,7 @@
                     <tbody>
                         <tr class="border-t border-slate-100">
                             <td class="px-4 py-3 font-semibold">DP / Uang Muka</td>
-                            <td class="px-4 py-3">{{ $sale->created_at?->format('d M Y H:i') ?: '-' }}</td>
+                            <td class="px-4 py-3">{{ $formatNotaDate($sale->created_at) }}</td>
                             <td class="px-4 py-3 font-semibold text-emerald-700">Rp {{ number_format((float) $sale->paid_amount, 0, ',', '.') }}</td>
                             <td class="px-4 py-3">{{ $sale->cashier_display_name }}</td>
                             <td class="px-4 py-3">DP saat transaksi pertama</td>
@@ -70,7 +85,7 @@
                         @foreach($sale->installments as $row)
                             <tr class="border-t border-slate-100 {{ (int) $row->id === (int) $installment->id ? 'bg-emerald-50' : '' }}">
                                 <td class="px-4 py-3 font-semibold">Cicilan</td>
-                                <td class="px-4 py-3">{{ $row->paid_at?->format('d M Y H:i') ?: '-' }}</td>
+                                <td class="px-4 py-3">{{ $formatNotaDate($row->paid_at) }}</td>
                                 <td class="px-4 py-3 font-semibold text-emerald-700">Rp {{ number_format((float) $row->amount, 0, ',', '.') }}</td>
                                 <td class="px-4 py-3">{{ $sale->cashier_display_name }}</td>
                                 <td class="px-4 py-3">{{ $row->note ?: '-' }}</td>

@@ -2,7 +2,7 @@
   <h3 class="mb-2.5 text-[15px] font-semibold leading-tight text-on-surface">Card 1: Informasi Barang</h3>
   <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
     <div>
-      <label class="mb-1 block text-[12px] font-medium text-on-surface">Part Name</label>
+      <label class="mb-1 block text-[12px] font-medium text-on-surface">Part Name <span class="text-on-surface-variant">(opsional)</span></label>
       <input type="text" name="name" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none">
       <p class="mt-1 text-xs text-error" data-error-for="name"></p>
     </div>
@@ -47,13 +47,13 @@
       <p class="mt-1 text-xs text-error" data-error-for="slug"></p>
     </div>
     <div>
-      <label class="mb-1 block text-[12px] font-medium text-on-surface">Kategori</label>
-      <input type="text" name="category" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none" value="Alat Berat" readonly>
-      <p class="mt-1 text-[11px] leading-4 text-on-surface-variant">Kategori ini tetap satu: Alat Berat.</p>
+      <label class="mb-1 block text-[12px] font-medium text-on-surface">Kategori <span class="text-on-surface-variant">(opsional)</span></label>
+      <input type="text" name="category" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none" placeholder="Opsional, bisa dikosongkan">
+      <p class="mt-1 text-[11px] leading-4 text-on-surface-variant">Kategori opsional, bisa dihapus kalau tidak dipakai.</p>
       <p class="mt-1 text-xs text-error" data-error-for="category"></p>
     </div>
     <div>
-      <label class="mb-1 block text-[12px] font-medium text-on-surface">Merek</label>
+      <label class="mb-1 block text-[12px] font-medium text-on-surface">Merek <span class="text-on-surface-variant">(opsional)</span></label>
       <input type="text" name="brand" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none" placeholder="Masukkan merek">
       <p class="mt-1 text-xs text-error" data-error-for="brand"></p>
     </div>

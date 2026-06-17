@@ -7,12 +7,21 @@ use App\Models\ProductBatch;
 use App\Models\Sale;
 use App\Models\StockHistory;
 use App\Models\User;
+use App\Support\AdminBesarCache;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class CheckoutService
 {
+    private function findFallbackBatchForProduct($batches)
+    {
+        return $batches
+            ->filter(fn (ProductBatch $batch): bool => (int) $batch->stock > 0)
+            ->sortBy('id')
+            ->first();
+    }
+
     private function normalizePartNumberKey(?string $value, ?int $productId = null): string
     {
         $normalized = strtoupper(trim((string) $value));
@@ -66,9 +75,10 @@ class CheckoutService
     {
         $datePart = now()->format('Ymd');
         $this->acquireInvoiceNumberLock($datePart);
+        $sale = null;
 
         try {
-            return DB::transaction(function () use ($cashier, $payload, $datePart): Sale {
+            $sale = DB::transaction(function () use ($cashier, $payload, $datePart): Sale {
                 $itemsPayload = collect($payload['items']);
                 $partNumbers = $itemsPayload
                     ->map(fn (array $item): string => $this->normalizePartNumberKey(
@@ -123,6 +133,8 @@ class CheckoutService
                     $batches = $batchesByPart->get($partNumber, collect());
                     $allocations = $this->normalizeStockAllocations($item);
                     $primaryBatch = $batchesById->get((int) ($item['product_batch_id'] ?? 0));
+                    $fallbackBatch = $this->findFallbackBatchForProduct($batches);
+                    $useRequestedAllocations = false;
 
                     if (! $product) {
                         throw ValidationException::withMessages([
@@ -140,26 +152,28 @@ class CheckoutService
                         $batchIds = array_keys($allocations);
                         $allocatedBatches = $batchesById->only($batchIds);
 
-                        if ($allocatedBatches->count() !== count($batchIds)) {
-                            throw ValidationException::withMessages([
-                                'items' => ["Batch for {$product->name} is not available."],
-                            ]);
-                        }
+                        $useRequestedAllocations = $allocatedBatches->count() === count($batchIds);
+                        $availableStock = $useRequestedAllocations
+                            ? (int) array_sum($allocations)
+                            : (int) $batches->sum('stock');
 
-                        $availableStock = (int) array_sum($allocations);
                         if ($availableStock < $qty) {
                             throw ValidationException::withMessages([
                                 'items' => ["Stock for {$product->name} is not sufficient."],
                             ]);
                         }
                     } elseif (! $primaryBatch || (int) $primaryBatch->product_id !== (int) $product->id) {
-                        throw ValidationException::withMessages([
-                            'items' => ["Batch for {$product->name} is not available."],
-                        ]);
+                        if (! $fallbackBatch) {
+                            throw ValidationException::withMessages([
+                                'items' => ["Batch for {$product->name} is not available."],
+                            ]);
+                        }
+
+                        $primaryBatch = $fallbackBatch;
                     }
 
                     $availableStock = $mergeStock
-                        ? (int) ($allocations !== [] ? array_sum($allocations) : $batches->sum('stock'))
+                        ? (int) ($useRequestedAllocations ? array_sum($allocations) : $batches->sum('stock'))
                         : (int) $primaryBatch->stock;
                     if ($availableStock < $qty) {
                         throw ValidationException::withMessages([
@@ -193,7 +207,7 @@ class CheckoutService
                         ];
                         $remainingQty = 0;
                     } else {
-                        if ($allocations !== []) {
+                        if ($allocations !== [] && $useRequestedAllocations) {
                             foreach ($allocations as $batchId => $takeQty) {
                                 if ($remainingQty <= 0) {
                                     break;
@@ -205,10 +219,11 @@ class CheckoutService
                                 }
 
                                 $batch = $batchesById->get((int) $batchId);
+                                if (! $batch || (int) $batch->product_id !== (int) $product->id) {
+                                    $batch = $batches->first(fn (ProductBatch $candidate): bool => (int) $candidate->stock > 0);
+                                }
                                 if (! $batch) {
-                                    throw ValidationException::withMessages([
-                                        'items' => ["Batch for {$product->name} is not available."],
-                                    ]);
+                                    continue;
                                 }
 
                                 $remainingQty -= $takeQty;
@@ -369,6 +384,9 @@ class CheckoutService
         } finally {
             $this->releaseInvoiceNumberLock($datePart);
         }
+
+        AdminBesarCache::forgetToday();
+        return $sale;
     }
 
     private function acquireInvoiceNumberLock(string $datePart): void

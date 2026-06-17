@@ -107,7 +107,7 @@
                     </div>
                 </div>
 
-                <form method="POST" action="<?php echo e(route('login.store')); ?>" class="space-y-4">
+                <form method="POST" action="<?php echo e(route('login.store')); ?>" class="space-y-4" autocomplete="off">
                     <?php echo csrf_field(); ?>
 
                     <div>
@@ -116,20 +116,19 @@
                             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                 <span class="material-symbols-outlined text-on-surface-variant/60 transition-colors group-focus-within:text-primary">mail</span>
                             </div>
-                            <input id="email" name="email" type="email" value="<?php echo e(old('email')); ?>" required placeholder="winkytiopratama@gmail.com" class="h-12 w-full rounded-2xl border border-[#c8d6ce] bg-white py-2.5 pl-10 pr-4 text-[14px] text-on-surface outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/15" />
+                            <input id="email" name="email" type="email" value="" required autocomplete="off" autocapitalize="off" spellcheck="false" data-form-type="other" class="h-12 w-full rounded-2xl border border-[#c8d6ce] bg-white py-2.5 pl-10 pr-4 text-[14px] text-on-surface outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/15" />
                         </div>
                     </div>
 
                     <div>
                         <div class="mb-1.5 flex items-center justify-between gap-4">
                             <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant" for="password">Password</label>
-                            <a class="text-[11px] font-semibold text-primary hover:underline" href="#">Lupa Password?</a>
                         </div>
                         <div class="relative group">
                             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                 <span class="material-symbols-outlined text-on-surface-variant/60 transition-colors group-focus-within:text-primary">lock</span>
                             </div>
-                            <input id="password" name="password" type="password" required placeholder="••••••••••••" class="h-12 w-full rounded-2xl border border-[#c8d6ce] bg-white py-2.5 pl-10 pr-12 text-[14px] text-on-surface outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/15" />
+                            <input id="password" name="password" type="password" required placeholder="••••••••••••" autocomplete="new-password" data-form-type="other" class="h-12 w-full rounded-2xl border border-[#c8d6ce] bg-white py-2.5 pl-10 pr-12 text-[14px] text-on-surface outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/15" />
                             <button id="toggle-password" class="absolute inset-y-0 right-0 flex items-center pr-3 text-on-surface-variant transition-colors hover:text-primary" type="button" aria-label="Toggle password visibility">
                                 <span class="material-symbols-outlined">visibility</span>
                             </button>
@@ -147,16 +146,14 @@
                     </button>
                 </form>
 
-                <div class="mt-4 border-t border-[#e5ece7] pt-4 text-center">
-                    <p class="text-[13px] text-on-surface-variant">
-                        Belum punya akun? <a class="font-bold text-primary hover:underline" href="#">Hubungi Admin</a>
-                    </p>
-                </div>
             </div>
 
-            <footer class="mt-3 flex items-center justify-between gap-3 text-[11px] font-semibold text-on-surface-variant/70">
-                <span>© <?php echo e(date('Y')); ?> Surya Duta Multindo</span>
-                <span>v1.0.4</span>
+            <footer class="mt-3 flex items-center justify-between gap-3">
+                <div class="inline-flex items-center gap-2 rounded-full border border-[#d7e4dc] bg-white/80 px-4 py-2 text-[11px] font-semibold tracking-[0.16em] text-on-surface-variant shadow-[0_10px_24px_rgba(15,23,42,0.05)] backdrop-blur">
+                    <span class="material-symbols-outlined text-[14px] text-primary" style="font-variation-settings:'FILL' 1;">copyright</span>
+                    <span class="uppercase">Winkytiopratama</span>
+                </div>
+                <span class="text-[11px] font-semibold tracking-[0.18em] text-on-surface-variant/55 uppercase">v1.0.4</span>
             </footer>
         </div>
     </section>

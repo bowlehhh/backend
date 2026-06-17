@@ -55,4 +55,24 @@ class AuthApiTest extends TestCase
 
         $response->assertForbidden();
     }
+
+    public function test_admin_besar_can_access_cashier_routes(): void
+    {
+        $adminBesar = User::factory()->adminBesar()->create();
+
+        $response = $this
+            ->actingAs($adminBesar, 'sanctum')
+            ->getJson('/api/pos/dashboard');
+
+        $response
+            ->assertOk()
+            ->assertJsonStructure([
+                'data' => [
+                    'today_sales_total',
+                    'today_transactions_count',
+                    'today_revenue_total',
+                    'recent_transactions',
+                ],
+            ]);
+    }
 }

@@ -15,6 +15,7 @@ use App\Models\SalesReturnItem;
 use App\Models\StockHistory;
 use App\Services\CheckoutService;
 use App\Services\SalesReturnService;
+use App\Support\AdminBesarCache;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -47,6 +48,13 @@ class CashierTransactionController extends Controller
         }
 
         return (int) $sale->user_id === (int) $request->user()->id;
+    }
+
+    private function canManageAdminToko(Request $request): bool
+    {
+        $user = $request->user();
+
+        return (bool) ($user?->isAdmin() || $user?->isAdminBesar());
     }
 
     private function getProductAvailableStock(Product $product): int
@@ -550,7 +558,51 @@ class CashierTransactionController extends Controller
      */
     public function checkout(Request $request): RedirectResponse
     {
-        $cart = collect((array) $request->session()->get('cashier_cart', []))->values();
+        $sessionCart = collect((array) $request->session()->get('cashier_cart', []))->values();
+
+        $incomingItems = collect((array) $request->input('items', []))
+            ->map(function ($item): array {
+                return [
+                    'product_id' => (int) ($item['product_id'] ?? 0),
+                    'product_batch_id' => (int) ($item['product_batch_id'] ?? 0),
+                    'product_name' => (string) ($item['product_name'] ?? ''),
+                    'part_number' => (string) ($item['part_number'] ?? ''),
+                    'merge_stock' => filter_var($item['merge_stock'] ?? false, FILTER_VALIDATE_BOOL),
+                    'qty' => max(0, (int) ($item['qty'] ?? 0)),
+                    'price' => max(0, (float) ($item['price'] ?? 0)),
+                ];
+            })
+            ->filter(fn (array $item): bool => $item['qty'] > 0 && $item['product_batch_id'] > 0)
+            ->values();
+
+        $cart = $sessionCart;
+
+        if ($incomingItems->isNotEmpty()) {
+            $overridesByBatch = $incomingItems->keyBy(fn (array $item): int => $item['product_batch_id']);
+
+            $cart = $sessionCart->map(function (array $item) use ($overridesByBatch): array {
+                $override = $overridesByBatch->get((int) ($item['product_batch_id'] ?? 0));
+                if (! $override) {
+                    return $item;
+                }
+
+                $qty = (int) $override['qty'];
+                $price = (float) $override['price'];
+                $mergeStock = (bool) ($item['merge_stock'] ?? $override['merge_stock'] ?? false);
+
+                $item['qty'] = $qty;
+
+                if ($mergeStock) {
+                    $item['merged_subtotal'] = $price;
+                    $item['price'] = $qty > 0 ? ($price / $qty) : 0;
+                } else {
+                    $item['price'] = $price;
+                    unset($item['merged_subtotal']);
+                }
+
+                return $item;
+            })->values();
+        }
 
         if ($cart->isEmpty()) {
             return back()->withErrors(['cart' => 'Keranjang masih kosong.']);
@@ -729,6 +781,8 @@ class CashierTransactionController extends Controller
                 'credit_due_date' => $newRemaining > 0 ? $sale->credit_due_date : null,
             ]);
         });
+
+        AdminBesarCache::forgetToday();
 
         $successMessage = $isFullSettlement
             ? ($amount > $remainingCredit
@@ -966,7 +1020,7 @@ class CashierTransactionController extends Controller
 
     public function editHistory(Request $request, Sale $sale): View
     {
-        if (! $this->canAccessSale($request, $sale) || ! $request->user()->isAdmin()) {
+        if (! $this->canAccessSale($request, $sale) || ! $this->canManageAdminToko($request)) {
             abort(403, 'Anda tidak berhak mengubah transaksi ini.');
         }
 
@@ -989,7 +1043,7 @@ class CashierTransactionController extends Controller
 
     public function updateHistory(Request $request, Sale $sale): RedirectResponse
     {
-        if (! $this->canAccessSale($request, $sale) || ! $request->user()->isAdmin()) {
+        if (! $this->canAccessSale($request, $sale) || ! $this->canManageAdminToko($request)) {
             abort(403, 'Anda tidak berhak mengubah transaksi ini.');
         }
 
@@ -1232,6 +1286,8 @@ class CashierTransactionController extends Controller
             return back()->withErrors($exception->errors())->withInput();
         }
 
+        AdminBesarCache::forgetToday();
+
         return redirect()
             ->route('cashier.history')
             ->with('success', "Transaksi {$sale->invoice_number} berhasil diperbarui.");
@@ -1239,7 +1295,7 @@ class CashierTransactionController extends Controller
 
     public function destroyHistory(Request $request, Sale $sale): RedirectResponse
     {
-        if (! $this->canAccessSale($request, $sale) || ! $request->user()->isAdmin()) {
+        if (! $this->canAccessSale($request, $sale) || ! $this->canManageAdminToko($request)) {
             abort(403, 'Anda tidak berhak menghapus transaksi ini.');
         }
 
@@ -1309,6 +1365,8 @@ class CashierTransactionController extends Controller
             return back()->withErrors($exception->errors());
         }
 
+        AdminBesarCache::forgetToday();
+
         return redirect()
             ->route('cashier.history')
             ->with('success', "Transaksi {$sale->invoice_number} berhasil dihapus.");
@@ -1316,7 +1374,7 @@ class CashierTransactionController extends Controller
 
     public function returnForm(Request $request, Sale $sale): View
     {
-        if (! $this->canAccessSale($request, $sale) || ! $request->user()->isAdmin()) {
+        if (! $this->canAccessSale($request, $sale) || ! $this->canManageAdminToko($request)) {
             abort(403, 'Anda tidak berhak memproses retur transaksi ini.');
         }
 
@@ -1365,7 +1423,7 @@ class CashierTransactionController extends Controller
 
     public function storeReturn(Request $request, Sale $sale): RedirectResponse
     {
-        if (! $this->canAccessSale($request, $sale) || ! $request->user()->isAdmin()) {
+        if (! $this->canAccessSale($request, $sale) || ! $this->canManageAdminToko($request)) {
             abort(403, 'Anda tidak berhak memproses retur transaksi ini.');
         }
 
@@ -1445,7 +1503,7 @@ class CashierTransactionController extends Controller
         }
 
         $sale->loadMissing([
-            'items.product',
+            'items.product.brand',
             'user:id,name',
             'returns.items.replacementBatch.product',
             'installments.user:id,name',

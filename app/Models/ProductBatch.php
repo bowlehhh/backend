@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -73,5 +74,26 @@ class ProductBatch extends Model
     public function creditInstallments(): HasMany
     {
         return $this->hasMany(CreditInstallment::class, 'product_batch_id');
+    }
+
+    public function getDisplayInventoryCodeAttribute(): string
+    {
+        $rawCode = trim((string) ($this->supplier_invoice_number ?: $this->batch_code ?: ''));
+
+        if ($rawCode === '') {
+            return '-';
+        }
+
+        $upperCode = strtoupper($rawCode);
+
+        if (Str::startsWith($upperCode, 'BATCH-')) {
+            return 'INV-' . substr($rawCode, 6);
+        }
+
+        if (Str::startsWith($upperCode, 'INV-')) {
+            return $rawCode;
+        }
+
+        return 'INV-' . ltrim($rawCode, '-');
     }
 }

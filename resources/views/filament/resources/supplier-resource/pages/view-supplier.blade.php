@@ -12,13 +12,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
     <style>
-      .sf-wrap { font-family: 'Hanken Grotesk', sans-serif; width: 100%; max-width: 100%; margin: 0; min-height: 100vh; overflow-x: hidden; }
+      .sf-wrap { font-family: 'Hanken Grotesk', sans-serif; width: 100%; max-width: 100%; margin: 0; min-height: 100vh; overflow-x: hidden; overflow-y: auto; }
       .material-symbols-outlined { font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; display: inline-block; vertical-align: middle; }
       .table-container::-webkit-scrollbar { height: 8px; }
       .table-container::-webkit-scrollbar-thumb { background: #bccac0; border-radius: 10px; }
       html.sf-dashboard-page, .sf-dashboard-page, .sf-dashboard-page body {
         background: #f7f9fb !important;
         min-height: 100% !important;
+        height: auto !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
       }
@@ -36,10 +37,10 @@
       }
       .sf-dashboard-page .fi-sidebar, .sf-dashboard-page .fi-topbar, .sf-dashboard-page .fi-topbar-ctn, .sf-dashboard-page .fi-layout-sidebar-toggle-btn-ctn, .sf-dashboard-page .fi-header { display: none !important; }
       .sf-dashboard-page .fi-main, .sf-dashboard-page .fi-main-ctn, .sf-dashboard-page .fi-page, .sf-dashboard-page .fi-page-content { max-width: 100% !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
-      .sf-layout { display: block; }
-      .sf-sidebar { position: fixed; top: 64px; left: 0; width: 220px; height: calc(100vh - 64px); border-right: 1px solid #d4dbd7; overflow: hidden; z-index: 20; display: flex; flex-direction: column; background: #fff; }
+      .sf-layout { display: flex; align-items: flex-start; overflow: visible; }
+      .sf-sidebar { position: sticky; top: 64px; left: 0; width: 220px; height: calc(100vh - 64px); border-right: 1px solid #d4dbd7; overflow: hidden; z-index: 20; display: flex; flex-direction: column; background: #fff; }
       .sf-sidebar nav { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
-      .sf-content { min-width: 0; width: calc(100% - 220px); margin-left: 220px; min-height: calc(100vh - 64px); overflow-x: hidden; overflow-y: visible; -webkit-overflow-scrolling: touch; }
+      .sf-content { min-width: 0; width: calc(100% - 220px); margin-left: 0; height: auto; min-height: 0; overflow-x: hidden; overflow-y: visible; -webkit-overflow-scrolling: touch; }
       .sf-nav-item { font-size: 13px; }
       .sf-table th { font-size: 12px; letter-spacing: .02em; }
       .sf-table td { font-size: 13px; }
@@ -60,6 +61,15 @@
         transition: transform .24s ease, opacity .24s ease, box-shadow .24s ease;
       }
       @media (max-width: 1279px) {
+        .sf-wrap { height: auto; min-height: 100vh; overflow: visible; }
+        html.sf-dashboard-page, .sf-dashboard-page, .sf-dashboard-page body,
+        .sf-dashboard-page .fi-body,
+        .sf-dashboard-page .fi-layout,
+        .sf-dashboard-page .fi-main,
+        .sf-dashboard-page .fi-main-ctn,
+        .sf-dashboard-page .fi-page,
+        .sf-dashboard-page .fi-page-content { overflow-y: visible !important; height: auto !important; }
+        .sf-layout { display: block; height: auto; margin-top: 0; overflow: visible; }
         .sf-sidebar { position: static; width: 100%; height: auto; border-right: 0; border-bottom: 1px solid #d4dbd7; transform: none; opacity: 1; pointer-events: auto; box-shadow: none; }
         .sf-content { width: 100%; margin-left: 0; height: auto; min-height: auto; overflow: visible; }
       }
@@ -106,17 +116,14 @@
             <a class="sf-nav-item flex items-center gap-3 bg-[#006948] text-white rounded-lg px-2.5 py-2 font-medium" href="{{ url('/admin/suppliers') }}">
               <span class="material-symbols-outlined">local_shipping</span><span>Supplier</span>
             </a>
+            <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-2.5 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium" href="{{ route('admin.transaksi.dashboard') }}">
+              <span class="material-symbols-outlined">point_of_sale</span><span>Transaksi</span>
+            </a>
             <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-2.5 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium" href="{{ url('/admin/admin-module?type=credits') }}">
               <span class="material-symbols-outlined">credit_card</span><span>Kredit</span>
             </a>
             <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-2.5 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium" href="{{ url('/admin/admin-module?type=supplier-transactions') }}">
               <span class="material-symbols-outlined">account_tree</span><span>Transaksi PT</span>
-            </a>
-            <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-2.5 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium" href="{{ url('/admin/admin-module?type=reports') }}">
-              <span class="material-symbols-outlined">analytics</span><span>Laporan</span>
-            </a>
-            <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-2.5 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium" href="{{ url('/admin/admin-module?type=users') }}">
-              <span class="material-symbols-outlined">group</span><span>User</span>
             </a>
             <a class="sf-nav-item mt-auto flex items-center gap-3 text-[#47534d] px-2.5 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium" href="{{ url('/admin/admin-module?type=product-groups') }}">
               <span class="material-symbols-outlined">inventory_2</span><span>Kelompok Barang</span>
@@ -209,17 +216,11 @@
                     <th class="px-4 py-2.5 font-medium uppercase tracking-wider">Metode</th>
                     <th class="px-4 py-2.5 font-medium uppercase tracking-wider">Total Dibayar</th>
                     <th class="px-4 py-2.5 font-medium uppercase tracking-wider">Jatuh Tempo</th>
-                    <th class="px-4 py-2.5 font-medium uppercase tracking-wider">Status</th>
                     <th class="px-4 py-2.5 font-medium uppercase tracking-wider text-right">Nota</th>
                   </tr>
                 </thead>
                 <tbody>
                   @forelse($rows as $row)
-                    @php
-                      $statusClass = ($row['status'] ?? '') === 'LUNAS'
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : ((($row['status'] ?? '') === 'JATUH TEMPO') ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700');
-                    @endphp
                     <tr id="batch-{{ $row['batch_id'] }}" class="border-b border-[#e4e8e6] {{ $focusBatchId === (int) ($row['batch_id'] ?? 0) ? 'bg-amber-50 ring-2 ring-amber-300 ring-inset' : '' }}">
                       <td class="px-4 py-2.5">{{ $row['waktu'] }}</td>
                       <td class="px-4 py-2.5 font-semibold">{{ $row['part_number'] }}</td>
@@ -237,7 +238,6 @@
                       <td class="px-4 py-2.5">{{ $row['payment_type'] }}</td>
                       <td class="px-4 py-2.5">{{ $row['total_dibayar'] ?? $row['sudah_dibayar'] ?? '-' }}</td>
                       <td class="px-4 py-2.5">{{ $row['payment_type'] === 'KREDIT' ? ($row['credit_days'] . ' hari (' . $row['credit_due_date'] . ')') : '-' }}</td>
-                      <td class="px-4 py-2.5"><span class="inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold {{ $statusClass }}">{{ $row['status'] }}</span></td>
                       <td class="px-4 py-2.5 text-right">
                         @if (!empty($row['receipt_url']))
                           <a href="{{ $row['receipt_url'] }}" target="_blank" rel="noopener" class="inline-flex items-center rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">
@@ -250,7 +250,7 @@
                     </tr>
                   @empty
                     <tr>
-                      <td colspan="18" class="px-4 py-8 text-center text-[#52615a]">Belum ada riwayat pembelian untuk supplier ini.</td>
+                      <td colspan="17" class="px-4 py-8 text-center text-[#52615a]">Belum ada riwayat pembelian untuk supplier ini.</td>
                     </tr>
                   @endforelse
                 </tbody>

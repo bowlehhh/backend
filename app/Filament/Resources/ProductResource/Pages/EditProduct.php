@@ -47,7 +47,7 @@ class EditProduct extends EditRecord
         if (! $batch) {
             $batch = new ProductBatch([
                 'product_id' => $record->id,
-                'batch_code' => sprintf('BATCH-%s-%04d', now()->format('YmdHis'), $record->id),
+                'batch_code' => sprintf('INV-%s-%04d', now()->format('YmdHis'), $record->id),
                 'purchase_price' => 0,
                 'selling_price' => 0,
                 'stock' => 0,

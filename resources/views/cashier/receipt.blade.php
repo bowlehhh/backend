@@ -22,7 +22,7 @@
         .desc { min-height: 0; line-height: 1.15; }
         .item-table th, .item-table td { overflow-wrap: anywhere; word-break: break-word; }
         .item-table .col-no { width: 4.5%; }
-        .item-table .col-name { width: 23%; }
+        .item-table .col-name { width: 26%; }
         .item-table .col-part { width: 18%; }
         .item-table .col-qty { width: 5.5%; }
         .item-table .col-unit { width: 5.5%; }
@@ -56,7 +56,7 @@
             .invoice-title { font-size: 18px; padding: 2px 8px; }
             .meta-table .label { width: 13%; }
             .item-table .col-no { width: 3.5%; }
-            .item-table .col-name { width: 21%; }
+            .item-table .col-name { width: 24%; }
             .item-table .col-part { width: 15%; }
             .item-table .col-qty { width: 5%; }
             .item-table .col-unit { width: 5%; }
@@ -126,6 +126,7 @@
 
             return [
                 'product_name' => (string) ($first->product_name ?: $first->product?->name ?: '-'),
+                'brand_name' => (string) ($first->product?->brand?->name ?: '-'),
                 'part_number' => (string) ($first->part_number ?: $first->product?->barcode ?: '-'),
                 'unit' => (string) ($first->product?->unit ?: '-'),
                 'qty' => (int) $items->sum('qty'),
@@ -140,6 +141,21 @@
     $finalGrandTotal = $isCredit ? $creditOutstanding : (float) $sale->total;
     $remainingAfterEntry = max(0, (float) $sale->total - $downPayment);
     $cashierDisplayName = $sale->cashier_display_name;
+@endphp
+@php
+    $formatNotaDate = function ($value, bool $withTime = true): string {
+        if (empty($value)) {
+            return '-';
+        }
+
+        $date = $value instanceof \Carbon\CarbonInterface
+            ? $value
+            : \Carbon\Carbon::parse((string) $value);
+
+        return $withTime
+            ? $date->locale('id')->translatedFormat('d M Y H:i l')
+            : $date->locale('id')->translatedFormat('d M Y l');
+    };
 @endphp
 @if(session('success'))
     <div style="width: var(--sheet-width); margin: 12px auto 0; background: #ecfdf5; border: 1px solid #10b981; color: #065f46; padding: 10px 14px; box-sizing: border-box; font-size: 13px; font-weight: 700;">
@@ -160,7 +176,7 @@
             <td class="label">No. Invoice</td>
             <td>{{ $sale->invoice_number }}</td>
             <td class="label">Tanggal</td>
-            <td>{{ $sale->created_at?->format('d M Y H:i') }}</td>
+            <td>{{ $formatNotaDate($sale->created_at) }}</td>
         </tr>
         <tr>
             <td class="label">Pembeli</td>
@@ -186,7 +202,7 @@
         <thead>
         <tr>
             <th class="col-no">No</th>
-            <th class="col-name">Part Name</th>
+            <th class="col-name">Part Name / Merek</th>
             <th class="col-part">Part Number</th>
             <th class="col-qty">Qty</th>
             <th class="col-unit">Unit</th>
@@ -198,7 +214,10 @@
         @foreach($displayItems as $idx => $item)
             <tr>
                 <td class="col-no" style="text-align:center;">{{ $idx + 1 }}</td>
-                <td class="desc col-name"><strong>{{ $item['product_name'] }}</strong></td>
+                <td class="desc col-name">
+                    <strong>{{ $item['product_name'] }}</strong><br>
+                    <span style="font-size: 9px; color: #64748b;">{{ $item['brand_name'] ?: '-' }}</span>
+                </td>
                 <td class="desc col-part"><span style="font-size: 9px; color: #64748b;">{{ $item['part_number'] }}</span></td>
                 <td class="col-qty" style="text-align:center;">{{ $item['qty'] }}</td>
                 <td class="col-unit" style="text-align:center;">{{ $item['unit'] }}</td>
@@ -242,7 +261,7 @@
                     <tr>
                         <td>
                             <div style="font-weight:700;">{{ $returnRecord->return_number }}</div>
-                            <div style="color:#64748b;">{{ $returnRecord->created_at?->format('d M Y H:i') }}</div>
+                            <div style="color:#64748b;">{{ $formatNotaDate($returnRecord->created_at) }}</div>
                         </td>
                         <td>
                             <div style="font-weight:700;">{{ $partName }}</div>
@@ -281,15 +300,12 @@
         <tr><td class="label">SUBTOTAL</td><td class="num">Rp {{ number_format((float) $sale->total, 0, ',', '.') }}</td></tr>
         @if($isCredit)
             <tr><td class="label">DP / UANG MUKA</td><td class="num">Rp {{ number_format($downPayment, 0, ',', '.') }}</td></tr>
-            <tr><td class="label">PEMBAYARAN TERAKHIR</td><td class="num">Rp {{ number_format($lastInstallmentReceived, 0, ',', '.') }}</td></tr>
             @if($lastInstallment)
                 <tr><td class="label">SISA SEBELUM BAYAR TERAKHIR</td><td class="num">Rp {{ number_format($creditOutstandingBeforeLastInstallment, 0, ',', '.') }}</td></tr>
             @endif
         @else
-            <tr><td class="label">BAYAR</td><td class="num">Rp {{ number_format($downPayment, 0, ',', '.') }}</td></tr>
             <tr><td class="label">KEMBALIAN</td><td class="num">Rp {{ number_format((float) $sale->change_amount, 0, ',', '.') }}</td></tr>
         @endif
-        <tr><td class="label">TOTAL RETUR BARANG</td><td class="num">Rp {{ number_format($totalReturned, 0, ',', '.') }}</td></tr>
         @if($totalRefundActual > 0)
             <tr><td class="label">REFUND AKTUAL</td><td class="num">Rp {{ number_format($totalRefundActual, 0, ',', '.') }}</td></tr>
         @endif
@@ -315,7 +331,7 @@
             <tr><td class="label">KEMBALIAN SELISIH</td><td class="num">Rp {{ number_format($extraPaymentChangeTotal, 0, ',', '.') }}</td></tr>
         @endif
         @if($isCredit)
-            <tr class="grand"><td class="label">SISA AKHIR CICILAN</td><td class="num">Rp {{ number_format($finalGrandTotal, 0, ',', '.') }}</td></tr>
+            <tr class="grand"><td class="label">GRAND TOTAL</td><td class="num">Rp {{ number_format($finalGrandTotal, 0, ',', '.') }}</td></tr>
             @if($lastInstallmentChange > 0)
                 <tr><td class="label">UANG SISA / KEMBALIAN</td><td class="num">Rp {{ number_format($lastInstallmentChange, 0, ',', '.') }}</td></tr>
             @endif
@@ -343,7 +359,7 @@
                     $remainingAfterEntry = max(0, $remainingAfterEntry - (float) $installment->amount);
                 @endphp
                 <tr>
-                    <td>{{ $installment->paid_at?->format('d M Y H:i') ?: '-' }}</td>
+                    <td>{{ $formatNotaDate($installment->paid_at) }}</td>
                     <td class="num">Rp {{ number_format((float) $installment->amount, 0, ',', '.') }}</td>
                     <td class="num">Rp {{ number_format($remainingAfterEntry, 0, ',', '.') }}</td>
                     <td>{{ $cashierDisplayName }}</td>
@@ -356,11 +372,15 @@
     <table class="foot-table">
         <tr>
             <td class="note-col footer-note-print">
-                <strong>Catatan:</strong> Simpan faktur ini sebagai bukti transaksi resmi.
+                <strong>Catatan:</strong>
+                <div style="margin-top: 4px; padding-left: 14px;">
+                    <div>1. Simpan faktur ini sebagai bukti transaksi resmi.</div>
+                    <div>2. Barang yang sudah di beli tidak dapat di tukar, kecuali ada perjanjian.</div>
+                </div>
             </td>
             <td class="sign-col">
                 <div class="sign-box">
-                    <div>{{ $sale->created_at?->format('d M Y') }}</div>
+                    <div>Yang Menyerahkan</div>
                     <div class="sign-bottom">
                         <strong>{{ $cashierDisplayName }}</strong><br>
                         {{ $sale->cashier_phone ?: 'Admin' }}

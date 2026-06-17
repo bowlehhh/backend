@@ -50,18 +50,18 @@ class DatabaseSeeder extends Seeder
         Schema::enableForeignKeyConstraints();
 
         User::query()->create([
-            'email' => 'admin@pos.test',
+            'email' => 'suryadutamultindo@gmail.com',
             'name' => 'Admin Toko/Gudang',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('suryadutamultindo123'),
             'role' => User::ROLE_ADMIN,
             'is_active' => true,
             'email_verified_at' => now(),
         ]);
 
         User::query()->create([
-            'email' => 'adminbesar@pos.test',
+            'email' => 'suryadi.paulus06@gmail.com',
             'name' => 'Admin Besar',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('suryadutamultindo123'),
             'role' => User::ROLE_ADMIN_BESAR,
             'is_active' => true,
             'email_verified_at' => now(),

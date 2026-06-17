@@ -400,8 +400,6 @@
               <a class="sf-nav-item w-full flex items-center gap-2.5 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/suppliers') }}"><span class="material-symbols-outlined">local_shipping</span><span>Supplier</span></a>
               <a class="sf-nav-item w-full flex items-center gap-2.5 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=credits') }}"><span class="material-symbols-outlined">credit_card</span><span>Kredit &amp; Utang Saya</span></a>
               <a class="sf-nav-item w-full flex items-center gap-2.5 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=supplier-transactions') }}"><span class="material-symbols-outlined">account_tree</span><span>Transaksi PT</span></a>
-              <a class="sf-nav-item w-full flex items-center gap-2.5 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=reports') }}"><span class="material-symbols-outlined">analytics</span><span>Laporan</span></a>
-              <a class="sf-nav-item w-full flex items-center gap-2.5 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=users') }}"><span class="material-symbols-outlined">group</span><span>User</span></a>
               <div class="mt-auto space-y-1">
                 <a class="sf-nav-item w-full flex items-center gap-2.5 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=product-groups') }}"><span class="material-symbols-outlined">inventory_2</span><span>Kelompok Barang</span></a>
                 <div class="ml-3 border-l border-outline-variant pl-3 py-1 space-y-1">
@@ -540,8 +538,15 @@
                               @endif
                             </div>
                             <div>
-                              <p class="sf-part-number">{{ $product['sku'] ?? '-' }}</p>
-                              <p class="sf-product-name">{{ $product['name'] ?? '-' }}</p>
+                              @if (!empty($product['supplier_id']))
+                                <a href="{{ url('/admin/suppliers/' . $product['supplier_id']) }}#riwayat-pembelian" class="inline-flex max-w-full cursor-pointer flex-col text-left" title="Lihat detail supplier">
+                                  <p class="sf-part-number transition-colors hover:text-primary">{{ $product['sku'] ?? '-' }}</p>
+                                  <p class="sf-product-name">{{ $product['name'] ?? '-' }}</p>
+                                </a>
+                              @else
+                                <p class="sf-part-number">{{ $product['sku'] ?? '-' }}</p>
+                                <p class="sf-product-name">{{ $product['name'] ?? '-' }}</p>
+                              @endif
                             </div>
                           </div>
                         </td>
@@ -841,7 +846,7 @@
               <div>
                 <p class="font-semibold text-on-surface">${escapeHtml(item.sku || item.product_sku || item.product_code || item.product_name || '-')}</p>
                 <p class="text-xs text-on-surface-variant mt-1">${escapeHtml(item.product_name || item.name || '-')}</p>
-                <p class="text-xs text-on-surface-variant mt-1">Batch: ${escapeHtml(item.batch_code || '-')} | Supplier: ${escapeHtml(item.supplier_name || '-')}</p>
+                <p class="text-xs text-on-surface-variant mt-1">INV: ${escapeHtml(item.batch_code || '-')} | Supplier: ${escapeHtml(item.supplier_name || '-')}</p>
                 <p class="text-xs text-on-surface-variant mt-1">Harga jual: ${escapeHtml(item.selling_price || 'Rp 0')}</p>
               </div>
               <span class="inline-flex items-center rounded-full bg-on-tertiary-fixed px-3 py-1 text-label-sm text-on-tertiary-fixed-variant">${Number(item.stock || 0)} Unit</span>
@@ -1117,7 +1122,7 @@
         form.querySelector('[name="weight"]').value = product.weight || '';
         setWeightUnitFields(form, product.weight_unit || 'kg');
         form.querySelector('[name="slug"]').value = product.slug || '';
-        form.querySelector('[name="category"]').value = 'Alat Berat';
+        form.querySelector('[name="category"]').value = product.category || '';
         form.querySelector('[name="brand"]').value = product.brand || '';
         form.querySelector('[name="supplier_id"]').value = product.supplier_id || '';
         form.querySelector('[name="supplier_name"]').value = product.supplier_name || '';

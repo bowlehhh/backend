@@ -1,7 +1,7 @@
 <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
   <div>
-    <label class="mb-1 block text-[12px] font-medium text-on-surface">Kode Batch</label>
-    <input type="text" name="batch_code" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none" placeholder="{{ $batchCodePlaceholder }}">
+    <label class="mb-1 block text-[12px] font-medium text-on-surface">Kode INV</label>
+    <input type="text" name="batch_code" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none" placeholder="{{ preg_replace('/^BATCH-/i', 'INV-', (string) $batchCodePlaceholder) }}">
     <p class="mt-1 text-xs text-error" data-error-for="batch_code"></p>
   </div>
   <div>

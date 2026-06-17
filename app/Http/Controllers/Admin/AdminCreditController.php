@@ -75,7 +75,7 @@ class AdminCreditController extends Controller
 
         [$totalCredit, $downPayment, $installmentPaid, $paid, $remaining] = $this->creditSummary($batch);
         if ($remaining <= 0) {
-            return back()->withErrors(['credit' => 'Kredit batch ini sudah lunas.']);
+            return back()->withErrors(['credit' => 'Kredit INV ini sudah lunas.']);
         }
         if ($amount > $remaining) {
             return back()->withErrors(['credit' => 'Nominal cicilan melebihi sisa kredit.']);
@@ -127,7 +127,7 @@ class AdminCreditController extends Controller
 
         [, , , , $remaining] = $this->creditSummary($batch);
         if ($remaining <= 0) {
-            return back()->withErrors(['credit' => 'Kredit batch ini sudah lunas.']);
+            return back()->withErrors(['credit' => 'Kredit INV ini sudah lunas.']);
         }
 
         $dueDate = $batch->credit_due_date ? Carbon::parse($batch->credit_due_date)->startOfDay() : null;

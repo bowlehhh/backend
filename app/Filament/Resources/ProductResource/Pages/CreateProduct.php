@@ -38,7 +38,7 @@ class CreateProduct extends CreateRecord
         ProductBatch::create([
             'product_id' => $product->id,
             'supplier_id' => $supplier->id,
-            'batch_code' => sprintf('BATCH-%s-%04d', now()->format('YmdHis'), $product->id),
+            'batch_code' => sprintf('INV-%s-%04d', now()->format('YmdHis'), $product->id),
             'purchase_price' => 0,
             'selling_price' => 0,
             'stock' => (int) ($data['stock'] ?? 0),

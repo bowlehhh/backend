@@ -43,6 +43,9 @@
             <a href="{{ route('admin.admin-besar.history.supplier') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-slate-600 hover:bg-slate-100">
                 <span class="material-symbols-outlined">account_tree</span><span class="font-semibold">PT/CV</span>
             </a>
+            <a href="{{ url('/admin/admin-module?type=users') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-slate-600 hover:bg-slate-100">
+                <span class="material-symbols-outlined">group</span><span class="font-semibold">Manajemen Akun</span>
+            </a>
         </nav>
         <div class="border-t border-slate-200 p-4">
             <form method="POST" action="{{ route('logout') }}">
@@ -295,7 +298,7 @@
             </div>
             </section>
 
-            <section class="grid gap-6 xl:grid-cols-[1.65fr_1fr]">
+            <section class="space-y-6">
             <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
                     <div>
@@ -356,13 +359,13 @@
                 </div>
             </div>
 
-            <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div class="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <div class="border-b border-slate-200 px-5 py-4">
                     <h2 class="text-lg font-bold text-slate-900">Log Aktivitas Admin Toko/Gudang</h2>
                     <p class="text-sm text-slate-500">Apa saja yang dilakukan role admin: stok masuk, stok keluar, edit transaksi, dan hapus transaksi.</p>
                 </div>
 
-                <div class="max-h-[900px] overflow-y-auto scrollbar p-4">
+                <div class="max-h-[540px] overflow-y-auto scrollbar p-4">
                     <div class="space-y-3">
                         @forelse($activityFeed as $item)
                             <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">

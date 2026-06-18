@@ -166,10 +166,6 @@ class AdminBesarDashboardController extends Controller
                     ->when(Schema::hasColumn('sales', 'deleted_at'), fn ($query) => $query->whereNull('sales.deleted_at'))
                     ->whereNotNull('sales.customer_name')
                     ->whereRaw("TRIM(sales.customer_name) <> ''")
-                    ->where(function ($query): void {
-                        $query->whereRaw("UPPER(TRIM(sales.customer_name)) LIKE 'PT %'")
-                            ->orWhereRaw("UPPER(TRIM(sales.customer_name)) LIKE 'CV %'");
-                    })
                     ->selectRaw('
                         sales.id as sale_id,
                         sales.invoice_number,
@@ -309,6 +305,16 @@ class AdminBesarDashboardController extends Controller
                             'created_at' => $createdAt?->format('d M Y H:i') ?? '-',
                             'created_ts' => $createdAt?->timestamp ?? 0,
                             'url' => null,
+                            'details' => [
+                                ['label' => 'Barang', 'value' => $history->product?->name ?: '-'],
+                                ['label' => 'Referensi', 'value' => $history->productBatch?->display_inventory_code ?: ($history->reference ?: '-')],
+                                ['label' => 'Tipe', 'value' => $typeLabel],
+                                ['label' => 'Qty', 'value' => number_format((int) $history->qty, 0, ',', '.')],
+                                ['label' => 'Stok Sebelum', 'value' => number_format((int) $history->stock_before, 0, ',', '.')],
+                                ['label' => 'Stok Sesudah', 'value' => number_format((int) $history->stock_after, 0, ',', '.')],
+                                ['label' => 'Catatan Sistem', 'value' => trim((string) ($history->description ?? '')) !== '' ? $history->description : '-'],
+                            ],
+                            'line_items' => [],
                         ];
                     })
             );
@@ -336,6 +342,8 @@ class AdminBesarDashboardController extends Controller
                             'created_at' => $createdAt?->format('d M Y H:i') ?? '-',
                             'created_ts' => $createdAt?->timestamp ?? 0,
                             'url' => null,
+                            'details' => $this->buildAdminActivityDetails($log),
+                            'line_items' => $this->buildAdminActivityItems($log),
                         ];
                     })
             );
@@ -365,6 +373,8 @@ class AdminBesarDashboardController extends Controller
                             'created_at' => $createdAt?->format('d M Y H:i') ?? '-',
                             'created_ts' => $createdAt?->timestamp ?? 0,
                             'url' => $log->sale_id ? route('admin.admin-besar.receipt', ['sale' => $log->sale_id]) : null,
+                            'details' => $this->buildSaleEditDetails($log),
+                            'line_items' => $this->buildSaleSnapshotItems((array) ($log->new_data['items'] ?? [])),
                         ];
                     })
             );
@@ -392,6 +402,8 @@ class AdminBesarDashboardController extends Controller
                             'created_at' => $createdAt?->format('d M Y H:i') ?? '-',
                             'created_ts' => $createdAt?->timestamp ?? 0,
                             'url' => $log->sale_id ? route('admin.admin-besar.receipt', ['sale' => $log->sale_id]) : null,
+                            'details' => $this->buildSaleDeleteDetails($log),
+                            'line_items' => $this->buildSaleSnapshotItems((array) ($log->snapshot['items'] ?? [])),
                         ];
                     })
             );
@@ -465,5 +477,130 @@ class AdminBesarDashboardController extends Controller
         }
 
         return $parts !== [] ? implode(' | ', $parts) : '-';
+    }
+
+    private function buildAdminActivityDetails(AdminActivityLog $log): array
+    {
+        $meta = (array) ($log->meta ?? []);
+        $details = [
+            ['label' => 'Aksi', 'value' => $log->title ?: '-'],
+            ['label' => 'Barang', 'value' => (string) ($meta['product_name'] ?? $meta['name'] ?? '-')],
+            ['label' => 'INV', 'value' => (string) ($meta['batch_code'] ?? '-')],
+            ['label' => 'Supplier', 'value' => (string) ($meta['supplier_name'] ?? '-')],
+        ];
+
+        if (array_key_exists('stock_before', $meta) || array_key_exists('stock_after', $meta)) {
+            $details[] = ['label' => 'Stok', 'value' => number_format((int) ($meta['stock_before'] ?? 0), 0, ',', '.') . ' -> ' . number_format((int) ($meta['stock_after'] ?? 0), 0, ',', '.')];
+        } elseif (array_key_exists('stock', $meta)) {
+            $details[] = ['label' => 'Stok Awal', 'value' => number_format((int) ($meta['stock'] ?? 0), 0, ',', '.')];
+        }
+
+        if (array_key_exists('purchase_price', $meta)) {
+            $details[] = ['label' => 'Harga Beli', 'value' => 'Rp ' . number_format((float) ($meta['purchase_price'] ?? 0), 0, ',', '.')];
+        }
+
+        if (array_key_exists('selling_price', $meta)) {
+            $details[] = ['label' => 'Harga Jual', 'value' => 'Rp ' . number_format((float) ($meta['selling_price'] ?? 0), 0, ',', '.')];
+        }
+
+        $details[] = ['label' => 'Catatan', 'value' => trim((string) ($log->description ?? '')) !== '' ? $log->description : '-'];
+
+        return $details;
+    }
+
+    private function buildAdminActivityItems(AdminActivityLog $log): array
+    {
+        $meta = (array) ($log->meta ?? []);
+        $productName = trim((string) ($meta['product_name'] ?? $meta['name'] ?? ''));
+
+        if ($productName === '') {
+            return [];
+        }
+
+        $inventory = trim((string) ($meta['batch_code'] ?? ''));
+        $supplier = trim((string) ($meta['supplier_name'] ?? ''));
+
+        return [[
+            'title' => $productName,
+            'meta' => collect([
+                $inventory !== '' ? 'INV ' . $inventory : null,
+                $supplier !== '' ? 'Supplier ' . $supplier : null,
+            ])->filter()->implode(' | '),
+        ]];
+    }
+
+    private function buildSaleEditDetails(SaleEditLog $log): array
+    {
+        $details = [
+            ['label' => 'Invoice', 'value' => $log->invoice_number ?: ('Sale #' . $log->sale_id)],
+            ['label' => 'Perubahan', 'value' => is_array($log->changed_fields) && $log->changed_fields !== [] ? implode(', ', array_map(fn ($field) => $this->humanizeFieldName((string) $field), $log->changed_fields)) : '-'],
+            ['label' => 'Catatan Edit', 'value' => trim((string) ($log->edit_note ?? '')) !== '' ? $log->edit_note : '-'],
+        ];
+
+        $oldTotal = (float) (($log->old_data['sale']['total'] ?? 0));
+        $newTotal = (float) (($log->new_data['sale']['total'] ?? 0));
+        $details[] = ['label' => 'Total', 'value' => 'Rp ' . number_format($oldTotal, 0, ',', '.') . ' -> Rp ' . number_format($newTotal, 0, ',', '.')];
+
+        return $details;
+    }
+
+    private function buildSaleDeleteDetails(SaleDeleteLog $log): array
+    {
+        return [
+            ['label' => 'Invoice', 'value' => $log->invoice_number ?: ('Sale #' . $log->sale_id)],
+            ['label' => 'Metode', 'value' => $this->labelPaymentMethod((string) $log->payment_method)],
+            ['label' => 'Total', 'value' => 'Rp ' . number_format((float) $log->total, 0, ',', '.')],
+            ['label' => 'Jumlah Item', 'value' => number_format((int) $log->items_count, 0, ',', '.')],
+            ['label' => 'Catatan Hapus', 'value' => trim((string) ($log->delete_note ?? '')) !== '' ? $log->delete_note : '-'],
+        ];
+    }
+
+    private function buildSaleSnapshotItems(array $items): array
+    {
+        return collect($items)
+            ->map(function ($item): ?array {
+                $productName = trim((string) ($item['product_name'] ?? ''));
+                if ($productName === '') {
+                    return null;
+                }
+
+                $qty = (int) ($item['qty'] ?? 0);
+                $price = (float) ($item['price'] ?? 0);
+                $subtotal = (float) ($item['subtotal'] ?? ($qty * $price));
+                $partNumber = trim((string) ($item['part_number'] ?? ''));
+
+                return [
+                    'title' => $productName,
+                    'meta' => collect([
+                        $partNumber !== '' ? 'Part No ' . $partNumber : null,
+                        'Qty ' . number_format($qty, 0, ',', '.'),
+                        'Harga Rp ' . number_format($price, 0, ',', '.'),
+                        'Subtotal Rp ' . number_format($subtotal, 0, ',', '.'),
+                    ])->filter()->implode(' | '),
+                ];
+            })
+            ->filter()
+            ->values()
+            ->all();
+    }
+
+    private function humanizeFieldName(string $field): string
+    {
+        return match ($field) {
+            'customer_name' => 'Nama Pembeli',
+            'customer_phone' => 'No. Telepon Pembeli',
+            'po_number' => 'P.O. No',
+            'site_name' => 'Site',
+            'cashier_service_name' => 'Nama Admin',
+            'cashier_phone' => 'No. Telepon Admin',
+            'payment_method' => 'Metode Pembayaran',
+            'paid_amount' => 'Jumlah Bayar',
+            'change_amount' => 'Kembalian',
+            'credit_amount' => 'Sisa Kredit',
+            'credit_days' => 'Tempo Kredit',
+            'credit_due_date' => 'Jatuh Tempo',
+            'total' => 'Total',
+            default => ucwords(str_replace('_', ' ', $field)),
+        };
     }
 }

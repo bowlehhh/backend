@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\AdminBesarDashboardController;
 use App\Http\Controllers\Admin\AdminBesarTransactionController;
 use App\Http\Controllers\Admin\AdminCreditController;
 use App\Http\Controllers\Admin\AdminSalesController;
+use App\Http\Controllers\Admin\AdminSupplierInvoiceRecapController;
 use App\Http\Controllers\Admin\ProductGroupCsvExportController;
 use App\Http\Controllers\Admin\ProductGroupXlsxExportController;
 use App\Http\Controllers\Admin\AdminCreditXlsxExportController;
@@ -60,6 +61,7 @@ Route::middleware(['auth', 'role:admin,admin_besar'])->prefix('admin')->group(fu
     Route::post('/credits/{batch}/settle', [AdminCreditController::class, 'settle'])->name('admin.credits.settle');
     Route::get('/credits/{batch}/receipt', [AdminCreditController::class, 'receipt'])->name('admin.credits.receipt');
     Route::get('/credits/{batch}/installments/{installment}/receipt', [AdminCreditController::class, 'installmentReceipt'])->name('admin.credits.installment.receipt');
+    Route::get('/suppliers/{supplier}/invoice-recap', [AdminSupplierInvoiceRecapController::class, 'show'])->name('admin.suppliers.invoice-recap');
 });
 
 Route::middleware(['auth', 'role:admin,admin_besar'])
@@ -80,6 +82,7 @@ Route::middleware(['auth', 'role:admin,admin_besar'])
         Route::get('/history/{sale}/edit', [CashierTransactionController::class, 'editHistory'])->name('admin.transactions.history.edit');
         Route::put('/history/{sale}/edit', [CashierTransactionController::class, 'updateHistory'])->name('admin.transactions.history.update');
         Route::delete('/history/{sale}/delete', [CashierTransactionController::class, 'destroyHistory'])->name('admin.transactions.history.destroy');
+        Route::get('/returns/replacement-options', [CashierTransactionController::class, 'replacementOptions'])->name('admin.transactions.return.options');
         Route::get('/history/{sale}/return', [CashierTransactionController::class, 'returnForm'])->name('admin.transactions.return.form');
         Route::post('/history/{sale}/return', [CashierTransactionController::class, 'storeReturn'])->name('admin.transactions.return.store');
         Route::get('/returns/{salesReturn}/receipt', [CashierTransactionController::class, 'returnReceipt'])->name('admin.transactions.return.receipt');
@@ -124,6 +127,7 @@ Route::middleware(['auth', 'role:admin,admin_besar'])
         Route::get('/history/{sale}/edit', [CashierTransactionController::class, 'editHistory'])->name('cashier.history.edit');
         Route::put('/history/{sale}/edit', [CashierTransactionController::class, 'updateHistory'])->name('cashier.history.update');
         Route::delete('/history/{sale}/delete', [CashierTransactionController::class, 'destroyHistory'])->name('cashier.history.destroy');
+        Route::get('/returns/replacement-options', [CashierTransactionController::class, 'replacementOptions'])->name('cashier.return.options');
         Route::get('/history/{sale}/return', [CashierTransactionController::class, 'returnForm'])->name('cashier.return.form');
         Route::post('/history/{sale}/return', [CashierTransactionController::class, 'storeReturn'])->name('cashier.return.store');
         Route::get('/returns/{salesReturn}/receipt', [CashierTransactionController::class, 'returnReceipt'])->name('cashier.return.receipt');

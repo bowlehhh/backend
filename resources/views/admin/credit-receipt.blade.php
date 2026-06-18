@@ -2,6 +2,7 @@
     $storeName = config('app.name', 'Surya Duta Multindo');
     $supplierName = $batch->supplier?->name ?? '-';
     $supplierInvoiceNumber = $batch->supplier_invoice_number ?: '-';
+    $purchaseDate = $batch->purchase_date ?: $batch->created_at;
     $partNumber = strtoupper((string) ($batch->product?->barcode ?? '-'));
     $partName = strtoupper((string) ($batch->product?->name ?? '-'));
     $unit = strtoupper((string) ($batch->product?->unit ?? '-'));
@@ -159,6 +160,7 @@
                 <p class="sub">{{ $isCredit ? 'NOTA KREDIT SUPPLIER' : 'NOTA PEMBELIAN LUNAS' }}</p>
                 <p class="sub">Supplier: <strong>{{ $supplierName }}</strong></p>
                 <p class="sub">No. Inv Supplier: <strong>{{ $supplierInvoiceNumber }}</strong></p>
+                <p class="sub">Tanggal Beli: <strong>{{ $formatNotaDate($purchaseDate, false) }}</strong></p>
             </div>
             <div class="meta">
                 <div>Tanggal Cetak: {{ $formatNotaDate($printedAt) }}</div>

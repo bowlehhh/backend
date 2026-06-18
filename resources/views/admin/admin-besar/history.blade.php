@@ -26,6 +26,9 @@
             <a href="{{ route('admin.admin-besar.history.supplier') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-slate-100">
                 <span class="material-symbols-outlined">account_tree</span><span class="font-semibold">PT/CV</span>
             </a>
+            <a href="{{ route('admin.transaksi.dashboard') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-slate-100">
+                <span class="material-symbols-outlined">point_of_sale</span><span class="font-semibold">Akses Dashboard Admin Gudang</span>
+            </a>
             <a href="{{ url('/admin/admin-module?type=users') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-slate-100">
                 <span class="material-symbols-outlined">group</span><span class="font-semibold">Manajemen Akun</span>
             </a>

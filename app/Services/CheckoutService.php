@@ -156,6 +156,9 @@ class CheckoutService
                     ->groupBy(fn (array $entry): string => $entry[0])
                     ->map(fn ($entries) => $entries->pluck(1)->unique('id')->values());
                 $batchesById = $batchesByPart->flatten()->keyBy('id');
+                $remainingStockByBatch = $batchesById
+                    ->mapWithKeys(fn (ProductBatch $batch): array => [(int) $batch->id => (int) $batch->stock])
+                    ->all();
 
                 $saleItems = [];
                 $total = 0.0;
@@ -176,13 +179,13 @@ class CheckoutService
 
                     if (! $product) {
                         throw ValidationException::withMessages([
-                            'items' => ['One or more selected products are unavailable.'],
+                            'items' => ['Ada barang di keranjang yang sudah tidak tersedia.'],
                         ]);
                     }
 
                     if ($qty < 1) {
                         throw ValidationException::withMessages([
-                            'items' => ['Quantity must be at least 1.'],
+                            'items' => ['Qty barang minimal 1.'],
                         ]);
                     }
 
@@ -192,18 +195,16 @@ class CheckoutService
 
                         $useRequestedAllocations = $allocatedBatches->count() === count($batchIds);
                         $availableStock = $useRequestedAllocations
-                            ? (int) array_sum($allocations)
-                            : (int) $batches->sum('stock');
+                            ? (int) collect($allocations)->sum(fn ($allocationQty, $batchId): int => min(
+                                max(0, (int) $allocationQty),
+                                max(0, (int) ($remainingStockByBatch[(int) $batchId] ?? 0)),
+                            ))
+                            : (int) $batches->sum(fn (ProductBatch $batch): int => max(0, (int) ($remainingStockByBatch[(int) $batch->id] ?? 0)));
 
-                        if ($availableStock < $qty) {
-                            throw ValidationException::withMessages([
-                                'items' => ["Stock for {$product->name} is not sufficient."],
-                            ]);
-                        }
                     } elseif (! $primaryBatch || (int) $primaryBatch->product_id !== (int) $product->id) {
                         if (! $fallbackBatch) {
                             throw ValidationException::withMessages([
-                                'items' => ["Batch for {$product->name} is not available."],
+                                'items' => ['Batch barang tidak tersedia.'],
                             ]);
                         }
 
@@ -211,20 +212,19 @@ class CheckoutService
                     }
 
                     $availableStock = $mergeStock
-                        ? (int) ($useRequestedAllocations ? array_sum($allocations) : $batches->sum('stock'))
-                        : (int) $primaryBatch->stock;
-                    if ($availableStock < $qty) {
-                        throw ValidationException::withMessages([
-                            'items' => ["Stock for {$product->name} is not sufficient."],
-                        ]);
-                    }
-
+                        ? (int) ($useRequestedAllocations
+                            ? collect($allocations)->sum(fn ($allocationQty, $batchId): int => min(
+                                max(0, (int) $allocationQty),
+                                max(0, (int) ($remainingStockByBatch[(int) $batchId] ?? 0)),
+                            ))
+                            : $batches->sum(fn (ProductBatch $batch): int => max(0, (int) ($remainingStockByBatch[(int) $batch->id] ?? 0))))
+                        : max(0, (int) ($remainingStockByBatch[(int) $primaryBatch->id] ?? 0));
                     $unitPrice = array_key_exists('price', $item)
                         ? (float) $item['price']
                         : (float) ($batches->first()?->selling_price ?? 0);
                     if ($unitPrice < 0) {
                         throw ValidationException::withMessages([
-                            'items' => ['Item price must not be negative.'],
+                            'items' => ['Harga barang tidak valid.'],
                         ]);
                     }
 
@@ -233,9 +233,10 @@ class CheckoutService
                     $total += $subtotal;
 
                     if (! $mergeStock) {
+                        $batchId = (int) $primaryBatch->id;
                         $saleItems[] = [
                             'product_id' => $product->id,
-                            'product_batch_id' => $primaryBatch->id,
+                            'product_batch_id' => $batchId,
                             'product_name' => $product->name,
                             'part_number' => $partNumber,
                             'merge_stock' => false,
@@ -243,6 +244,7 @@ class CheckoutService
                             'qty' => $remainingQty,
                             'subtotal' => $subtotal,
                         ];
+                        $remainingStockByBatch[$batchId] = (int) ($remainingStockByBatch[$batchId] ?? 0) - $remainingQty;
                         $remainingQty = 0;
                     } else {
                         if ($allocations !== [] && $useRequestedAllocations) {
@@ -258,34 +260,14 @@ class CheckoutService
 
                                 $batch = $batchesById->get((int) $batchId);
                                 if (! $batch || (int) $batch->product_id !== (int) $product->id) {
-                                    $batch = $batches->first(fn (ProductBatch $candidate): bool => (int) $candidate->stock > 0);
+                                    $batch = $batches->first(fn (ProductBatch $candidate): bool => max(0, (int) ($remainingStockByBatch[(int) $candidate->id] ?? 0)) > 0);
                                 }
                                 if (! $batch) {
                                     continue;
                                 }
 
-                                $remainingQty -= $takeQty;
-                                $batchPrice = (float) $batch->selling_price;
-                                $batchSubtotal = $batchPrice * $takeQty;
-
-                                $saleItems[] = [
-                                    'product_id' => $product->id,
-                                    'product_batch_id' => $batch->id,
-                                    'product_name' => $product->name,
-                                    'part_number' => $partNumber,
-                                    'merge_stock' => true,
-                                    'price' => $batchPrice,
-                                    'qty' => $takeQty,
-                                    'subtotal' => $batchSubtotal,
-                                ];
-                            }
-                        } else {
-                            foreach ($batches as $batch) {
-                                if ($remainingQty <= 0) {
-                                    break;
-                                }
-
-                                $takeQty = min($remainingQty, (int) $batch->stock);
+                                $availableInBatch = max(0, (int) ($remainingStockByBatch[(int) $batch->id] ?? 0));
+                                $takeQty = min($remainingQty, $takeQty, $availableInBatch);
                                 if ($takeQty <= 0) {
                                     continue;
                                 }
@@ -304,14 +286,64 @@ class CheckoutService
                                     'qty' => $takeQty,
                                     'subtotal' => $batchSubtotal,
                                 ];
+                                $remainingStockByBatch[(int) $batch->id] = $availableInBatch - $takeQty;
+                            }
+                        } else {
+                            foreach ($batches as $batch) {
+                                if ($remainingQty <= 0) {
+                                    break;
+                                }
+
+                                $availableInBatch = max(0, (int) ($remainingStockByBatch[(int) $batch->id] ?? 0));
+                                $takeQty = min($remainingQty, $availableInBatch);
+                                if ($takeQty <= 0) {
+                                    continue;
+                                }
+
+                                $remainingQty -= $takeQty;
+                                $batchPrice = (float) $batch->selling_price;
+                                $batchSubtotal = $batchPrice * $takeQty;
+
+                                $saleItems[] = [
+                                    'product_id' => $product->id,
+                                    'product_batch_id' => $batch->id,
+                                    'product_name' => $product->name,
+                                    'part_number' => $partNumber,
+                                    'merge_stock' => true,
+                                    'price' => $batchPrice,
+                                    'qty' => $takeQty,
+                                    'subtotal' => $batchSubtotal,
+                                ];
+                                $remainingStockByBatch[(int) $batch->id] = $availableInBatch - $takeQty;
                             }
                         }
-                    }
 
-                    if ($remainingQty > 0) {
-                        throw ValidationException::withMessages([
-                            'items' => ["Stock for {$product->name} is not sufficient."],
-                        ]);
+                        if ($remainingQty > 0) {
+                            $overflowBatch = $primaryBatch ?? $fallbackBatch ?? $batches->first();
+
+                            if (! $overflowBatch) {
+                                throw ValidationException::withMessages([
+                                    'items' => ['Batch barang tidak tersedia.'],
+                                ]);
+                            }
+
+                            $overflowPrice = (float) $overflowBatch->selling_price;
+                            $overflowSubtotal = $overflowPrice * $remainingQty;
+
+                            $saleItems[] = [
+                                'product_id' => $product->id,
+                                'product_batch_id' => $overflowBatch->id,
+                                'product_name' => $product->name,
+                                'part_number' => $partNumber,
+                                'merge_stock' => true,
+                                'price' => $overflowPrice,
+                                'qty' => $remainingQty,
+                                'subtotal' => $overflowSubtotal,
+                            ];
+
+                            $remainingStockByBatch[(int) $overflowBatch->id] = (int) ($remainingStockByBatch[(int) $overflowBatch->id] ?? 0) - $remainingQty;
+                            $remainingQty = 0;
+                        }
                     }
                 }
 
@@ -324,14 +356,14 @@ class CheckoutService
 
                 if (! in_array($paymentMethod, ['cash', 'transfer', 'qris', 'debit', 'credit'], true)) {
                     throw ValidationException::withMessages([
-                        'payment_method' => ['Payment method is invalid.'],
+                        'payment_method' => ['Metode pembayaran tidak valid.'],
                     ]);
                 }
 
                 if ($paymentMethod === 'cash') {
                     if ($paidAmount < $total) {
                         throw ValidationException::withMessages([
-                            'paid_amount' => ['Paid amount must be equal to or greater than the total.'],
+                            'paid_amount' => ['Jumlah bayar harus sama atau lebih besar dari total.'],
                         ]);
                     }
 
@@ -378,6 +410,8 @@ class CheckoutService
                     'invoice_number' => $this->generateInvoiceNumber($datePart),
                     'customer_name' => $payload['customer_name'] ?? null,
                     'customer_phone' => $payload['customer_phone'] ?? null,
+                    'po_number' => $payload['po_number'] ?? null,
+                    'site_name' => $payload['site_name'] ?? null,
                     'cashier_service_name' => $payload['cashier_service_name'] ?? null,
                     'cashier_phone' => $payload['cashier_phone'] ?? null,
                     'total' => $total,

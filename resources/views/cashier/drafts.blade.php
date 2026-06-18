@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Draft Transaksi - Surya Duta Multindo</title>
+    <title>Draft Penjualan - Surya Duta Multindo</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
@@ -14,12 +14,12 @@
     <aside class="hidden lg:flex fixed inset-y-0 left-0 z-30 w-[260px] flex-col border-r border-slate-300 bg-white">
         <div class="px-5 py-5 border-b border-slate-200">
             <h1 class="text-3xl font-extrabold text-emerald-700">Surya Duta Multindo</h1>
-            <p class="text-xs text-slate-500">Admin Transaksi - Station 01</p>
+            <p class="text-xs text-slate-500">Admin Penjualan - Station 01</p>
         </div>
         <nav class="flex-1 p-4 space-y-2">
             <a href="{{ route('cashier.dashboard') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-slate-100">
                 <span class="material-symbols-outlined">point_of_sale</span>
-                <span class="font-semibold">Transaksi</span>
+                <span class="font-semibold">Penjualan</span>
             </a>
             <a href="{{ route('cashier.history') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-slate-100">
                 <span class="material-symbols-outlined">history</span>
@@ -65,10 +65,10 @@
     <main class="lg:ml-[260px] h-full overflow-y-auto p-4 lg:p-6">
         <div class="mb-4 flex items-center justify-between">
             <div>
-                <h2 class="text-2xl font-extrabold">Draft Transaksi</h2>
+                <h2 class="text-2xl font-extrabold">Draft Penjualan</h2>
                 <p class="text-sm text-slate-500">{{ $user?->name }} - Admin</p>
             </div>
-            <a href="{{ route('cashier.dashboard') }}" class="rounded-xl border border-emerald-700 px-4 py-2 text-sm font-semibold text-emerald-700">Kembali ke Transaksi</a>
+            <a href="{{ route('cashier.dashboard') }}" class="rounded-xl border border-emerald-700 px-4 py-2 text-sm font-semibold text-emerald-700">Kembali ke Penjualan</a>
         </div>
 
         @if(session('success'))
@@ -92,7 +92,7 @@
                 <tbody>
                 @forelse($drafts as $draft)
                     <tr class="border-t border-slate-100">
-                        <td class="px-4 py-3 font-semibold">{{ $draft->title ?: 'Draft Transaksi' }}</td>
+                        <td class="px-4 py-3 font-semibold">{{ $draft->title ?: 'Draft Penjualan' }}</td>
                         <td class="px-4 py-3">{{ $draft->created_at?->format('d M Y H:i') }}</td>
                         <td class="px-4 py-3">{{ number_format((int) $draft->items_count) }}</td>
                         <td class="px-4 py-3 text-right font-bold">Rp {{ number_format((float) $draft->total, 0, ',', '.') }}</td>

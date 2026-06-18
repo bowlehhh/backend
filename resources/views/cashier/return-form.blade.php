@@ -214,6 +214,9 @@
 </main>
 <script>
     const replacementOptions = @json($replacementOptions);
+    const replacementSearchUrl = @json($replacementSearchUrl);
+    const replacementSearchCache = new Map();
+    const replacementSearchTimers = new Map();
     const returnReasonSelect = document.getElementById('return_reason');
     const returnSummaryBox = document.getElementById('return-summary');
     const returnSummaryItems = document.getElementById('return-summary-items');
@@ -230,6 +233,7 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+    const getReplacementSearchKey = (query = '') => query.trim().toUpperCase();
 
     const getReplacementPanel = (index) => document.querySelector(`.js-replacement-panel[data-index="${index}"]`);
     const getReplacementLinesContainer = (index) => getReplacementPanel(index)?.querySelector('.js-replacement-lines');
@@ -397,7 +401,41 @@
         return normalized;
     };
 
-    const renderReplacementResults = (index, lineId, query = '') => {
+    const fetchReplacementOptions = async (query = '') => {
+        const cacheKey = getReplacementSearchKey(query);
+        if (!replacementSearchCache.has('')) {
+            replacementSearchCache.set('', replacementOptions);
+        }
+
+        if (replacementSearchCache.has(cacheKey)) {
+            return replacementSearchCache.get(cacheKey);
+        }
+
+        const url = new URL(replacementSearchUrl, window.location.origin);
+        const trimmedQuery = query.trim();
+        if (trimmedQuery) {
+            url.searchParams.set('q', trimmedQuery);
+        }
+
+        const response = await fetch(url.toString(), {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error('Gagal mengambil daftar barang pengganti.');
+        }
+
+        const payload = await response.json();
+        const items = Array.isArray(payload.data) ? payload.data : [];
+        replacementSearchCache.set(cacheKey, items);
+
+        return items;
+    };
+
+    const renderReplacementResults = async (index, lineId, query = '') => {
         const row = getReplacementLine(index, lineId);
         const resultsBox = row?.querySelector('.js-replacement-line-results');
         const searchInput = row?.querySelector('.js-replacement-line-search');
@@ -405,35 +443,47 @@
             return;
         }
 
-        const normalized = query.trim().toUpperCase();
-        const filtered = replacementOptions
-            .filter((option) => !normalized || option.search_text.includes(normalized))
-            .slice(0, 12);
+        const requestKey = String(Date.now() + Math.random());
+        row.dataset.searchRequestKey = requestKey;
+        resultsBox.innerHTML = '<div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3 py-4 text-sm text-slate-500">Memuat daftar barang pengganti...</div>';
 
-        resultsBox.innerHTML = filtered.length
-            ? filtered.map((option) => `
-                <button type="button"
-                    class="js-replacement-pick flex w-full flex-col rounded-xl border border-slate-200 bg-white px-3 py-2 text-left hover:border-amber-400 hover:bg-amber-50"
-                    data-index="${index}"
-                    data-line-id="${lineId}"
-                    data-product-id="${option.product_id}"
-                    data-batch-id="${option.batch_id}"
-                    data-label="${escapeHtml(option.label)}"
-                    data-price="${option.price}"
-                    data-stock="${option.stock}">
-                    <div class="flex items-start justify-between gap-3">
-                        <div class="min-w-0">
-                            <p class="font-semibold text-slate-900">${option.part_number}</p>
-                            <p class="text-xs text-slate-500">${option.part_name}</p>
+        try {
+            const filtered = await fetchReplacementOptions(query);
+            if (!document.body.contains(row) || row.dataset.searchRequestKey !== requestKey) {
+                return;
+            }
+
+            resultsBox.innerHTML = filtered.length
+                ? filtered.map((option) => `
+                    <button type="button"
+                        class="js-replacement-pick flex w-full flex-col rounded-xl border border-slate-200 bg-white px-3 py-2 text-left hover:border-amber-400 hover:bg-amber-50"
+                        data-index="${index}"
+                        data-line-id="${lineId}"
+                        data-product-id="${option.product_id}"
+                        data-batch-id="${option.batch_id}"
+                        data-label="${escapeHtml(option.label)}"
+                        data-price="${option.price}"
+                        data-stock="${option.stock}">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <p class="font-semibold text-slate-900">${option.part_number}</p>
+                                <p class="text-xs text-slate-500">${option.part_name}</p>
+                            </div>
+                            <div class="flex flex-col items-end gap-1">
+                                <span class="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">Stok ${option.stock}</span>
+                                <span class="text-xs font-semibold text-emerald-700">Rp ${new Intl.NumberFormat('id-ID').format(option.price)}</span>
+                            </div>
                         </div>
-                        <div class="flex flex-col items-end gap-1">
-                            <span class="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">Stok ${option.stock}</span>
-                            <span class="text-xs font-semibold text-emerald-700">Rp ${new Intl.NumberFormat('id-ID').format(option.price)}</span>
-                        </div>
-                    </div>
-                </button>
-            `).join('')
-            : '<div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3 py-4 text-sm text-slate-500">Barang tidak ditemukan.</div>';
+                    </button>
+                `).join('')
+                : '<div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3 py-4 text-sm text-slate-500">Barang tidak ditemukan.</div>';
+        } catch (error) {
+            if (!document.body.contains(row) || row.dataset.searchRequestKey !== requestKey) {
+                return;
+            }
+
+            resultsBox.innerHTML = '<div class="rounded-xl border border-dashed border-rose-300 bg-rose-50 px-3 py-4 text-sm text-rose-600">Daftar barang pengganti gagal dimuat. Coba cari lagi.</div>';
+        }
     };
 
     const syncReplacementPanel = (index) => {
@@ -604,7 +654,17 @@
             const row = searchInput.closest('.js-replacement-line');
             const index = row?.dataset.index;
             const lineId = row?.dataset.lineId;
-            renderReplacementResults(index, lineId, searchInput.value);
+            const timerKey = `${index}:${lineId}`;
+            if (replacementSearchTimers.has(timerKey)) {
+                clearTimeout(replacementSearchTimers.get(timerKey));
+            }
+
+            const timerId = window.setTimeout(() => {
+                renderReplacementResults(index, lineId, searchInput.value);
+                replacementSearchTimers.delete(timerKey);
+            }, 200);
+
+            replacementSearchTimers.set(timerKey, timerId);
             return;
         }
     });

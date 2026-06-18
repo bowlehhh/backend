@@ -29,30 +29,39 @@
         .desc { min-height: 0; line-height: 1.15; }
         .item-table th, .item-table td { overflow-wrap: anywhere; word-break: break-word; }
         .item-table .col-no { width: 6%; }
-        .item-table .col-name { width: 27%; }
+        .item-table .col-name { width: 23%; }
+        .item-table .col-brand { width: 12%; }
         .item-table .col-part { width: 16%; }
-        .item-table .col-qty { width: 8%; }
+        .item-table .col-qty { width: 10%; }
         .item-table .col-unit { width: 8%; }
-        .item-table .col-price { width: 16%; }
-        .item-table .col-total { width: 19%; }
+        .item-table .col-price { width: 12%; }
+        .item-table .col-total { width: 13%; }
         .totals { margin-top: 0; width: 100%; border-collapse: collapse; }
         .totals td { border: 1px solid #111827; padding: 5px 6px; font-size: 11px; }
         .totals .label { text-align: right; font-weight: 700; background: #f9fafb; }
         .totals .grand td { font-size: 16px; font-weight: 800; }
-        .foot-table { width: 100%; border-collapse: collapse; margin-top: 6px; table-layout: fixed; }
-        .foot-table td { vertical-align: top; font-size: 11px; }
-        .foot-table .note-col { width: 58%; padding-right: 10px; line-height: 1.3; }
-        .foot-table .sign-col { width: 42%; text-align: right; }
-        .sign-box { min-height: 116px; }
-        .sign-box .sign-bottom { margin-top: 62px; }
+        .foot-table { width: 100%; border-collapse: collapse; margin-top: 0; table-layout: fixed; }
+        .foot-table td { border: 1px solid #111827; vertical-align: top; font-size: 11px; padding: 6px 8px; }
+        .foot-table .terbilang-label-col { width: 16%; font-weight: 800; text-transform: uppercase; }
+        .foot-table .terbilang-value-col { width: 44%; font-size: 13px; font-weight: 800; text-transform: uppercase; }
+        .foot-table .note-col { width: 40%; line-height: 1.35; }
+        .foot-table .signature-row td { height: 96px; }
+        .foot-table .signature-wrap { display: flex; justify-content: space-between; align-items: stretch; gap: 18px; height: 100%; }
+        .foot-table .signature-party { flex: 1; display: flex; flex-direction: column; justify-content: space-between; min-height: 82px; }
+        .foot-table .signature-party.left { align-items: flex-start; text-align: left; }
+        .foot-table .signature-party.right { align-items: flex-end; text-align: right; }
+        .foot-table .signature-title { font-size: 10px; font-weight: 700; }
+        .foot-table .signature-line { width: 140px; border-bottom: 1px dotted #111827; margin-bottom: 6px; }
+        .foot-table .signature-name { font-size: 10px; font-weight: 700; }
         .actions { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
         .btn { border: 1px solid #0f766e; background: #0f766e; color: #fff; padding: 7px 10px; border-radius: 8px; font-weight: 700; cursor: pointer; text-decoration: none; font-size: 11px; }
         .btn.secondary { background: #fff; color: #0f766e; }
         .receipt-page + .receipt-page { margin-top: 10px; }
-        @page { size: A4 portrait; margin: 6mm; }
+        @page { size: {{ ($useLargePaper ?? false) ? 'legal' : 'A4' }} portrait; margin: 6mm; }
         @media print {
-            @page { size: A4 portrait; margin: 6mm; }
+            @page { size: {{ ($useLargePaper ?? false) ? 'legal' : 'A4' }} portrait; margin: 6mm; }
             body { background: #fff; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .screen-success-banner { display: none !important; }
             .wrap {
                 width: 100%;
                 margin: 0;
@@ -63,7 +72,7 @@
                 transform-origin: initial;
             }
             .actions { display: none !important; }
-            .return-history, .installment-history { display: none !important; }
+            .return-history { display: none !important; }
             .receipt-page { page-break-after: always; }
             .receipt-page:last-of-type { page-break-after: auto; }
             .header-table { margin-bottom: 5px; page-break-inside: avoid; }
@@ -78,25 +87,30 @@
             .item-table th { padding: 5px 5px; font-size: 10px; line-height: 1.2; background: #e5e7eb; font-weight: 700; text-transform: uppercase; }
             .item-table td { padding: 5px 5px; font-size: 10px; line-height: 1.2; vertical-align: top; }
             .item-table .col-no { width: 6%; text-align: center; }
-            .item-table .col-name { width: 27%; }
+            .item-table .col-name { width: 23%; }
+            .item-table .col-brand { width: 12%; }
             .item-table .col-part { width: 16%; }
-            .item-table .col-qty { width: 8%; text-align: center; }
+            .item-table .col-qty { width: 10%; text-align: center; }
             .item-table .col-unit { width: 8%; text-align: center; }
-            .item-table .col-price { width: 16%; text-align: right; }
-            .item-table .col-total { width: 19%; text-align: right; }
+            .item-table .col-price { width: 12%; text-align: right; }
+            .item-table .col-total { width: 13%; text-align: right; }
             .totals { margin-top: 0; margin-bottom: 0; border: 1px solid #111827; outline: 1px solid #111827; outline-offset: -1px; page-break-inside: avoid; }
             .totals tr { page-break-inside: avoid; }
             .totals td { padding: 5px 6px; font-size: 11px; line-height: 1.25; }
             .totals .label { text-align: right; font-weight: 700; background: #f3f4f6; width: 75%; }
             .totals .grand { background: #e5e7eb; }
             .totals .grand td { font-size: 14px; font-weight: 900; padding: 5px 6px; letter-spacing: 0.2px; }
-            .foot-table { margin-top: 4px; border: 1px solid #111827; outline: 1px solid #111827; outline-offset: -1px; page-break-inside: avoid; }
+            .foot-table { margin-top: 0; border: 1px solid #111827; outline: 1px solid #111827; outline-offset: -1px; page-break-inside: avoid; }
             .foot-table td { padding: 5px 6px; font-size: 10px; line-height: 1.25; vertical-align: top; }
-            .foot-table .note-col { width: 56%; padding-right: 3px; }
-            .foot-table .sign-col { width: 44%; text-align: right; }
-            .sign-box { min-height: 96px; padding: 2px; }
-            .sign-box div:first-child { font-size: 10px; font-weight: 700; margin-bottom: 2px; }
-            .sign-box .sign-bottom { margin-top: 40px; font-size: 10px; }
+            .foot-table .terbilang-label-col { width: 16%; font-size: 10px; }
+            .foot-table .terbilang-value-col { width: 44%; font-size: 12px; }
+            .foot-table .note-col { width: 40%; }
+            .foot-table .signature-row td { height: 78px; }
+            .foot-table .signature-wrap { gap: 14px; }
+            .foot-table .signature-party { min-height: 68px; }
+            .foot-table .signature-title,
+            .foot-table .signature-name { font-size: 10px; }
+            .foot-table .signature-line { width: 118px; margin-bottom: 5px; }
             .desc { line-height: 1.1; }
             .desc span { font-size: 9px; }
             * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -105,6 +119,16 @@
 </head>
 <body>
 @php
+    $normalizeBrandName = function (?string $value): string {
+        $brand = trim((string) $value);
+
+        if ($brand === '' || mb_strtolower($brand) === 'tanpa merek') {
+            return '';
+        }
+
+        return $brand;
+    };
+
     $isCredit = strtolower((string) $sale->payment_method) === 'credit';
     $downPayment = (float) ($sale->paid_amount ?? 0);
     $installmentPaid = (float) ($sale->installments?->sum('amount') ?? 0);
@@ -121,6 +145,7 @@
     $creditOutstanding = (float) ($sale->credit_amount ?? 0);
     $creditOutstandingBeforeLastInstallment = $lastInstallment ? ($creditOutstanding + $lastInstallmentApplied) : $creditOutstanding;
     $creditDays = (int) ($sale->credit_days ?? 0);
+    $invoiceTitle = 'INVOICE PENJUALAN';
     $totalReturned = (float) ($sale->returns?->sum('return_total') ?? 0);
     $totalRefundActual = (float) ($sale->returns?->sum('refund_amount') ?? 0);
     $exchangeTotal = (float) ($sale->returns?->sum('exchange_total') ?? 0);
@@ -138,9 +163,22 @@
     ])->values();
     $hasReturnItems = $returnItemsBySaleItem->isNotEmpty();
     $displayItems = collect($sale->items ?? [])
-        ->groupBy(fn ($item) => strtoupper(trim((string) ($item->part_number ?? $item->product?->barcode ?? 'PRODUCT-' . ($item->product_id ?? 0)))))
-        ->map(function ($items) {
+        ->groupBy(function ($item): string {
+            if ((bool) ($item->merge_stock ?? false)) {
+                return (int) ($item->product_id ?? 0) > 0
+                    ? 'MERGED-PRODUCT-' . (int) $item->product_id
+                    : 'MERGED-' . strtoupper(trim((string) ($item->part_number ?? $item->product?->barcode ?? 'PRODUCT-' . ($item->product_id ?? 0))));
+            }
+
+            return 'ITEM-' . (int) ($item->id ?? 0);
+        })
+        ->map(function ($items) use ($normalizeBrandName) {
             $first = $items->first();
+            $brandName = $items
+                ->map(fn ($item): string => $normalizeBrandName($item->productBatch?->product?->brand?->name ?? $item->product?->brand?->name))
+                ->filter()
+                ->unique()
+                ->implode('/');
             $uniquePrices = $items
                 ->pluck('price')
                 ->map(fn ($price) => (float) $price)
@@ -163,7 +201,7 @@
 
             return [
                 'product_name' => (string) ($first->product_name ?: $first->product?->name ?: '-'),
-                'brand_name' => (string) ($first->product?->brand?->name ?: '-'),
+                'brand_name' => $brandName,
                 'part_number' => (string) ($first->part_number ?: $first->product?->barcode ?: '-'),
                 'unit' => (string) ($first->product?->unit ?: '-'),
                 'qty' => (int) $items->sum('qty'),
@@ -174,7 +212,10 @@
             ];
         })
         ->values();
-    $displayItemPages = $displayItems->chunk(35)->values();
+    $displayItemCount = $displayItems->count();
+    $useLargePaper = $displayItemCount > 10;
+    $itemsPerPage = $useLargePaper ? 14 : 10;
+    $displayItemPages = $displayItems->chunk($itemsPerPage)->values();
     if ($displayItemPages->isEmpty()) {
         $displayItemPages = collect([collect([])]);
     }
@@ -182,6 +223,8 @@
     $finalGrandTotal = $isCredit ? $creditOutstanding : (float) $sale->total;
     $remainingAfterEntry = max(0, (float) $sale->total - $downPayment);
     $cashierDisplayName = $sale->cashier_display_name;
+    $poNumberDisplay = trim((string) ($sale->po_number ?? '')) ?: '-';
+    $siteNameDisplay = trim((string) ($sale->site_name ?? '')) ?: '-';
 @endphp
 @php
     $formatNotaDate = function ($value, bool $withTime = true): string {
@@ -197,9 +240,32 @@
             ? $date->locale('id')->translatedFormat('d M Y H:i l')
             : $date->locale('id')->translatedFormat('d M Y l');
     };
+
+    $spellNumber = function (int $value) use (&$spellNumber): string {
+        $value = abs($value);
+        $words = ['', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan', 'sepuluh', 'sebelas'];
+
+        return match (true) {
+            $value < 12 => $words[$value],
+            $value < 20 => $spellNumber($value - 10) . ' belas',
+            $value < 100 => $spellNumber((int) floor($value / 10)) . ' puluh' . (($value % 10) !== 0 ? ' ' . $spellNumber($value % 10) : ''),
+            $value < 200 => 'seratus' . ($value > 100 ? ' ' . $spellNumber($value - 100) : ''),
+            $value < 1000 => $spellNumber((int) floor($value / 100)) . ' ratus' . (($value % 100) !== 0 ? ' ' . $spellNumber($value % 100) : ''),
+            $value < 2000 => 'seribu' . ($value > 1000 ? ' ' . $spellNumber($value - 1000) : ''),
+            $value < 1000000 => $spellNumber((int) floor($value / 1000)) . ' ribu' . (($value % 1000) !== 0 ? ' ' . $spellNumber($value % 1000) : ''),
+            $value < 1000000000 => $spellNumber((int) floor($value / 1000000)) . ' juta' . (($value % 1000000) !== 0 ? ' ' . $spellNumber($value % 1000000) : ''),
+            $value < 1000000000000 => $spellNumber((int) floor($value / 1000000000)) . ' miliar' . (($value % 1000000000) !== 0 ? ' ' . $spellNumber($value % 1000000000) : ''),
+            default => $spellNumber((int) floor($value / 1000000000000)) . ' triliun' . (($value % 1000000000000) !== 0 ? ' ' . $spellNumber($value % 1000000000000) : ''),
+        };
+    };
+
+    $grandTotalInWords = trim($spellNumber((int) round($finalGrandTotal)));
+    $grandTotalInWords = $grandTotalInWords !== ''
+        ? ucfirst($grandTotalInWords) . ' rupiah'
+        : 'Nol rupiah';
 @endphp
-@if(session('success'))
-    <div style="width: var(--sheet-width); margin: 12px auto 0; background: #ecfdf5; border: 1px solid #10b981; color: #065f46; padding: 10px 14px; box-sizing: border-box; font-size: 13px; font-weight: 700;">
+@if(session('success') && ! (($pdf ?? false) || request()->boolean('pdf')))
+    <div class="screen-success-banner" style="width: var(--sheet-width); margin: 12px auto 0; background: #ecfdf5; border: 1px solid #10b981; color: #065f46; padding: 10px 14px; box-sizing: border-box; font-size: 13px; font-weight: 700;">
         {{ session('success') }}
     </div>
 @endif
@@ -207,7 +273,7 @@
     <table class="header-table">
         <tr>
             <td class="header-title">
-                <div class="invoice-title">INVOICE PENJUALAN</div>
+                <div class="invoice-title">{{ $invoiceTitle }}</div>
             </td>
         </tr>
     </table>
@@ -245,7 +311,8 @@
         <thead>
         <tr>
             <th class="col-no">No</th>
-            <th class="col-name">Part Name / Merek</th>
+            <th class="col-name">Part Name</th>
+            <th class="col-brand">Merek</th>
             <th class="col-part">Part Number</th>
             <th class="col-qty">Qty</th>
             <th class="col-unit">Unit</th>
@@ -258,9 +325,9 @@
             <tr>
                 <td class="col-no" style="text-align:center;">{{ ($pageIndex * 35) + $idx + 1 }}</td>
                 <td class="desc col-name">
-                    <strong>{{ $item['product_name'] }}</strong><br>
-                    <span style="font-size: 9px; color: #64748b;">{{ $item['brand_name'] ?: '-' }}</span>
+                    <strong>{{ $item['product_name'] }}</strong>
                 </td>
+                <td class="desc col-brand">{{ $item['brand_name'] !== '' ? $item['brand_name'] : '-' }}</td>
                 <td class="desc col-part"><span style="font-size: 9px; color: #64748b;">{{ $item['part_number'] }}</span></td>
                 <td class="col-qty" style="text-align:center;">{{ $item['qty'] }}</td>
                 <td class="col-unit" style="text-align:center;">{{ $item['unit'] }}</td>
@@ -415,19 +482,39 @@
 
     <table class="foot-table">
         <tr>
+            <td class="terbilang-label-col">TERBILANG:</td>
+            <td class="terbilang-value-col">{{ $grandTotalInWords }}</td>
             <td class="note-col footer-note-print">
-                <strong style="font-size: 9px;">Catatan:</strong>
-                <div style="margin-top: 2px; padding-left: 10px; font-size: 9px; line-height: 1.3;">
+                <strong style="font-size: 10px; display: block;">Catatan:</strong>
+                <div style="margin-top: 3px; padding-left: 10px; font-size: 9px; line-height: 1.35;">
                     <div>1. Simpan faktur ini sebagai bukti transaksi resmi.</div>
                     <div>2. Barang yang sudah di beli tidak dapat di tukar, kecuali ada perjanjian.</div>
                 </div>
             </td>
-            <td class="sign-col">
-                <div class="sign-box" style="text-align: right;">
-                    <div style="font-size: 10px;">Yang Menyerahkan</div>
-                    <div class="sign-bottom">
-                        <strong style="font-size: 10px;">{{ $cashierDisplayName }}</strong><br>
-                        <span style="font-size: 9px;">{{ $sale->cashier_phone ?: 'Admin' }}</span>
+        </tr>
+        <tr>
+            <td class="terbilang-label-col">P.O. NO:</td>
+            <td colspan="2" style="font-size: 12px; font-weight: 700; text-transform: none;">{{ $poNumberDisplay }}</td>
+        </tr>
+        <tr>
+            <td class="terbilang-label-col">SITE:</td>
+            <td colspan="2" style="font-size: 12px; font-weight: 700; text-transform: none;">{{ $siteNameDisplay }}</td>
+        </tr>
+        <tr class="signature-row">
+            <td colspan="3">
+                <div class="signature-wrap">
+                    <div class="signature-party left">
+                        <div class="signature-title">Penerima</div>
+                        <div>
+                            <div class="signature-line"></div>
+                        </div>
+                    </div>
+                    <div class="signature-party right">
+                        <div class="signature-title">Yang Menyerahkan</div>
+                        <div>
+                            <div class="signature-name">{{ $cashierDisplayName }}</div>
+                            <div style="font-size: 9px;">{{ $sale->cashier_phone ?: 'Admin' }}</div>
+                        </div>
                     </div>
                 </div>
             </td>

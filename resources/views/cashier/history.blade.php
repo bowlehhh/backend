@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>History Transaksi - Surya Duta Multindo</title>
+    <title>History Penjualan - Surya Duta Multindo</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
@@ -15,18 +15,18 @@
     $homeUrl = $isAdminBesarContext ? route('admin.admin-besar.index') : route('cashier.dashboard');
     $historyUrl = $isAdminBesarContext ? route('admin.admin-besar.history') : route('cashier.history');
     $supplierHistoryUrl = $isAdminBesarContext ? route('admin.admin-besar.history.supplier') : route('cashier.history.supplier');
-    $homeLabel = $isAdminBesarContext ? 'Kembali ke Admin Besar' : 'Kembali ke Transaksi';
+    $homeLabel = $isAdminBesarContext ? 'Kembali ke Admin Besar' : 'Kembali ke Penjualan';
 @endphp
 <div class="h-screen overflow-hidden bg-[#f7f9fb]">
     <aside class="hidden lg:flex fixed inset-y-0 left-0 z-30 w-[260px] flex-col border-r border-slate-300 bg-white">
         <div class="px-5 py-5 border-b border-slate-200">
             <h1 class="text-3xl font-extrabold text-emerald-700">Surya Duta Multindo</h1>
-            <p class="text-xs text-slate-500">{{ $isAdminBesarContext ? 'Admin Besar' : 'Admin Transaksi - Station 01' }}</p>
+            <p class="text-xs text-slate-500">{{ $isAdminBesarContext ? 'Admin Besar' : 'Admin Penjualan - Station 01' }}</p>
         </div>
         <nav class="flex-1 p-4 space-y-2">
             <a href="{{ $homeUrl }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-slate-100">
                 <span class="material-symbols-outlined">{{ $isAdminBesarContext ? 'dashboard' : 'point_of_sale' }}</span>
-                <span class="font-semibold">{{ $isAdminBesarContext ? 'Admin Besar' : 'Transaksi' }}</span>
+                <span class="font-semibold">{{ $isAdminBesarContext ? 'Admin Besar' : 'Penjualan' }}</span>
             </a>
             <a href="{{ $historyUrl }}" class="flex items-center gap-3 rounded-xl bg-indigo-500 px-3 py-2 text-white">
                 <span class="material-symbols-outlined">history</span>
@@ -72,7 +72,7 @@
     <main class="lg:ml-[260px] h-full overflow-y-auto p-4 lg:p-6">
         <div class="mb-4 flex items-center justify-between">
             <div>
-                <h2 class="text-2xl font-extrabold">History Transaksi</h2>
+                <h2 class="text-2xl font-extrabold">History Penjualan</h2>
                 <p class="text-sm text-slate-500">{{ $user?->name }} - {{ $isAdminBesarContext ? 'Admin Besar' : 'Admin' }}</p>
             </div>
             <a href="{{ $homeUrl }}" class="rounded-xl border border-emerald-700 px-4 py-2 text-sm font-semibold text-emerald-700">{{ $homeLabel }}</a>
@@ -115,7 +115,7 @@
                         $creditAmount = (float) ($sale->credit_amount ?? 0);
                         $downPayment = (float) ($sale->paid_amount ?? 0);
                         $installmentPaid = (float) ($installmentPaidMap[$sale->id] ?? 0);
-                        $remainingCredit = max(0, $creditAmount - $installmentPaid);
+                        $remainingCredit = max(0, $creditAmount);
                         $isCredit = strtolower((string) $sale->payment_method) === 'credit';
                         $canInstallment = $isCredit && $remainingCredit > 0;
                         $paymentStatus = $isCredit

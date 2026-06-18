@@ -52,6 +52,7 @@ class AdminDashboardProductController extends Controller
                 $paymentType = 'LUNAS';
             }
 
+            $purchaseDate = ($payload['purchase_date'] ?? '') ?: now()->toDateString();
             $creditDays = $paymentType === 'KREDIT' ? (int) ($payload['credit_days'] ?? 0) : null;
             $creditDueDate = $paymentType === 'KREDIT' ? ($payload['credit_due_date'] ?: null) : null;
             $totalPurchase = ($purchasePrice * $stock) + ((float) ($payload['expedition_cost'] ?? 0));
@@ -66,6 +67,7 @@ class AdminDashboardProductController extends Controller
                 'supplier_invoice_number' => Schema::hasColumn('product_batches', 'supplier_invoice_number')
                     ? (($payload['supplier_invoice_number'] ?? '') ?: null)
                     : null,
+                'purchase_date' => Schema::hasColumn('product_batches', 'purchase_date') ? $purchaseDate : null,
                 'condition' => ($payload['condition'] ?? '') ?: null,
                 'processed_by' => Schema::hasColumn('product_batches', 'processed_by')
                     ? ($this->resolveProcessedBy($payload, $request->user()?->name) ?: null)
@@ -171,6 +173,7 @@ class AdminDashboardProductController extends Controller
             if (! in_array($paymentType, ['LUNAS', 'KREDIT'], true)) {
                 $paymentType = 'LUNAS';
             }
+            $purchaseDate = ($payload['purchase_date'] ?? '') ?: ($batch->purchase_date?->toDateString() ?: now()->toDateString());
             $creditDays = $paymentType === 'KREDIT' ? (int) ($payload['credit_days'] ?? 0) : null;
             $creditDueDate = $paymentType === 'KREDIT' ? ($payload['credit_due_date'] ?: null) : null;
             $totalPurchase = ((float) ($payload['purchase_price'] ?? 0)) * $stockAfter + ((float) ($payload['expedition_cost'] ?? 0));
@@ -184,6 +187,7 @@ class AdminDashboardProductController extends Controller
                 'supplier_invoice_number' => Schema::hasColumn('product_batches', 'supplier_invoice_number')
                     ? (($payload['supplier_invoice_number'] ?? '') ?: null)
                     : null,
+                'purchase_date' => Schema::hasColumn('product_batches', 'purchase_date') ? $purchaseDate : null,
                 'condition' => ($payload['condition'] ?? '') ?: null,
                 'processed_by' => Schema::hasColumn('product_batches', 'processed_by')
                     ? ($this->resolveProcessedBy($payload, $request->user()?->name) ?: null)
@@ -307,6 +311,7 @@ class AdminDashboardProductController extends Controller
             'batch_id' => $batch?->id,
             'batch_code' => $batch?->display_inventory_code,
             'supplier_invoice_number' => $batch?->supplier_invoice_number,
+            'purchase_date' => $batch?->purchase_date?->toDateString(),
             'condition' => $batch?->condition,
             'processed_by' => $batch?->processed_by,
             'payment_type' => $batch?->payment_type ?? 'LUNAS',

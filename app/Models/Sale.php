@@ -18,6 +18,8 @@ class Sale extends Model
         'invoice_number',
         'customer_name',
         'customer_phone',
+        'po_number',
+        'site_name',
         'cashier_service_name',
         'cashier_phone',
         'total',

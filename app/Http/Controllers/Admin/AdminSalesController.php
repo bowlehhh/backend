@@ -13,7 +13,13 @@ class AdminSalesController extends Controller
 {
     public function receipt(Request $request, Sale $sale): View|Response
     {
-        $sale->loadMissing(['items.product:id,name,barcode,unit', 'user:id,name', 'returns']);
+        $sale->loadMissing([
+            'items.product:id,name,barcode,unit,brand_id',
+            'items.product.brand:id,name',
+            'items.productBatch.product.brand:id,name',
+            'user:id,name',
+            'returns',
+        ]);
         $isAdminBesar = (bool) $request->user()?->isAdminBesar();
         $historyUrl = $isAdminBesar
             ? url('/admin/admin-besar/history')

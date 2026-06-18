@@ -90,7 +90,7 @@ class AdminBesarTransactionController extends Controller
                         $isCredit = strtolower((string) $sale->payment_method) === 'credit';
                         $creditAmount = (float) ($sale->credit_amount ?? 0);
                         $installmentPaid = (float) ($installmentPaidMap[(int) $sale->id] ?? 0);
-                        $remainingCredit = max(0, $creditAmount - $installmentPaid);
+                        $remainingCredit = max(0, $creditAmount);
 
                         return [
                             'id' => (int) $sale->id,
@@ -206,7 +206,6 @@ class AdminBesarTransactionController extends Controller
                     ->when(Schema::hasColumn('sales', 'deleted_at'), fn ($query) => $query->whereNull('sales.deleted_at'))
                     ->whereNotNull('sales.customer_name')
                     ->whereRaw("TRIM(sales.customer_name) <> ''")
-                    ->where(fn ($query) => $query->whereRaw("UPPER(TRIM(sales.customer_name)) LIKE 'PT %'")->orWhereRaw("UPPER(TRIM(sales.customer_name)) LIKE 'CV %'"))
                     ->orderByDesc('sales.id')
                     ->get([
                         'sales.id as sale_id',

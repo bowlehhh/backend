@@ -1,44 +1,49 @@
 <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
   <div>
     <label class="mb-1 block text-[12px] font-medium text-on-surface">Kode INV</label>
-    <input type="text" name="batch_code" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none" placeholder="{{ preg_replace('/^BATCH-/i', 'INV-', (string) $batchCodePlaceholder) }}">
+    <input type="text" name="batch_code" data-history-key="batch_code" autocomplete="off" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none" placeholder="{{ preg_replace('/^BATCH-/i', 'INV-', (string) $batchCodePlaceholder) }}">
     <p class="mt-1 text-xs text-error" data-error-for="batch_code"></p>
   </div>
   <div>
     <label class="mb-1 block text-[12px] font-medium text-on-surface">Nomor Invoice Supplier / PT</label>
-    <input type="text" name="supplier_invoice_number" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none" placeholder="Nomor invoice dari supplier">
+    <input type="text" name="supplier_invoice_number" data-history-key="supplier_invoice_number" autocomplete="off" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none" placeholder="Nomor invoice dari supplier">
     <p class="mt-1 text-[11px] leading-4 text-on-surface-variant">Nomor invoice asli dari PT/supplier yang mengirim barang.</p>
     <p class="mt-1 text-xs text-error" data-error-for="supplier_invoice_number"></p>
   </div>
   <div>
+    <label class="mb-1 block text-[12px] font-medium text-on-surface">Tanggal Beli Barang</label>
+    <input type="date" name="purchase_date" data-history-key="purchase_date" autocomplete="off" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none">
+    <p class="mt-1 text-xs text-error" data-error-for="purchase_date"></p>
+  </div>
+  <div>
     <label class="mb-1 block text-[12px] font-medium text-on-surface">Kondisi Barang <span class="text-on-surface-variant">(opsional)</span></label>
-    <input type="text" name="condition" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none" placeholder="Baru, bekas, layak pakai, rekondisi">
+    <input type="text" name="condition" data-history-key="condition" autocomplete="off" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none" placeholder="Baru, bekas, layak pakai, rekondisi">
     <p class="mt-1 text-xs text-error" data-error-for="condition"></p>
   </div>
   <div>
     <label class="mb-1 block text-[12px] font-medium text-on-surface">Diproses Oleh <span class="text-on-surface-variant">(opsional)</span></label>
-    <input type="text" name="processed_by" value="{{ auth()->user()?->name ?? '' }}" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none" placeholder="Nama petugas / admin">
+    <input type="text" name="processed_by" data-history-key="processed_by" autocomplete="off" value="{{ auth()->user()?->name ?? '' }}" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none" placeholder="Nama petugas / admin">
     <p class="mt-1 text-[11px] leading-4 text-on-surface-variant">Nama yang menginput atau memproses pembelian ini.</p>
     <p class="mt-1 text-xs text-error" data-error-for="processed_by"></p>
   </div>
   <div>
     <label class="mb-1 block text-[12px] font-medium text-on-surface">Harga Beli Satuan</label>
-    <input type="text" inputmode="numeric" name="purchase_price" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none" placeholder="0">
+    <input type="text" inputmode="numeric" name="purchase_price" data-history-key="purchase_price" autocomplete="off" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none" placeholder="0">
     <p class="mt-1 text-xs text-error" data-error-for="purchase_price"></p>
   </div>
   <div>
     <label class="mb-1 block text-[12px] font-medium text-on-surface">Biaya Ekspedisi</label>
-    <input type="text" inputmode="numeric" name="expedition_cost" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none" placeholder="0">
+    <input type="text" inputmode="numeric" name="expedition_cost" data-history-key="expedition_cost" autocomplete="off" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none" placeholder="0">
     <p class="mt-1 text-xs text-error" data-error-for="expedition_cost"></p>
   </div>
   <div>
     <label class="mb-1 block text-[12px] font-medium text-on-surface">Harga Jual</label>
-    <input type="text" inputmode="numeric" name="selling_price" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none" placeholder="0">
+    <input type="text" inputmode="numeric" name="selling_price" data-history-key="selling_price" autocomplete="off" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none" placeholder="0">
     <p class="mt-1 text-xs text-error" data-error-for="selling_price"></p>
   </div>
   <div>
     <label class="mb-1 block text-[12px] font-medium text-on-surface">Jumlah Barang Dibeli</label>
-    <input type="number" min="0" step="1" name="stock" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none">
+    <input type="number" min="0" step="1" name="stock" data-history-key="stock" autocomplete="off" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none">
     <p class="mt-1 text-xs text-error" data-error-for="stock"></p>
   </div>
   <div>

@@ -47,6 +47,7 @@ class StoreDashboardProductRequest extends FormRequest
             'supplier_note' => ['nullable', 'string'],
             'batch_code' => ['nullable', 'string', 'max:255', Rule::unique('product_batches', 'batch_code')],
             'supplier_invoice_number' => ['nullable', 'string', 'max:255'],
+            'purchase_date' => ['nullable', 'date'],
             'condition' => ['nullable', 'string', 'max:120'],
             'processed_by' => ['nullable', 'string', 'max:255'],
             'purchase_price' => ['nullable', 'numeric', 'min:0'],

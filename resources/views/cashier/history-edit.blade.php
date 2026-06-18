@@ -61,6 +61,14 @@
                         <input type="text" name="customer_phone" maxlength="30" value="{{ old('customer_phone', $sale->customer_phone ?? '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="No. telepon pembeli (opsional)" />
                     </div>
                     <div>
+                        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">P.O. No</label>
+                        <input type="text" name="po_number" maxlength="100" value="{{ old('po_number', $sale->po_number ?? '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Nomor PO (opsional)" />
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Site</label>
+                        <input type="text" name="site_name" maxlength="100" value="{{ old('site_name', $sale->site_name ?? '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Site (opsional)" />
+                    </div>
+                    <div>
                         <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Nama Petugas / Admin</label>
                         <input type="text" name="cashier_service_name" maxlength="100" value="{{ old('cashier_service_name', $sale->cashier_service_name ?? $user?->name ?? '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" />
                     </div>

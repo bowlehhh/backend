@@ -7,12 +7,36 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class SaleResource extends JsonResource
 {
+    private function normalizeBrandName(?string $value): string
+    {
+        $brand = trim((string) $value);
+
+        if ($brand === '' || mb_strtolower($brand) === 'tanpa merek') {
+            return '';
+        }
+
+        return $brand;
+    }
+
     public function toArray(Request $request): array
     {
         $groupedItems = $this->relationLoaded('items') ? $this->items
-            ->groupBy(fn ($item) => strtoupper(trim((string) ($item->part_number ?? $item->product?->barcode ?? 'PRODUCT-' . ($item->product_id ?? 0)))))
+            ->groupBy(function ($item): string {
+                if ((bool) ($item->merge_stock ?? false)) {
+                    return (int) ($item->product_id ?? 0) > 0
+                        ? 'MERGED-PRODUCT-' . (int) $item->product_id
+                        : 'MERGED-' . strtoupper(trim((string) ($item->part_number ?? $item->product?->barcode ?? 'PRODUCT-' . ($item->product_id ?? 0))));
+                }
+
+                return 'ITEM-' . (int) ($item->id ?? 0);
+            })
             ->map(function ($items) {
                 $first = $items->first();
+                $brandName = $items
+                    ->map(fn ($item): string => $this->normalizeBrandName($item->productBatch?->product?->brand?->name ?? $item->product?->brand?->name))
+                    ->filter()
+                    ->unique()
+                    ->implode('/');
                 $uniquePrices = $items
                     ->pluck('price')
                     ->map(fn ($price) => (float) $price)
@@ -35,6 +59,7 @@ class SaleResource extends JsonResource
 
                 return [
                     'product_name' => (string) ($first->product_name ?: $first->product?->name ?: '-'),
+                    'brand_name' => $brandName,
                     'part_number' => (string) ($first->part_number ?: $first->product?->barcode ?: '-'),
                     'unit' => (string) ($first->product?->unit ?: '-'),
                     'qty' => (int) $items->sum('qty'),
@@ -71,6 +96,8 @@ class SaleResource extends JsonResource
                 'product_batch_id' => $item->product_batch_id,
                 'product_name' => $item->product_name,
                 'part_number' => $item->part_number ?? $item->product?->barcode,
+                'brand_name' => $this->normalizeBrandName($item->productBatch?->product?->brand?->name ?? $item->product?->brand?->name),
+                'merge_stock' => (bool) ($item->merge_stock ?? false),
                 'price' => (float) $item->price,
                 'qty' => $item->qty,
                 'subtotal' => (float) $item->subtotal,

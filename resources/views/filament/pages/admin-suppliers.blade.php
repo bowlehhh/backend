@@ -2,6 +2,8 @@
     $viewData = $this->getViewData();
     $stats = $viewData['stats'] ?? ['total' => 0, 'active' => 0, 'total_stock' => 0];
     $suppliers = $viewData['suppliers'] ?? [];
+    $currentUser = auth()->user();
+    $isAdminBesarAccess = $currentUser?->isAdminBesar() ?? false;
 @endphp
 
 <x-filament-panels::page>
@@ -10,31 +12,63 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 
     <style>
-      .sf-wrap { font-family: 'Hanken Grotesk', sans-serif; }
-      .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; display: inline-block; vertical-align: middle; }
-      html.sf-dashboard-page, .sf-dashboard-page, .sf-dashboard-page body {
-        background: #f7f9fb !important;
-        min-height: 100% !important;
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
+      :root { --sf-topbar-h: 52px; --sf-sidebar-w: 208px; }
+      .sf-wrap {
+        font-family: 'Hanken Grotesk', sans-serif;
+        width: 100vw;
+        max-width: 100vw;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+        font-size: 13px;
       }
+      .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; display: inline-block; vertical-align: middle; }
+      html.sf-dashboard-page,
+      .sf-dashboard-page,
+      .sf-dashboard-page body,
       .sf-dashboard-page .fi-body,
       .sf-dashboard-page .fi-layout,
       .sf-dashboard-page .fi-main,
-      .sf-dashboard-page .fi-main-ctn,
+      .sf-dashboard-page .fi-main-ctn {
+        background: #f7f9fb !important;
+        height: 100% !important;
+        overflow: hidden !important;
+      }
+      .sf-dashboard-page .fi-sidebar,
+      .sf-dashboard-page .fi-topbar,
+      .sf-dashboard-page .fi-topbar-ctn,
+      .sf-dashboard-page .fi-layout-sidebar-toggle-btn-ctn { display: none !important; }
+      .fi-topbar,
+      .fi-topbar-ctn,
+      .fi-layout-sidebar-toggle-btn-ctn { display: none !important; }
+      .sf-dashboard-page .fi-main {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      .sf-dashboard-page .fi-main-ctn {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+      }
+      .sf-dashboard-page .fi-header { display: none !important; }
       .sf-dashboard-page .fi-page,
       .sf-dashboard-page .fi-page-content {
-        background: #f7f9fb !important;
-        min-height: 100% !important;
-        height: auto !important;
-        overflow-y: visible !important;
-        overflow-x: hidden !important;
+        max-width: none !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
       }
-      .sf-dashboard-page .fi-sidebar, .sf-dashboard-page .fi-topbar, .sf-dashboard-page .fi-header { display: none !important; }
-      .sf-dashboard-page .fi-main, .sf-dashboard-page .fi-page, .sf-dashboard-page .fi-page-content, .sf-dashboard-page .fi-main-ctn { max-width: 100% !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
-      .sf-layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: calc(100vh - 58px); }
-      .sf-sidebar { position: sticky; top: 58px; align-self: start; height: calc(100vh - 58px); border-right: 1px solid #d4dbd7; overflow: hidden; }
-      .sf-main-scroll { min-height: calc(100vh - 58px); overflow: visible; }
+      .sf-dashboard-page .fi-page-header-main-ctn,
+      .sf-dashboard-page .fi-page-main {
+        padding: 0 !important;
+        gap: 0 !important;
+      }
+      .sf-shell { width: 100%; max-width: 100%; margin: 0; padding: 0; }
+      .sf-layout { display: block; }
+      .sf-sidebar { position: fixed; top: var(--sf-topbar-h); left: 0; width: var(--sf-sidebar-w); height: calc(100vh - var(--sf-topbar-h)); border-right: 1px solid #d4dbd7; overflow: hidden; z-index: 30; display: flex; flex-direction: column; background: #fff; }
+      .sf-main-scroll { min-width: 0; width: calc(100% - var(--sf-sidebar-w)); margin-left: var(--sf-sidebar-w); height: calc(100vh - var(--sf-topbar-h)); overflow-y: auto; }
       .sf-nav-item { font-size: 13px; }
       .sf-wrap .custom-shadow { box-shadow: 0 1px 3px rgba(0,0,0,.03); }
       .sf-wrap .rounded-xl { border-radius: 10px !important; }
@@ -45,15 +79,15 @@
       .sf-wrap .px-5 { padding-left: 1rem !important; padding-right: 1rem !important; }
       .sf-wrap .px-6 { padding-left: 1rem !important; padding-right: 1rem !important; }
       .sf-wrap .py-4 { padding-top: .7rem !important; padding-bottom: .7rem !important; }
-      .sf-wrap .h-16 { height: 58px !important; }
+      .sf-wrap .h-16 { height: var(--sf-topbar-h) !important; }
       .sf-wrap .text-4xl { font-size: 30px !important; line-height: 36px !important; }
       .sf-wrap .text-5xl { font-size: 30px !important; line-height: 36px !important; }
       .sf-wrap table th,
       .sf-wrap table td { padding-top: .65rem !important; padding-bottom: .65rem !important; }
       @media (max-width: 1279px) {
-        .sf-layout { grid-template-columns: 1fr; min-height: auto; display: block; }
+        .sf-layout { display: block; }
         .sf-sidebar { display: none; }
-        .sf-main-scroll { height: auto; overflow: visible; }
+        .sf-main-scroll { width: 100%; margin-left: 0; height: auto; overflow: visible; }
         .sf-wrap header { height: 56px !important; padding-left: 14px !important; padding-right: 14px !important; }
         .sf-main-scroll { padding: 12px !important; }
         .sf-main-scroll h1 { font-size: 28px !important; line-height: 34px !important; }
@@ -62,13 +96,14 @@
       }
     </style>
 
-    <div class="sf-wrap bg-[#f7f9fb] text-[#191c1e] min-h-screen w-screen max-w-none ml-[calc(50%-50vw)] mr-[calc(50%-50vw)] overflow-x-hidden">
-      <header class="bg-white border-b border-[#d4dbd7] flex justify-between items-center px-6 h-16 sticky top-0 z-20">
+    <div class="sf-wrap bg-[#f7f9fb] text-[#191c1e] min-h-screen overflow-x-hidden">
+      <header class="bg-white border-b border-[#d4dbd7] flex justify-between items-center px-5 h-16 w-full sticky top-0 z-50">
         <div class="flex items-center gap-4">
-          <span class="text-xl font-bold text-[#006948]">Surya Duta Multindo</span>
+          <span class="block leading-none text-xl font-bold text-[#006948]">Surya Duta Multindo</span>
         </div>
       </header>
 
+      <div class="sf-shell">
       <div class="sf-layout">
         <aside class="sf-sidebar lg:flex flex-col w-full p-4 pb-6 bg-white hidden">
           <div class="mb-4 rounded-lg border border-[#d4dbd7] bg-[#f2f4f6] p-3">
@@ -77,12 +112,18 @@
                 <span class="material-symbols-outlined text-sm">inventory</span>
               </div>
               <div>
-                <p class="text-sm font-semibold text-[#006948]">Admin Panel</p>
-                <p class="text-[10px] uppercase tracking-wide text-[#52615a]">Management Mode</p>
+                <p class="text-sm font-semibold text-[#006948]">{{ $isAdminBesarAccess ? 'Admin Besar Panel' : 'Admin Panel' }}</p>
+                <p class="text-[10px] uppercase tracking-wide text-[#52615a]">{{ $isAdminBesarAccess ? 'Gudang Access Mode' : 'Management Mode' }}</p>
               </div>
             </div>
           </div>
           <nav class="flex-1 min-h-0 flex flex-col space-y-1 overflow-y-auto">
+            @if($isAdminBesarAccess)
+              <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium" href="{{ route('admin.admin-besar.index') }}">
+                <span class="material-symbols-outlined">arrow_back</span>
+                <span>Kembali ke Dashboard Admin Besar</span>
+              </a>
+            @endif
             <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium" href="{{ url('/admin/products') }}">
               <span class="material-symbols-outlined">inventory_2</span>
               <span>Barang</span>
@@ -120,6 +161,12 @@
             <div>
               <h1 class="text-4xl font-semibold text-[#191c1e]">Daftar Supplier</h1>
               <p class="text-[#52615a] text-base">Kelola data supplier dengan tampilan yang konsisten.</p>
+              @if($isAdminBesarAccess)
+                <a href="{{ route('admin.admin-besar.index') }}" class="mt-2 inline-flex items-center gap-2 rounded-lg border border-[#bccac0] bg-white px-3 py-2 text-[12px] font-semibold text-[#006948] hover:bg-[#f2f4f6]">
+                  <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                  Kembali ke Dashboard Admin Besar
+                </a>
+              @endif
             </div>
           </div>
 
@@ -171,6 +218,7 @@
             </table>
           </div>
         </main>
+      </div>
       </div>
     </div>
 

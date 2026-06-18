@@ -21,6 +21,23 @@
     $ptCustomerGroups = $ptCustomerGroups ?? [];
     $ptCustomerDetail = $ptCustomerDetail ?? ['pt_name' => '', 'rows' => [], 'summary' => null];
     $productGroups = $productGroups ?? ['summary' => [], 'groups' => []];
+    $currentUser = auth()->user();
+    $isAdminBesarContext = $currentUser?->isAdminBesar() ?? false;
+    $adminGudangModuleTypes = ['credits', 'supplier-transactions', 'product-groups'];
+    $isAdminBesarGudangModuleAccess = $isAdminBesarContext && in_array($type, $adminGudangModuleTypes, true);
+    $moduleBaseUrl = url('/admin/admin-module');
+    $creditsUrl = $moduleBaseUrl . '?type=credits';
+    $supplierTransactionsUrl = $moduleBaseUrl . '?type=supplier-transactions';
+    $productGroupsUrl = $moduleBaseUrl . '?type=product-groups';
+    $salesListUrl = ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? route('admin.admin-besar.index') : route('admin.transaksi.dashboard');
+    $draftsUrl = ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? route('admin.admin-besar.index') : route('admin.transactions.drafts');
+    $historyUrl = ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? route('admin.admin-besar.history') : route('admin.transactions.history');
+    $salesListActive = ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? request()->routeIs('admin.admin-besar.index') : request()->routeIs('admin.transaksi.dashboard');
+    $draftsActive = ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? request()->routeIs('admin.admin-besar.index') : request()->routeIs('admin.transactions.drafts');
+    $historyActive = ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? request()->routeIs('admin.admin-besar.history*') : request()->routeIs('admin.transactions.history*');
+    $salesListLabel = ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? 'Dashboard Admin Besar' : 'Daftar Barang Jual';
+    $draftsLabel = ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? 'Ringkasan Admin Besar' : 'Draft Tertunda';
+    $historyLabel = ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? 'History Admin Besar' : 'History & Nota';
 @endphp
 
 <x-filament-panels::page>
@@ -29,6 +46,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
     <style>
+      :root {
+        --sf-header-h: 64px;
+        --sf-sidebar-w: 240px;
+        --sf-sidebar-collapsed-w: 76px;
+      }
       .sf-wrap { font-family: 'Hanken Grotesk', sans-serif; }
       .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; display: inline-block; vertical-align: middle; }
       /* Hard override: always hide native Filament shell on this custom page */
@@ -82,20 +104,22 @@
         overflow: hidden !important;
       }
       .sf-layout {
-        display: grid;
-        grid-template-columns: 240px minmax(0, 1fr);
-        gap: 0;
+        display: block;
         height: calc(100vh - 64px);
         overflow: hidden;
       }
       .sf-sidebar {
-        position: sticky;
-        top: 64px;
-        height: calc(100vh - 64px);
+        position: fixed;
+        left: 0;
+        top: var(--sf-header-h);
+        width: var(--sf-sidebar-w);
+        height: calc(100vh - var(--sf-header-h));
         border-right: 1px solid #d4dbd7;
         overflow: hidden;
         display: flex;
         flex-direction: column;
+        z-index: 30;
+        background: #fff;
       }
       .sf-sidebar nav {
         flex: 1 1 auto;
@@ -103,14 +127,16 @@
         overflow-y: auto;
       }
       .sf-main-scroll {
-        height: calc(100vh - 64px);
+        height: calc(100vh - var(--sf-header-h));
         min-width: 0;
+        width: calc(100% - var(--sf-sidebar-w));
+        margin-left: var(--sf-sidebar-w);
         overflow-x: hidden;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
       }
       .sf-nav-item { font-size: 14px; }
-      .sf-sidebar-collapsed .sf-layout { grid-template-columns: 76px minmax(0, 1fr); }
+      .sf-sidebar-collapsed { --sf-sidebar-w: var(--sf-sidebar-collapsed-w); }
       .sf-sidebar-collapsed .sf-sidebar .nav-label,
       .sf-sidebar-collapsed .sf-sidebar .brand-title,
       .sf-sidebar-collapsed .sf-sidebar .brand-subtitle { display: none; }
@@ -145,16 +171,15 @@
       }
       @media (max-width: 1279px) {
         .sf-layout {
-          grid-template-columns: 1fr;
           height: auto;
           overflow: visible;
         }
         .sf-sidebar {
           position: fixed;
           left: 0;
-          top: 64px;
+          top: var(--sf-header-h);
           width: min(84vw, 300px);
-          height: calc(100vh - 64px);
+          height: calc(100vh - var(--sf-header-h));
           transform: translateX(-102%);
           opacity: 0;
           pointer-events: none;
@@ -162,6 +187,7 @@
         }
         .sf-main-scroll {
           width: 100%;
+          margin-left: 0;
           height: auto;
           overflow: visible;
         }
@@ -219,33 +245,44 @@
             <div class="flex items-center gap-2">
               <div class="h-8 w-8 rounded-lg bg-[#006948] text-white flex items-center justify-center"><span class="material-symbols-outlined text-sm">inventory</span></div>
               <div>
-                <p class="brand-title text-sm font-semibold text-[#006948]">Admin Panel</p>
-                <p class="brand-subtitle text-[10px] uppercase tracking-wide text-[#52615a]">Management Mode</p>
+                <p class="brand-title text-sm font-semibold text-[#006948]">{{ ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? 'Admin Besar Panel' : 'Admin Panel' }}</p>
+                <p class="brand-subtitle text-[10px] uppercase tracking-wide text-[#52615a]">{{ ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? 'Executive Mode' : ($isAdminBesarGudangModuleAccess ? 'Gudang Access Mode' : 'Management Mode') }}</p>
               </div>
             </div>
           </div>
           <nav class="flex-1 min-h-0 flex flex-col space-y-1 overflow-y-auto">
-            <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] rounded-lg font-medium" href="{{ url('/admin/products') }}"><span class="material-symbols-outlined">inventory_2</span><span class="nav-label">Barang</span></a>
-            <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] rounded-lg font-medium" href="{{ url('/admin/suppliers') }}"><span class="material-symbols-outlined">local_shipping</span><span class="nav-label">Supplier</span></a>
-            <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'credits' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=credits') }}"><span class="material-symbols-outlined">credit_card</span><span class="nav-label">Kredit &amp; Utang Saya</span></a>
-            <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'supplier-transactions' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=supplier-transactions') }}"><span class="material-symbols-outlined">account_tree</span><span class="nav-label">Transaksi PT/CV</span></a>
-            <div class="mt-auto space-y-1">
-              <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'product-groups' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ url('/admin/admin-module?type=product-groups') }}"><span class="material-symbols-outlined">inventory_2</span><span class="nav-label">Kelompok Barang</span></a>
-              <div class="ml-3 border-l border-[#d4dbd7] pl-3 py-1 space-y-1">
-                <a class="sf-nav-item flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('admin.transaksi.dashboard') ? 'bg-[#e8fff4] text-[#006948]' : 'text-[#52615a] hover:bg-[#f2f4f6]' }}" href="{{ route('admin.transaksi.dashboard') }}">
-                  <span class="material-symbols-outlined text-[18px]">point_of_sale</span>
-                  <span class="nav-label">Daftar Barang Jual</span>
-                </a>
-                <a class="sf-nav-item flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('admin.transactions.drafts') ? 'bg-[#e8fff4] text-[#006948]' : 'text-[#52615a] hover:bg-[#f2f4f6]' }}" href="{{ route('admin.transactions.drafts') }}">
-                  <span class="material-symbols-outlined text-[18px]">draft</span>
-                  <span class="nav-label">Draft Tertunda</span>
-                </a>
-                <a class="sf-nav-item flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('admin.transactions.history*') ? 'bg-[#e8fff4] text-[#006948]' : 'text-[#52615a] hover:bg-[#f2f4f6]' }}" href="{{ route('admin.transactions.history') }}">
-                  <span class="material-symbols-outlined text-[18px]">receipt_long</span>
-                  <span class="nav-label">History &amp; Nota</span>
-                </a>
+            @if($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess)
+              <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ request()->routeIs('admin.admin-besar.index') ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ route('admin.admin-besar.index') }}"><span class="material-symbols-outlined">dashboard</span><span class="nav-label">Dashboard Admin Besar</span></a>
+              <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ request()->routeIs('admin.admin-besar.history*') ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ route('admin.admin-besar.history') }}"><span class="material-symbols-outlined">history</span><span class="nav-label">History Admin Besar</span></a>
+              <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ request()->routeIs('admin.admin-besar.history.supplier*') || $type === 'supplier-transactions' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ route('admin.admin-besar.history.supplier') }}"><span class="material-symbols-outlined">account_tree</span><span class="nav-label">Transaksi PT/CV</span></a>
+              <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ request()->routeIs('admin.transaksi.dashboard', 'admin.transactions.*') ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ route('admin.transaksi.dashboard') }}"><span class="material-symbols-outlined">point_of_sale</span><span class="nav-label">Akses Dashboard Admin Gudang</span></a>
+              <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'users' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ $moduleBaseUrl . '?type=users' }}"><span class="material-symbols-outlined">group</span><span class="nav-label">Manajemen Akun</span></a>
+            @else
+              @if($isAdminBesarGudangModuleAccess)
+                <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] rounded-lg font-medium" href="{{ route('admin.admin-besar.index') }}"><span class="material-symbols-outlined">arrow_back</span><span class="nav-label">Kembali ke Admin Besar</span></a>
+              @endif
+              <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] rounded-lg font-medium" href="{{ url('/admin/products') }}"><span class="material-symbols-outlined">inventory_2</span><span class="nav-label">Barang</span></a>
+              <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] rounded-lg font-medium" href="{{ url('/admin/suppliers') }}"><span class="material-symbols-outlined">local_shipping</span><span class="nav-label">Supplier</span></a>
+              <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'credits' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ $creditsUrl }}"><span class="material-symbols-outlined">credit_card</span><span class="nav-label">Kredit &amp; Utang Saya</span></a>
+              <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'supplier-transactions' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ $supplierTransactionsUrl }}"><span class="material-symbols-outlined">account_tree</span><span class="nav-label">Transaksi PT/CV</span></a>
+              <div class="mt-auto space-y-1">
+                <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'product-groups' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ $productGroupsUrl }}"><span class="material-symbols-outlined">inventory_2</span><span class="nav-label">Kelompok Barang</span></a>
+                <div class="ml-3 border-l border-[#d4dbd7] pl-3 py-1 space-y-1">
+                  <a class="sf-nav-item flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium {{ $salesListActive ? 'bg-[#e8fff4] text-[#006948]' : 'text-[#52615a] hover:bg-[#f2f4f6]' }}" href="{{ $salesListUrl }}">
+                    <span class="material-symbols-outlined text-[18px]">point_of_sale</span>
+                    <span class="nav-label">{{ $salesListLabel }}</span>
+                  </a>
+                  <a class="sf-nav-item flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium {{ $draftsActive ? 'bg-[#e8fff4] text-[#006948]' : 'text-[#52615a] hover:bg-[#f2f4f6]' }}" href="{{ $draftsUrl }}">
+                    <span class="material-symbols-outlined text-[18px]">draft</span>
+                    <span class="nav-label">{{ $draftsLabel }}</span>
+                  </a>
+                  <a class="sf-nav-item flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium {{ $historyActive ? 'bg-[#e8fff4] text-[#006948]' : 'text-[#52615a] hover:bg-[#f2f4f6]' }}" href="{{ $historyUrl }}">
+                    <span class="material-symbols-outlined text-[18px]">receipt_long</span>
+                    <span class="nav-label">{{ $historyLabel }}</span>
+                  </a>
+                </div>
               </div>
-            </div>
+            @endif
           </nav>
           <div class="mt-4 pt-3 pb-5 border-t border-[#d4dbd7]">
             <form method="POST" action="{{ route('logout') }}" class="js-admin-logout-form">
@@ -671,7 +708,7 @@
                             <td class="px-6 py-4">{{ number_format((int) $group['lunas'], 0, ',', '.') }}</td>
                             <td class="px-6 py-4">{{ $group['terakhir_beli'] }}</td>
                             <td class="px-6 py-4 text-right">
-                              <a href="{{ url('/admin/admin-module?type=supplier-transactions&pt=' . urlencode($group['pt_name'])) }}" class="inline-flex items-center rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">Detail</a>
+                              <a href="{{ $supplierTransactionsUrl . '&pt=' . urlencode($group['pt_name']) }}" class="inline-flex items-center rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">Detail</a>
                             </td>
                           </tr>
                         @empty
@@ -776,14 +813,14 @@
                   <p class="text-sm text-[#52615a]">Pakai daftar barang jual, simpan draft transaksi, lalu buka history atau nota dari sini.</p>
                 </div>
                 <div class="flex flex-col gap-2 sm:flex-row">
-                  <a href="{{ route('admin.transaksi.dashboard') }}" class="inline-flex items-center justify-center rounded-lg bg-[#006948] px-4 py-2 text-sm font-semibold text-white hover:brightness-95">
+                  <a href="{{ $salesListUrl }}" class="inline-flex items-center justify-center rounded-lg bg-[#006948] px-4 py-2 text-sm font-semibold text-white hover:brightness-95">
                     Buka Transaksi
                   </a>
-                  <a href="{{ route('admin.transactions.drafts') }}" class="inline-flex items-center justify-center rounded-lg border border-[#bccac0] bg-white px-4 py-2 text-sm font-semibold text-[#006948] hover:bg-[#f1f4f2]">
-                    Draft Tertunda
+                  <a href="{{ $draftsUrl }}" class="inline-flex items-center justify-center rounded-lg border border-[#bccac0] bg-white px-4 py-2 text-sm font-semibold text-[#006948] hover:bg-[#f1f4f2]">
+                    {{ $draftsLabel }}
                   </a>
-                  <a href="{{ route('admin.transactions.history') }}" class="inline-flex items-center justify-center rounded-lg border border-[#bccac0] bg-white px-4 py-2 text-sm font-semibold text-[#006948] hover:bg-[#f1f4f2]">
-                    History &amp; Nota
+                  <a href="{{ $historyUrl }}" class="inline-flex items-center justify-center rounded-lg border border-[#bccac0] bg-white px-4 py-2 text-sm font-semibold text-[#006948] hover:bg-[#f1f4f2]">
+                    {{ $historyLabel }}
                   </a>
                 </div>
               </div>

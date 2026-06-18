@@ -18,6 +18,7 @@ use App\Services\SalesReturnService;
 use App\Support\AdminBesarCache;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -77,6 +78,83 @@ class CashierTransactionController extends Controller
         $batch->loadMissing('product:id,barcode');
 
         return $this->getProductPartNumber($batch->product);
+    }
+
+    private function transformReplacementOption(ProductBatch $batch): array
+    {
+        $partNumber = strtoupper((string) ($batch->product?->barcode ?? '-'));
+        $partName = strtoupper((string) ($batch->product?->name ?? '-'));
+
+        return [
+            'product_id' => (int) $batch->product_id,
+            'batch_id' => (int) $batch->id,
+            'part_number' => $partNumber,
+            'part_name' => $partName,
+            'stock' => (int) $batch->stock,
+            'price' => (float) $batch->selling_price,
+            'label' => trim("{$partNumber} - {$partName}"),
+            'search_text' => strtoupper(trim("{$partNumber} {$partName} {$batch->batch_code}")),
+        ];
+    }
+
+    private function searchReplacementOptionData(string $search = '', int $limit = 30): array
+    {
+        $keyword = trim($search);
+        $normalizedKeyword = strtoupper($keyword);
+
+        $query = ProductBatch::query()
+            ->select('product_batches.*')
+            ->join('products', 'products.id', '=', 'product_batches.product_id')
+            ->with(['product:id,name,barcode'])
+            ->where('product_batches.is_active', true)
+            ->where('product_batches.stock', '>', 0);
+
+        if ($keyword !== '') {
+            $likeKeyword = '%' . $keyword . '%';
+            $startsWithKeyword = $keyword . '%';
+
+            $query
+                ->where(function ($builder) use ($likeKeyword): void {
+                    $builder
+                        ->where('products.barcode', 'like', $likeKeyword)
+                        ->orWhere('products.name', 'like', $likeKeyword)
+                        ->orWhere('product_batches.batch_code', 'like', $likeKeyword);
+                })
+                ->orderByRaw(
+                    "CASE
+                        WHEN UPPER(COALESCE(products.barcode, '')) = ? THEN 0
+                        WHEN UPPER(COALESCE(products.barcode, '')) LIKE ? THEN 1
+                        WHEN UPPER(COALESCE(products.name, '')) LIKE ? THEN 2
+                        ELSE 3
+                    END",
+                    [$normalizedKeyword, strtoupper($startsWithKeyword), strtoupper($likeKeyword)]
+                );
+        }
+
+        return $query
+            ->orderBy('products.barcode')
+            ->orderBy('products.name')
+            ->orderByDesc('product_batches.stock')
+            ->limit($limit)
+            ->get()
+            ->map(fn (ProductBatch $batch): array => $this->transformReplacementOption($batch))
+            ->values()
+            ->all();
+    }
+
+    private function getReceiptDisplayItemCount(Sale $sale): int
+    {
+        return collect($sale->items ?? [])
+            ->groupBy(function ($item): string {
+                if ((bool) ($item->merge_stock ?? false)) {
+                    return (int) ($item->product_id ?? 0) > 0
+                        ? 'MERGED-PRODUCT-' . (int) $item->product_id
+                        : 'MERGED-' . strtoupper(trim((string) ($item->part_number ?? $item->product?->barcode ?? 'PRODUCT-' . ($item->product_id ?? 0))));
+                }
+
+                return 'ITEM-' . (int) ($item->id ?? 0);
+            })
+            ->count();
     }
 
     private function getBatchStock(ProductBatch $batch): int
@@ -614,6 +692,8 @@ class CashierTransactionController extends Controller
         $creditDueDate = trim((string) $request->input('credit_due_date', ''));
         $customerName = trim((string) $request->input('customer_name', ''));
         $customerPhone = trim((string) $request->input('customer_phone', ''));
+        $poNumber = trim((string) $request->input('po_number', ''));
+        $siteName = trim((string) $request->input('site_name', ''));
         $cashierServiceName = trim((string) $request->input('cashier_service_name', ''));
         $cashierPhone = trim((string) $request->input('cashier_phone', ''));
         $shouldPrintReceipt = $request->boolean('print_receipt');
@@ -626,6 +706,8 @@ class CashierTransactionController extends Controller
                 'credit_due_date' => $creditDueDate !== '' ? $creditDueDate : null,
                 'customer_name' => $customerName !== '' ? mb_substr($customerName, 0, 100) : null,
                 'customer_phone' => $customerPhone !== '' ? mb_substr($customerPhone, 0, 30) : null,
+                'po_number' => $poNumber !== '' ? mb_substr($poNumber, 0, 100) : null,
+                'site_name' => $siteName !== '' ? mb_substr($siteName, 0, 100) : null,
                 'cashier_service_name' => $cashierServiceName !== '' ? mb_substr($cashierServiceName, 0, 100) : null,
                 'cashier_phone' => $cashierPhone !== '' ? mb_substr($cashierPhone, 0, 30) : null,
                 'items' => $cart->map(fn (array $item): array => [
@@ -790,8 +872,14 @@ class CashierTransactionController extends Controller
                 : 'Cicilan berhasil dicatat dan kredit sudah lunas.')
             : 'Cicilan berhasil dicatat.';
 
-        return redirect()
-            ->route('cashier.receipt', $sale)
+        $targetRoute = $isFullSettlement
+            ? route('cashier.receipt', $sale)
+            : route('cashier.history.installment.receipt', [
+                'sale' => $sale,
+                'installment' => $installment,
+            ]);
+
+        return redirect($targetRoute)
             ->with('success', $successMessage)
             ->with('last_installment_id', $installment?->id);
     }
@@ -843,13 +931,13 @@ class CashierTransactionController extends Controller
         $ptName = $this->normalizePtCvName((string) $request->query('pt', ''));
 
         if ($ptName === 'TANPA PT/CV') {
-            abort(404, 'Nama PT/CV tidak ditemukan.');
+            abort(404, 'Nama pembeli tidak ditemukan.');
         }
 
         $group = $this->getPtCvDetailForCashier($this->canViewAllTransactions($request) ? null : (int) $user->id, $ptName);
 
         if ($group === null) {
-            abort(404, 'Riwayat PT/CV tidak ditemukan.');
+            abort(404, 'Riwayat pembeli tidak ditemukan.');
         }
 
         return view('admin.transaksi.history-supplier-detail', [
@@ -859,7 +947,7 @@ class CashierTransactionController extends Controller
     }
 
     /**
-     * Ambil daftar kelompok transaksi PT/CV untuk kasir aktif.
+     * Ambil daftar kelompok transaksi berdasarkan nama pembeli untuk kasir aktif.
      *
      * Data ini dipakai di halaman list dan halaman detail supaya konsisten.
      *
@@ -895,7 +983,7 @@ class CashierTransactionController extends Controller
     }
 
     /**
-     * Ambil detail transaksi untuk satu PT/CV.
+     * Ambil detail transaksi untuk satu nama pembeli.
      *
      * @return array<string, mixed>|null
      */
@@ -914,7 +1002,7 @@ class CashierTransactionController extends Controller
     }
 
     /**
-     * Ambil data transaksi PT/CV berdasarkan customer_name pada sales.
+     * Ambil data transaksi berdasarkan customer_name pada sales.
      */
     private function getPtCvRowsForCashier(?int $userId)
     {
@@ -929,10 +1017,6 @@ class CashierTransactionController extends Controller
             ->when($userId !== null, fn ($query) => $query->where('sales.user_id', $userId))
             ->whereNotNull('sales.customer_name')
             ->whereRaw("TRIM(sales.customer_name) <> ''")
-            ->where(function ($query): void {
-                $query->whereRaw("UPPER(TRIM(sales.customer_name)) LIKE 'PT %'")
-                    ->orWhereRaw("UPPER(TRIM(sales.customer_name)) LIKE 'CV %'");
-            })
             ->whereNull('sales.deleted_at')
             ->selectRaw('
                 sales.id as sale_id,
@@ -981,7 +1065,7 @@ class CashierTransactionController extends Controller
     }
 
     /**
-     * Normalisasi nama PT/CV supaya nama yang mirip tetap tergabung.
+     * Normalisasi nama pembeli supaya nama yang mirip tetap tergabung.
      */
     private function normalizePtCvName(?string $name): string
     {
@@ -1057,6 +1141,8 @@ class CashierTransactionController extends Controller
             'credit_due_date' => ['nullable', 'date'],
             'customer_name' => ['nullable', 'string', 'max:100'],
             'customer_phone' => ['nullable', 'string', 'max:30'],
+            'po_number' => ['nullable', 'string', 'max:100'],
+            'site_name' => ['nullable', 'string', 'max:100'],
             'cashier_service_name' => ['nullable', 'string', 'max:100'],
             'cashier_phone' => ['nullable', 'string', 'max:30'],
             'edit_note' => ['required', 'string', 'max:1000'],
@@ -1093,6 +1179,8 @@ class CashierTransactionController extends Controller
                     'sale' => $sale->only([
                         'customer_name',
                         'customer_phone',
+                        'po_number',
+                        'site_name',
                         'cashier_service_name',
                         'cashier_phone',
                         'payment_method',
@@ -1220,6 +1308,8 @@ class CashierTransactionController extends Controller
                 $sale->update([
                     'customer_name' => trim((string) ($validated['customer_name'] ?? '')) ?: null,
                     'customer_phone' => trim((string) ($validated['customer_phone'] ?? '')) ?: null,
+                    'po_number' => trim((string) ($validated['po_number'] ?? '')) ?: null,
+                    'site_name' => trim((string) ($validated['site_name'] ?? '')) ?: null,
                     'cashier_service_name' => trim((string) ($validated['cashier_service_name'] ?? '')) ?: null,
                     'cashier_phone' => trim((string) ($validated['cashier_phone'] ?? '')) ?: null,
                     'payment_method' => $paymentMethod,
@@ -1237,6 +1327,8 @@ class CashierTransactionController extends Controller
                     'sale' => $sale->only([
                         'customer_name',
                         'customer_phone',
+                        'po_number',
+                        'site_name',
                         'cashier_service_name',
                         'cashier_phone',
                         'payment_method',
@@ -1261,6 +1353,8 @@ class CashierTransactionController extends Controller
                 $changedFields = collect([
                     'customer_name',
                     'customer_phone',
+                    'po_number',
+                    'site_name',
                     'cashier_service_name',
                     'cashier_phone',
                     'payment_method',
@@ -1388,36 +1482,27 @@ class CashierTransactionController extends Controller
             ->get()
             ->mapWithKeys(fn ($row): array => [(int) $row->sale_item_id => (int) $row->total_qty]);
 
-        $replacementOptions = ProductBatch::query()
-            ->with(['product:id,name,barcode'])
-            ->where('is_active', true)
-            ->where('stock', '>', 0)
-            ->orderByDesc('id')
-            ->limit(500)
-            ->get()
-            ->map(function (ProductBatch $batch): array {
-                $partNumber = strtoupper((string) ($batch->product?->barcode ?? '-'));
-                $partName = strtoupper((string) ($batch->product?->name ?? '-'));
-
-                return [
-                    'product_id' => (int) $batch->product_id,
-                    'batch_id' => (int) $batch->id,
-                    'part_number' => $partNumber,
-                    'part_name' => $partName,
-                    'stock' => (int) $batch->stock,
-                    'price' => (float) $batch->selling_price,
-                    'label' => trim("{$partNumber} - {$partName}"),
-                    'search_text' => strtoupper(trim("{$partNumber} {$partName} {$batch->batch_code}")),
-                ];
-            })
-            ->values()
-            ->all();
+        $replacementOptions = $this->searchReplacementOptionData(limit: 20);
+        $replacementSearchUrl = $request->routeIs('admin.transactions.*')
+            ? route('admin.transactions.return.options')
+            : route('cashier.return.options');
 
         return view('admin.transaksi.return-form', [
             'user' => $request->user(),
             'sale' => $sale,
             'returnedQtyMap' => $returnedQtyMap,
             'replacementOptions' => $replacementOptions,
+            'replacementSearchUrl' => $replacementSearchUrl,
+        ]);
+    }
+
+    public function replacementOptions(Request $request): JsonResponse
+    {
+        $limit = max(1, min((int) $request->integer('limit', 30), 100));
+        $search = (string) $request->query('q', '');
+
+        return response()->json([
+            'data' => $this->searchReplacementOptionData($search, $limit),
         ]);
     }
 
@@ -1504,19 +1589,23 @@ class CashierTransactionController extends Controller
 
         $sale->loadMissing([
             'items.product.brand',
+            'items.productBatch.product.brand',
             'user:id,name',
             'returns.items.replacementBatch.product',
             'installments.user:id,name',
         ]);
 
         if ($request->boolean('pdf')) {
+            $receiptDisplayItemCount = $this->getReceiptDisplayItemCount($sale);
+            $pdfPaper = $receiptDisplayItemCount > 10 ? 'legal' : 'a4';
+
             $pdf = Pdf::loadView('admin.transaksi.receipt', [
                 'sale' => $sale,
                 'storeName' => config('app.name', 'Surya Duta Multindo'),
                 'historyUrl' => $historyUrl,
                 'historyLabel' => $historyLabel,
                 'newTransactionUrl' => $newTransactionUrl,
-            ])->setPaper('a4', 'portrait');
+            ])->setPaper($pdfPaper, 'portrait');
 
             return $pdf->download("{$sale->invoice_number}.pdf");
         }

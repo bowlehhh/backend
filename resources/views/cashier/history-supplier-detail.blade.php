@@ -21,11 +21,11 @@
     <aside class="hidden lg:flex fixed inset-y-0 left-0 z-30 w-[260px] flex-col border-r border-slate-300 bg-white">
         <div class="px-5 py-5 border-b border-slate-200">
             <h1 class="text-3xl font-extrabold text-emerald-700">Surya Duta Multindo</h1>
-            <p class="text-xs text-slate-500">{{ $isAdminBesarContext ? 'Admin Besar' : 'Admin Transaksi - Station 01' }}</p>
+            <p class="text-xs text-slate-500">{{ $isAdminBesarContext ? 'Admin Besar' : 'Admin Penjualan - Station 01' }}</p>
         </div>
         <nav class="flex-1 p-4 space-y-2">
             <a href="{{ $homeUrl }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-slate-100">
-                <span class="material-symbols-outlined">{{ $isAdminBesarContext ? 'dashboard' : 'point_of_sale' }}</span><span class="font-semibold">{{ $isAdminBesarContext ? 'Admin Besar' : 'Transaksi' }}</span>
+                <span class="material-symbols-outlined">{{ $isAdminBesarContext ? 'dashboard' : 'point_of_sale' }}</span><span class="font-semibold">{{ $isAdminBesarContext ? 'Admin Besar' : 'Penjualan' }}</span>
             </a>
             <a href="{{ $historyUrl }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-slate-100">
                 <span class="material-symbols-outlined">history</span><span class="font-semibold">History</span>
@@ -66,7 +66,7 @@
     <main class="lg:ml-[260px] h-full overflow-y-auto p-4 lg:p-6">
         <div class="mb-4 flex items-center justify-between gap-4">
             <div>
-                <h2 class="text-2xl font-extrabold">Detail PT/CV</h2>
+                <h2 class="text-2xl font-extrabold">Detail Transaksi Pembeli</h2>
                 <p class="text-sm text-slate-500">{{ $user?->name }} - {{ $isAdminBesarContext ? 'Admin Besar' : 'Admin' }}</p>
             </div>
             <a href="{{ $supplierUrl }}" class="rounded-xl border border-emerald-700 px-4 py-2 text-sm font-semibold text-emerald-700">{{ $backLabel }}</a>
@@ -75,7 +75,7 @@
         <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
             <div class="border-b border-slate-200 px-4 py-4 md:px-5">
                 <h3 class="text-2xl font-extrabold text-slate-900">{{ $group['pt_name'] }}</h3>
-                <p class="mt-1 text-sm text-slate-500">Semua transaksi dengan nama PT/CV yang sama akan masuk ke halaman ini.</p>
+                <p class="mt-1 text-sm text-slate-500">Semua transaksi dengan nama pembeli yang sama akan masuk ke halaman ini.</p>
             </div>
 
             <div class="grid gap-3 border-b border-slate-200 bg-slate-50 p-4 md:grid-cols-5">

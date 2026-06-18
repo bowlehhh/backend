@@ -26,6 +26,9 @@
             <a href="{{ route('admin.admin-besar.history.supplier') }}" class="flex items-center gap-3 rounded-xl bg-emerald-700 px-3 py-2 text-white">
                 <span class="material-symbols-outlined">account_tree</span><span class="font-semibold">PT/CV</span>
             </a>
+            <a href="{{ route('admin.transaksi.dashboard') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-slate-100">
+                <span class="material-symbols-outlined">point_of_sale</span><span class="font-semibold">Akses Dashboard Admin Gudang</span>
+            </a>
             <a href="{{ url('/admin/admin-module?type=users') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-slate-100">
                 <span class="material-symbols-outlined">group</span><span class="font-semibold">Manajemen Akun</span>
             </a>
@@ -35,7 +38,7 @@
     <main class="lg:ml-[260px] h-full overflow-y-auto p-4 lg:p-6">
         <div class="mb-4 flex items-center justify-between">
             <div>
-                <h2 class="text-2xl font-extrabold">Kelompok Transaksi PT/CV</h2>
+                <h2 class="text-2xl font-extrabold">Kelompok Transaksi Pembeli</h2>
                 <p class="text-sm text-slate-500">{{ $user?->name }} - Admin Besar</p>
             </div>
             <a href="{{ route('admin.admin-besar.index') }}" class="rounded-xl border border-emerald-700 px-4 py-2 text-sm font-semibold text-emerald-700">Kembali ke Admin Besar</a>
@@ -58,7 +61,7 @@
                 </div>
             </div>
         @empty
-            <div class="rounded-2xl border border-slate-200 bg-white px-4 py-8 text-center text-slate-500">Belum ada transaksi untuk dikelompokkan per PT/CV.</div>
+            <div class="rounded-2xl border border-slate-200 bg-white px-4 py-8 text-center text-slate-500">Belum ada transaksi pembeli yang bisa dikelompokkan.</div>
         @endforelse
     </main>
 </div>

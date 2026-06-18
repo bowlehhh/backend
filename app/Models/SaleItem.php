@@ -16,6 +16,7 @@ class SaleItem extends Model
         'product_id',
         'product_batch_id',
         'product_name',
+        'merge_stock',
         'price',
         'qty',
         'subtotal',
@@ -24,6 +25,7 @@ class SaleItem extends Model
     protected function casts(): array
     {
         return [
+            'merge_stock' => 'boolean',
             'price' => 'decimal:2',
             'subtotal' => 'decimal:2',
         ];

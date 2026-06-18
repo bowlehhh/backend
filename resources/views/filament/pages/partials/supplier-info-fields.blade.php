@@ -3,17 +3,17 @@
   <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
     <div>
       <label class="mb-1 block text-[12px] font-medium text-on-surface">Nama Supplier <span class="text-on-surface-variant">(opsional)</span></label>
-      <input type="text" name="supplier_name" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none">
+      <input type="text" name="supplier_name" data-history-key="supplier_name" autocomplete="off" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none">
       <p class="mt-1 text-xs text-error" data-error-for="supplier_name"></p>
     </div>
     <div>
       <label class="mb-1 block text-[12px] font-medium text-on-surface">Nomor HP supplier</label>
-      <input type="text" name="supplier_phone" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none">
+      <input type="text" name="supplier_phone" data-history-key="supplier_phone" autocomplete="off" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none">
       <p class="mt-1 text-xs text-error" data-error-for="supplier_phone"></p>
     </div>
     <div>
       <label class="mb-1 block text-[12px] font-medium text-on-surface">Alamat supplier</label>
-      <input type="text" name="supplier_address" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none">
+      <input type="text" name="supplier_address" data-history-key="supplier_address" autocomplete="off" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none">
       <p class="mt-1 text-xs text-error" data-error-for="supplier_address"></p>
     </div>
     <div class="md:col-span-2">

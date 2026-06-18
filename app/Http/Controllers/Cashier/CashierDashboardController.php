@@ -37,6 +37,7 @@ class CashierDashboardController extends Controller
 
         $search = trim((string) $request->query('q', ''));
         $category = trim((string) $request->query('category', ''));
+        $showAllProducts = $request->boolean('show_all');
 
         $todaySalesQuery = Sale::query()
             ->where('user_id', $user?->id)
@@ -59,7 +60,7 @@ class CashierDashboardController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'slug']);
 
-        $products = Product::query()
+        $productsQuery = Product::query()
             ->with(['category', 'batches' => fn ($query) => $query->where('is_active', true)->latest('id')])
             ->where('is_active', true)
             ->when($search !== '', function ($query) use ($search): void {
@@ -72,9 +73,15 @@ class CashierDashboardController extends Controller
             ->when($category !== '', function ($query) use ($category): void {
                 $query->whereHas('category', fn ($q) => $q->where('slug', $category));
             })
-            ->latest('id')
-            ->limit(12)
-            ->get();
+            ->latest('id');
+
+        $totalFilteredProducts = (clone $productsQuery)->count();
+
+        if (! $showAllProducts) {
+            $productsQuery->limit(12);
+        }
+
+        $products = $productsQuery->get();
 
         $rawCart = collect((array) $request->session()->get('cashier_cart', []))->values();
         $reservedQtyByBatch = [];
@@ -279,6 +286,8 @@ class CashierDashboardController extends Controller
             'products' => $products,
             'selectedCategory' => $category,
             'search' => $search,
+            'showAllProducts' => $showAllProducts,
+            'totalFilteredProducts' => $totalFilteredProducts,
             'cartItems' => $cartItems,
             'subtotal' => $subtotal,
             'cartTotal' => $total,

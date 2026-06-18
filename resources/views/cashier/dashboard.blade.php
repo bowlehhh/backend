@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard Transaksi - Surya Duta Multindo</title>
+    <title>Dashboard Penjualan - Surya Duta Multindo</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
@@ -52,29 +52,49 @@
 <body class="cashier-compact text-slate-900">
 @php
     $creditDaysValue = old('credit_days', '');
+    $currentUser = auth()->user();
+    $isAdminBesarGudangAccess = $currentUser?->isAdminBesar() && request()->routeIs('admin.transaksi.dashboard', 'admin.transactions.*');
     $isTransactionDashboard = request()->routeIs('cashier.dashboard', 'admin.transaksi.dashboard');
+    $transactionDashboardRoute = $isAdminBesarGudangAccess ? 'admin.transaksi.dashboard' : 'cashier.dashboard';
+    $historyRoute = $isAdminBesarGudangAccess ? 'admin.transactions.history' : 'cashier.history';
+    $supplierHistoryRoute = $isAdminBesarGudangAccess ? 'admin.transactions.history.supplier' : 'cashier.history.supplier';
+    $draftsRoute = $isAdminBesarGudangAccess ? 'admin.transactions.drafts' : 'cashier.drafts';
+    $cartClearRoute = $isAdminBesarGudangAccess ? 'admin.transactions.cart.clear' : 'cashier.cart.clear';
+    $cartUpdateRoute = $isAdminBesarGudangAccess ? 'admin.transactions.cart.update' : 'cashier.cart.update';
+    $cartMergeRoute = $isAdminBesarGudangAccess ? 'admin.transactions.cart.merge' : 'cashier.cart.merge';
+    $cartRemoveRoute = $isAdminBesarGudangAccess ? 'admin.transactions.cart.remove' : 'cashier.cart.remove';
+    $cartAddRoute = $isAdminBesarGudangAccess ? 'admin.transactions.cart.add' : 'cashier.cart.add';
+    $cartHoldRoute = $isAdminBesarGudangAccess ? 'admin.transactions.cart.hold' : 'cashier.cart.hold';
+    $checkoutRoute = $isAdminBesarGudangAccess ? 'admin.transactions.checkout' : 'cashier.checkout';
+    $backToAdminBesarRoute = route('admin.admin-besar.index');
 @endphp
 <div class="h-screen overflow-hidden bg-[#f7f9fb]">
     <aside class="hidden lg:flex fixed inset-y-0 left-0 z-30 w-[340px] flex-col border-r border-slate-300 bg-white">
         <div class="px-5 py-5 border-b border-slate-200">
             <h1 class="text-3xl font-extrabold text-emerald-700">Surya Duta Multindo</h1>
-            <p class="text-xs text-slate-500">Admin Transaksi - Station 01</p>
+            <p class="text-xs text-slate-500">{{ $isAdminBesarGudangAccess ? 'Akses Dashboard Admin Gudang' : 'Admin Penjualan - Station 01' }}</p>
         </div>
         <div class="min-h-0 flex-1 overflow-y-auto custom-scrollbar px-4 py-4 space-y-4">
             <nav class="space-y-2">
-                <a href="{{ route('cashier.dashboard') }}" class="flex items-center gap-3 rounded-xl {{ $isTransactionDashboard ? 'bg-indigo-500 text-white' : 'text-slate-600 hover:bg-slate-100' }} px-3 py-2">
+                @if($isAdminBesarGudangAccess)
+                    <a href="{{ $backToAdminBesarRoute }}" class="flex items-center gap-3 rounded-xl text-slate-600 hover:bg-slate-100 px-3 py-2">
+                        <span class="material-symbols-outlined">arrow_back</span>
+                        <span class="font-semibold">Kembali ke Admin Besar</span>
+                    </a>
+                @endif
+                <a href="{{ route($transactionDashboardRoute) }}" class="flex items-center gap-3 rounded-xl {{ $isTransactionDashboard ? 'bg-indigo-500 text-white' : 'text-slate-600 hover:bg-slate-100' }} px-3 py-2">
                     <span class="material-symbols-outlined">point_of_sale</span>
-                    <span class="font-semibold">Transaksi</span>
+                    <span class="font-semibold">Penjualan</span>
                 </a>
-                <a href="{{ route('cashier.history') }}" class="flex w-full items-center gap-3 rounded-xl {{ request()->routeIs('cashier.history') ? 'bg-indigo-500 text-white' : 'text-slate-600 hover:bg-slate-100' }} px-3 py-2">
+                <a href="{{ route($historyRoute) }}" class="flex w-full items-center gap-3 rounded-xl {{ request()->routeIs('cashier.history', 'admin.transactions.history') ? 'bg-indigo-500 text-white' : 'text-slate-600 hover:bg-slate-100' }} px-3 py-2">
                     <span class="material-symbols-outlined">history</span>
                     <span class="font-semibold">History</span>
                 </a>
-                <a href="{{ route('cashier.history.supplier') }}" class="flex w-full items-center gap-3 rounded-xl {{ request()->routeIs('cashier.history.supplier') ? 'bg-indigo-500 text-white' : 'text-slate-600 hover:bg-slate-100' }} px-3 py-2">
+                <a href="{{ route($supplierHistoryRoute) }}" class="flex w-full items-center gap-3 rounded-xl {{ request()->routeIs('cashier.history.supplier', 'admin.transactions.history.supplier') ? 'bg-indigo-500 text-white' : 'text-slate-600 hover:bg-slate-100' }} px-3 py-2">
                     <span class="material-symbols-outlined">account_tree</span>
                     <span class="font-semibold">PT/CV</span>
                 </a>
-                <a href="{{ route('cashier.drafts') }}" class="flex w-full items-center gap-3 rounded-xl {{ request()->routeIs('cashier.drafts') ? 'bg-indigo-500 text-white' : 'text-slate-600 hover:bg-slate-100' }} px-3 py-2">
+                <a href="{{ route($draftsRoute) }}" class="flex w-full items-center gap-3 rounded-xl {{ request()->routeIs('cashier.drafts', 'admin.transactions.drafts') ? 'bg-indigo-500 text-white' : 'text-slate-600 hover:bg-slate-100' }} px-3 py-2">
                     <span class="material-symbols-outlined">draft</span>
                     <span class="font-semibold">Draft</span>
                     @if($draftCount > 0)
@@ -82,6 +102,11 @@
                     @endif
                 </a>
             </nav>
+            @if($isAdminBesarGudangAccess)
+                <div class="rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-700">
+                    Anda sedang masuk ke dashboard admin gudang sebagai <span class="font-bold">Admin Besar</span>. Semua proses di halaman ini tetap memakai akses admin gudang, dan Anda bisa kembali kapan saja.
+                </div>
+            @endif
             <div class="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3">
                 <p class="px-1 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Master Data</p>
                 <div class="mt-2 space-y-1">
@@ -102,7 +127,7 @@
             <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
                     <h2 class="text-base font-bold text-slate-900">Keranjang Belanja</h2>
-                    <form method="POST" action="{{ route('cashier.cart.clear') }}">
+                    <form method="POST" action="{{ route($cartClearRoute) }}">
                         @csrf
                         <button type="submit" class="text-xs text-red-500">Kosongkan</button>
                     </form>
@@ -119,7 +144,7 @@
                                 @endif
                             </p>
                             <div class="mt-2 flex justify-between text-sm">
-                                <form method="POST" action="{{ route('cashier.cart.update', $item['product_batch_id']) }}" class="flex flex-col gap-2" data-cart-item-form data-merge-stock="{{ !empty($item['merge_stock']) ? '1' : '0' }}" data-product-id="{{ (int) $item['product_id'] }}" data-product-batch-id="{{ (int) $item['product_batch_id'] }}" data-product-name="{{ $item['product_name'] }}" data-part-number="{{ $item['part_number'] }}">
+                                <form method="POST" action="{{ route($cartUpdateRoute, $item['product_batch_id']) }}" class="flex flex-col gap-2" data-cart-item-form data-merge-stock="{{ !empty($item['merge_stock']) ? '1' : '0' }}" data-product-id="{{ (int) $item['product_id'] }}" data-product-batch-id="{{ (int) $item['product_batch_id'] }}" data-product-name="{{ $item['product_name'] }}" data-part-number="{{ $item['part_number'] }}">
                                     @csrf
                                     <div class="flex items-center gap-2">
                                         <label class="text-xs text-slate-500">Qty</label>
@@ -143,7 +168,7 @@
                                             @if(empty($item['merge_stock']))
                                                 <button
                                                     type="submit"
-                                                    formaction="{{ route('cashier.cart.merge', $item['product_batch_id']) }}"
+                                                    formaction="{{ route($cartMergeRoute, $item['product_batch_id']) }}"
                                                     class="w-fit rounded-lg border border-amber-300 bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100"
                                                 >
                                                     Gabung Stok
@@ -158,7 +183,7 @@
                                 </form>
                                 <div class="text-right">
                                     <span class="block font-bold" data-cart-line-total>Rp {{ number_format((float) ($item['line_total'] ?? ((float) $item['price'] * (int) $item['qty'])), 0, ',', '.') }}</span>
-                                    <form method="POST" action="{{ route('cashier.cart.remove', $item['product_batch_id']) }}">
+                                    <form method="POST" action="{{ route($cartRemoveRoute, $item['product_batch_id']) }}">
                                         @csrf
                                         <button type="submit" class="text-xs text-red-500">Hapus</button>
                                     </form>
@@ -179,16 +204,21 @@
                 <div class="flex items-center justify-between lg:hidden">
                     <div>
                         <h1 class="text-3xl font-extrabold text-emerald-700 leading-none">Surya Duta Multindo</h1>
-                        <p class="mt-1 text-[10px] text-slate-500">Admin Transaksi - Station 01</p>
+                        <p class="mt-1 text-[10px] text-slate-500">{{ $isAdminBesarGudangAccess ? 'Akses Dashboard Admin Gudang' : 'Admin Penjualan - Station 01' }}</p>
                     </div>
                     <div class="flex items-center gap-2 text-slate-600">
-                        <a href="{{ route('cashier.history') }}" class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">
+                        @if($isAdminBesarGudangAccess)
+                            <a href="{{ $backToAdminBesarRoute }}" class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-indigo-50 text-indigo-700">
+                                <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                            </a>
+                        @endif
+                        <a href="{{ route($historyRoute) }}" class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">
                             <span class="material-symbols-outlined text-[18px]">history</span>
                         </a>
-                        <a href="{{ route('cashier.drafts') }}" class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">
+                        <a href="{{ route($draftsRoute) }}" class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">
                             <span class="material-symbols-outlined text-[18px]">draft</span>
                         </a>
-                        <a href="{{ route('cashier.history.supplier') }}" class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">
+                        <a href="{{ route($supplierHistoryRoute) }}" class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">
                             <span class="material-symbols-outlined text-[18px]">local_shipping</span>
                         </a>
                         <form method="POST" action="{{ route('logout') }}" class="js-logout-form">
@@ -200,7 +230,7 @@
                     </div>
                 </div>
                 <div class="mt-3 flex items-center gap-4">
-                    <form id="search-form" method="GET" action="{{ route('cashier.dashboard') }}" class="relative flex-1">
+                    <form id="search-form" method="GET" action="{{ route($transactionDashboardRoute) }}" class="relative flex-1">
                         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">search</span>
                         <input id="product-search-input" type="text" name="q" value="{{ $search }}" placeholder="Cari produk berdasarkan nama atau barcode..." autocomplete="off" class="h-11 w-full rounded-xl border border-slate-300 bg-slate-50 pl-10 pr-4 text-sm focus:border-emerald-500 focus:ring-emerald-500" />
                         <div id="product-search-popup" class="absolute left-0 right-0 top-[48px] z-40 hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg"></div>
@@ -208,7 +238,7 @@
                     <div class="hidden lg:flex items-center gap-3">
                         <div class="text-right">
                             <p class="text-sm font-bold">{{ $user?->name ?? 'Admin' }}</p>
-                            <p class="text-xs text-slate-500">Admin</p>
+                            <p class="text-xs text-slate-500">{{ $isAdminBesarGudangAccess ? 'Admin Besar • Mode Gudang' : 'Admin' }}</p>
                         </div>
                         <form method="POST" action="{{ route('logout') }}" class="js-logout-form">
                             @csrf
@@ -231,8 +261,31 @@
                     <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ $errors->first() }}</div>
                 @endif
                 <div class="mb-4 flex items-center justify-between">
-                    <h3 class="text-2xl md:text-xl font-bold text-slate-700">Daftar Produk</h3>
-                    <button type="button" class="text-sm font-semibold text-emerald-700">Lihat Semua</button>
+                    <div>
+                        <h3 class="text-2xl md:text-xl font-bold text-slate-700">Daftar Produk</h3>
+                        <p class="mt-1 text-xs text-slate-500">
+                            Menampilkan {{ count($products) }} dari {{ number_format((int) ($totalFilteredProducts ?? count($products)), 0, ',', '.') }} barang
+                            @if(!empty($showAllProducts))
+                                secara penuh.
+                            @else
+                                di tampilan ringkas.
+                            @endif
+                        </p>
+                    </div>
+                    @php
+                        $toggleQuery = request()->query();
+                        if (!empty($showAllProducts)) {
+                            unset($toggleQuery['show_all']);
+                        } else {
+                            $toggleQuery['show_all'] = 1;
+                        }
+                    @endphp
+                    <a
+                        href="{{ route($transactionDashboardRoute, $toggleQuery) }}"
+                        class="inline-flex items-center rounded-xl border border-emerald-200 bg-white px-3 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50"
+                    >
+                        {{ !empty($showAllProducts) ? 'Tampilkan Ringkas' : 'Lihat Semua' }}
+                    </a>
                 </div>
 
                 <div class="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4">
@@ -242,6 +295,7 @@
                             $stock = (int) ($product->display_stock ?? ($batch?->stock ?? 0));
                             $price = (float) ($batch?->selling_price ?? 0);
                             $image = $product->image_path ? asset('storage/' . ltrim($product->image_path, '/')) : null;
+                            $partNumber = trim((string) ($product->barcode ?? '')) ?: '-';
                         @endphp
                         <article class="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
                             <div class="relative h-36 md:h-44 bg-slate-100">
@@ -258,10 +312,11 @@
                             </div>
                             <div class="p-3">
                                 <p class="text-[10px] font-bold uppercase tracking-tight text-emerald-700">{{ $product->category?->name ?? '-' }}</p>
-                                <h3 class="font-bold text-slate-900 text-xl md:text-base line-clamp-1">{{ $product->name }}</h3>
+                                <h3 class="font-bold text-slate-900 text-xl md:text-lg line-clamp-1">{{ $partNumber }}</h3>
+                                <p class="mt-1 text-xs text-slate-500 line-clamp-1">{{ $product->name }}</p>
                                 <div class="mt-3 flex items-center justify-between">
                                     <p class="text-2xl md:text-2xl font-extrabold text-emerald-700">Rp {{ number_format($price, 0, ',', '.') }}</p>
-                                    <form method="POST" action="{{ route('cashier.cart.add', $batch) }}">
+                                    <form method="POST" action="{{ route($cartAddRoute, $batch) }}">
                                         @csrf
                                         <button type="submit" class="inline-flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-xl bg-emerald-700 text-white hover:bg-emerald-600">
                                             <span class="material-symbols-outlined">add</span>
@@ -289,12 +344,12 @@
                     </div>
                     <div class="mt-4 grid grid-cols-2 gap-3">
                         <button id="print-invoice-btn" type="button" class="rounded-xl border border-emerald-700 px-3 py-3 text-sm font-semibold text-emerald-700">Print Invoice</button>
-                        <form method="POST" action="{{ route('cashier.cart.hold') }}">
+                        <form method="POST" action="{{ route($cartHoldRoute) }}">
                             @csrf
-                            <button type="submit" class="w-full rounded-xl border border-slate-300 px-3 py-3 text-sm font-semibold text-slate-700">Tunda Transaksi</button>
+                            <button type="submit" class="w-full rounded-xl border border-slate-300 px-3 py-3 text-sm font-semibold text-slate-700">Tunda Penjualan</button>
                         </form>
                     </div>
-                    <form id="checkout-form-desktop" data-checkout-form method="POST" action="{{ route('cashier.checkout') }}" class="mt-3 space-y-2">
+                    <form id="checkout-form-desktop" data-checkout-form method="POST" action="{{ route($checkoutRoute) }}" class="mt-3 space-y-2">
                         @csrf
                         <input data-print-receipt-input type="hidden" name="print_receipt" value="0" />
                         <div class="grid grid-cols-[88px_minmax(0,1fr)] gap-2">
@@ -337,6 +392,8 @@
                         </div>
                         <input type="text" name="cashier_service_name" maxlength="100" value="{{ old('cashier_service_name', '') }}" autocomplete="off" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Nama petugas / admin" />
                         <input type="text" name="customer_name" maxlength="100" value="{{ old('customer_name', '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Nama pembeli (opsional)" />
+                        <input type="text" name="po_number" maxlength="100" value="{{ old('po_number', '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="P.O. No (opsional)" />
+                        <input type="text" name="site_name" maxlength="100" value="{{ old('site_name', '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Site (opsional)" />
                         <button type="submit" data-normal-submit class="w-full rounded-2xl bg-emerald-700 py-4 text-xl font-extrabold text-white">KONFIRMASI PENJUALAN</button>
                     </form>
                 </div>
@@ -352,14 +409,14 @@
             <p class="font-bold text-slate-800" data-cart-subtotal>Rp {{ number_format($subtotal, 0, ',', '.') }}</p>
         </div>
         <div class="flex gap-2">
-            <form method="POST" action="{{ route('cashier.cart.hold') }}">
+            <form method="POST" action="{{ route($cartHoldRoute) }}">
                 @csrf
                 <button type="submit" class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-600">TUNDA</button>
             </form>
-            <a href="{{ route('cashier.drafts') }}" class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-600">DRAFT</a>
+            <a href="{{ route($draftsRoute) }}" class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-600">DRAFT</a>
         </div>
     </div>
-    <form id="checkout-form-mobile" data-checkout-form method="POST" action="{{ route('cashier.checkout') }}" class="px-4 pt-2 pb-4 space-y-2">
+    <form id="checkout-form-mobile" data-checkout-form method="POST" action="{{ route($checkoutRoute) }}" class="px-4 pt-2 pb-4 space-y-2">
         @csrf
         <input data-print-receipt-input type="hidden" name="print_receipt" value="0" />
         <input type="hidden" name="payment_method" value="{{ old('payment_method', 'cash') }}" />
@@ -368,6 +425,8 @@
         <input type="hidden" name="credit_due_date" value="{{ old('credit_due_date', '') }}" />
         <input type="hidden" name="cashier_service_name" value="" />
         <input type="hidden" name="customer_name" value="{{ old('customer_name', '') }}" />
+        <input type="hidden" name="po_number" value="{{ old('po_number', '') }}" />
+        <input type="hidden" name="site_name" value="{{ old('site_name', '') }}" />
         <div class="flex gap-2">
             <button type="button" data-print-btn class="w-12 rounded-xl border border-slate-300 bg-white text-slate-700">
                 <span class="material-symbols-outlined text-[18px]">print</span>
@@ -386,6 +445,16 @@
         <div class="mt-3 rounded-xl border border-slate-200 p-3">
             <p class="text-xs font-semibold text-slate-500">NAMA PEMBELI</p>
             <p id="confirm-customer" class="mt-1 font-semibold text-slate-900">-</p>
+        </div>
+        <div class="mt-3 grid gap-3 rounded-xl border border-slate-200 p-3 md:grid-cols-2">
+            <div>
+                <p class="text-xs font-semibold text-slate-500">P.O. NO</p>
+                <p id="confirm-po-number" class="mt-1 font-semibold text-slate-900">-</p>
+            </div>
+            <div>
+                <p class="text-xs font-semibold text-slate-500">SITE</p>
+                <p id="confirm-site-name" class="mt-1 font-semibold text-slate-900">-</p>
+            </div>
         </div>
         <div id="mobile-confirm-fields" class="mt-3 hidden space-y-2 rounded-xl border border-slate-200 p-3">
             <div class="grid grid-cols-[88px_minmax(0,1fr)] gap-2">
@@ -426,6 +495,8 @@
             </div>
             <input id="mobile-confirm-cashier-name" type="text" maxlength="100" value="{{ old('cashier_service_name', '') }}" autocomplete="off" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Nama petugas / admin" />
             <input id="mobile-confirm-customer-name" type="text" maxlength="100" value="{{ old('customer_name', '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Nama pembeli (opsional)" />
+            <input id="mobile-confirm-po-number" type="text" maxlength="100" value="{{ old('po_number', '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="P.O. No (opsional)" />
+            <input id="mobile-confirm-site-name" type="text" maxlength="100" value="{{ old('site_name', '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Site (opsional)" />
         </div>
 
         <div class="mt-4 space-y-1 rounded-xl bg-slate-50 p-3 text-sm">
@@ -454,6 +525,8 @@
     const confirmSubtotal = document.getElementById('confirm-subtotal');
     const confirmTotal = document.getElementById('confirm-total');
     const confirmCustomer = document.getElementById('confirm-customer');
+    const confirmPoNumber = document.getElementById('confirm-po-number');
+    const confirmSiteName = document.getElementById('confirm-site-name');
     const mobileConfirmFields = document.getElementById('mobile-confirm-fields');
     const mobileConfirmPaymentMethod = document.getElementById('mobile-confirm-payment-method');
     const mobileConfirmPaidAmount = document.getElementById('mobile-confirm-paid-amount');
@@ -465,6 +538,8 @@
     const mobileCreditDaysWrap = document.getElementById('mobile-credit-days-wrap');
     const mobileConfirmCashierName = document.getElementById('mobile-confirm-cashier-name');
     const mobileConfirmCustomerName = document.getElementById('mobile-confirm-customer-name');
+    const mobileConfirmPoNumber = document.getElementById('mobile-confirm-po-number');
+    const mobileConfirmSiteName = document.getElementById('mobile-confirm-site-name');
     const cancelBtn = document.getElementById('cancel-confirm-btn');
     const submitBtn = document.getElementById('submit-confirm-btn');
     const desktopPaymentMethod = desktopCheckoutForm?.querySelector('[data-payment-method]');
@@ -767,6 +842,8 @@
                 mobileConfirmCreditDays.value = form.querySelector('[name="credit_days"]')?.value || '';
                 mobileConfirmCashierName.value = form.querySelector('input[name="cashier_service_name"]')?.value || '';
                 mobileConfirmCustomerName.value = form.querySelector('input[name="customer_name"]')?.value || '';
+                mobileConfirmPoNumber.value = form.querySelector('input[name="po_number"]')?.value || '';
+                mobileConfirmSiteName.value = form.querySelector('input[name="site_name"]')?.value || '';
             }
             itemsBox.innerHTML = liveCartItems.map((item) => {
                 const qty = Number(item.qty || 0);
@@ -785,7 +862,13 @@
 
             const customerNameInput = isMobileCheckout ? mobileConfirmCustomerName : form.querySelector('input[name=\"customer_name\"]');
             const customerName = (customerNameInput?.value || '').trim();
+            const poNumberInput = isMobileCheckout ? mobileConfirmPoNumber : form.querySelector('input[name=\"po_number\"]');
+            const poNumber = (poNumberInput?.value || '').trim();
+            const siteNameInput = isMobileCheckout ? mobileConfirmSiteName : form.querySelector('input[name=\"site_name\"]');
+            const siteName = (siteNameInput?.value || '').trim();
             confirmCustomer.textContent = customerName !== '' ? customerName : '-';
+            confirmPoNumber.textContent = poNumber !== '' ? poNumber : '-';
+            confirmSiteName.textContent = siteName !== '' ? siteName : '-';
             confirmSubtotal.textContent = `Rp ${toRupiah(liveSubtotal)}`;
             confirmTotal.textContent = `Rp ${toRupiah(liveTotal)}`;
             syncCheckoutFormItems(form, liveCartItems);
@@ -811,6 +894,8 @@
             activeCheckoutForm.querySelector('input[name="credit_due_date"]').value = (mobileConfirmPaymentMethod?.value === 'credit' ? computeDueDateFromDays(getCreditDaysValue(mobileConfirmCreditDays)) : '');
             activeCheckoutForm.querySelector('input[name="cashier_service_name"]').value = mobileConfirmCashierName?.value || '';
             activeCheckoutForm.querySelector('input[name="customer_name"]').value = mobileConfirmCustomerName?.value || '';
+            activeCheckoutForm.querySelector('input[name="po_number"]').value = mobileConfirmPoNumber?.value || '';
+            activeCheckoutForm.querySelector('input[name="site_name"]').value = mobileConfirmSiteName?.value || '';
         } else if (activeCheckoutForm) {
             const paidInput = activeCheckoutForm.querySelector('input[name="paid_amount"]');
             if (paidInput) {

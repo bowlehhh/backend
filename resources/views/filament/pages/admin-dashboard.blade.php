@@ -31,6 +31,8 @@
         'Supplier Pusat',
         'Importir',
     ];
+    $currentUser = auth()->user();
+    $isAdminBesarAccess = $currentUser?->isAdminBesar() ?? false;
 @endphp
 
 <x-filament-panels::page>
@@ -387,12 +389,18 @@
                   <span class="material-symbols-outlined text-[14px]">inventory</span>
                 </div>
                 <div>
-                  <p class="text-[13px] font-semibold text-primary leading-tight">Admin Panel</p>
-                  <p class="text-[10px] uppercase tracking-wide text-on-surface-variant">Management Mode</p>
+                  <p class="text-[13px] font-semibold text-primary leading-tight">{{ $isAdminBesarAccess ? 'Admin Besar Panel' : 'Admin Panel' }}</p>
+                  <p class="text-[10px] uppercase tracking-wide text-on-surface-variant">{{ $isAdminBesarAccess ? 'Gudang Access Mode' : 'Management Mode' }}</p>
                 </div>
               </div>
             </div>
             <nav class="flex-1 flex flex-col space-y-1 overflow-y-auto pr-1">
+              @if($isAdminBesarAccess)
+                <a class="sf-nav-item flex items-center gap-2.5 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium" href="{{ route('admin.admin-besar.index') }}">
+                  <span class="material-symbols-outlined">arrow_back</span>
+                  <span>Kembali ke Dashboard Admin Besar</span>
+                </a>
+              @endif
               <a class="sf-nav-item flex items-center gap-2.5 bg-primary text-on-primary rounded-lg px-3 py-2 font-medium" href="{{ url('/admin/products') }}">
                 <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">inventory_2</span>
                 <span>Barang</span>
@@ -431,6 +439,12 @@
               <div>
                 <h1 class="sf-title font-display text-headline-lg text-on-surface mb-1">Daftar Barang</h1>
                 <p class="text-on-surface-variant text-[13px] leading-5">Kelola seluruh stok inventaris Anda di satu tempat.</p>
+                @if($isAdminBesarAccess)
+                  <a href="{{ route('admin.admin-besar.index') }}" class="mt-2 inline-flex items-center gap-2 rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[12px] font-semibold text-primary hover:bg-surface-container-high">
+                    <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                    Kembali ke Dashboard Admin Besar
+                  </a>
+                @endif
               </div>
               <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
                 <button type="button" wire:click="createOfflineBackup" wire:loading.attr="disabled" class="w-full md:w-auto bg-surface text-primary border border-outline-variant px-4 md:px-5 py-2.5 rounded-xl text-[13px] font-medium flex items-center justify-center gap-2 hover:bg-surface-container-high transition-all active:scale-95">
@@ -740,6 +754,11 @@
       const csrfToken = {{ Illuminate\Support\Js::from(csrf_token()) }};
       const productsForNotification = {{ Illuminate\Support\Js::from($products) }};
       const lowStockProducts = {{ Illuminate\Support\Js::from($lowStockProducts) }};
+      const categoryOptionSeeds = {{ Illuminate\Support\Js::from($categoryOptions) }};
+      const brandOptionSeeds = {{ Illuminate\Support\Js::from($brandOptions) }};
+      const supplierOptionSeeds = {{ Illuminate\Support\Js::from($supplierOptions) }};
+      const formHistoryStorageKey = 'admin-dashboard-product-form-history-v1';
+      const formHistoryLimit = 300;
       const globalSearchInput = document.getElementById('globalSearchInput');
       globalSearchInput?.addEventListener('input', () => {
         if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
@@ -933,9 +952,143 @@
         const blob = new Blob([csv.join('\n')], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `products-${new Date().toISOString().slice(0, 10)}.csv`; document.body.appendChild(a); a.click(); URL.revokeObjectURL(url); document.body.removeChild(a);
       }
-      function openCreateModal() {
+      function normalizeHistoryValue(value) {
+        return String(value ?? '').replace(/\s+/g, ' ').trim();
+      }
+      function readFormHistory() {
+        try {
+          const raw = window.localStorage.getItem(formHistoryStorageKey);
+          const parsed = raw ? JSON.parse(raw) : {};
+          return parsed && typeof parsed === 'object' ? parsed : {};
+        } catch (error) {
+          return {};
+        }
+      }
+      function writeFormHistory(historyState) {
+        try {
+          window.localStorage.setItem(formHistoryStorageKey, JSON.stringify(historyState));
+        } catch (error) {
+          // Abaikan bila storage penuh atau browser memblokir localStorage.
+        }
+      }
+      function historyValuesFromOptions(options, candidateKeys = []) {
+        if (!Array.isArray(options)) return [];
+        return options
+          .map((option) => {
+            if (typeof option === 'string' || typeof option === 'number') {
+              return normalizeHistoryValue(option);
+            }
+            if (!option || typeof option !== 'object') {
+              return '';
+            }
+            for (const key of candidateKeys) {
+              const candidate = normalizeHistoryValue(option[key]);
+              if (candidate !== '') return candidate;
+            }
+            return '';
+          })
+          .filter(Boolean);
+      }
+      function buildSeedHistory() {
+        const productSeeds = Array.isArray(productsForNotification) ? productsForNotification : [];
+        return {
+          product_name: productSeeds.map((item) => item?.name),
+          barcode: productSeeds.map((item) => item?.barcode || item?.sku),
+          unit: productSeeds.map((item) => item?.unit),
+          weight: productSeeds.map((item) => item?.weight),
+          weight_unit_custom: productSeeds.map((item) => item?.weight_unit),
+          slug: productSeeds.map((item) => item?.slug),
+          category: [
+            ...historyValuesFromOptions(categoryOptionSeeds, ['name', 'label', 'value']),
+            ...productSeeds.map((item) => item?.category),
+          ],
+          brand: [
+            ...historyValuesFromOptions(brandOptionSeeds, ['name', 'label', 'value']),
+            ...productSeeds.map((item) => item?.brand),
+          ],
+          supplier_name: [
+            ...historyValuesFromOptions(supplierOptionSeeds, ['name', 'label', 'value']),
+            ...productSeeds.map((item) => item?.supplier_name),
+          ],
+          supplier_phone: productSeeds.map((item) => item?.supplier_phone),
+          supplier_address: productSeeds.map((item) => item?.supplier_address),
+          batch_code: productSeeds.map((item) => item?.batch_code),
+          supplier_invoice_number: productSeeds.map((item) => item?.supplier_invoice_number),
+          purchase_date: productSeeds.map((item) => item?.purchase_date),
+          condition: productSeeds.map((item) => item?.condition),
+          processed_by: productSeeds.map((item) => item?.processed_by),
+          purchase_price: productSeeds.map((item) => item?.purchase_price_value),
+          expedition_cost: productSeeds.map((item) => item?.expedition_cost_value),
+          selling_price: productSeeds.map((item) => item?.selling_price_value),
+          stock: productSeeds.map((item) => item?.stock),
+        };
+      }
+      function getMergedFieldHistory(fieldKey) {
+        const savedHistory = readFormHistory();
+        const seedHistory = buildSeedHistory();
+        const merged = [
+          ...(Array.isArray(savedHistory[fieldKey]) ? savedHistory[fieldKey] : []),
+          ...(Array.isArray(seedHistory[fieldKey]) ? seedHistory[fieldKey] : []),
+        ]
+          .map((value) => normalizeHistoryValue(value))
+          .filter(Boolean);
+
+        return [...new Set(merged)].slice(0, formHistoryLimit);
+      }
+      function persistFormHistoryEntries(entries) {
+        const historyState = readFormHistory();
+        Object.entries(entries).forEach(([fieldKey, values]) => {
+          const currentValues = Array.isArray(historyState[fieldKey]) ? historyState[fieldKey] : [];
+          const nextValues = [
+            ...values.map((value) => normalizeHistoryValue(value)).filter(Boolean),
+            ...currentValues.map((value) => normalizeHistoryValue(value)).filter(Boolean),
+          ];
+          historyState[fieldKey] = [...new Set(nextValues)].slice(0, formHistoryLimit);
+        });
+        writeFormHistory(historyState);
+      }
+      function attachHistoryDatalist(input, formId, fieldKey) {
+        if (!input || !fieldKey) return;
+        const datalistId = `${formId}-${fieldKey}-history`;
+        let datalist = document.getElementById(datalistId);
+        if (!datalist) {
+          datalist = document.createElement('datalist');
+          datalist.id = datalistId;
+          document.body.appendChild(datalist);
+        }
+        const values = getMergedFieldHistory(fieldKey);
+        datalist.innerHTML = values.map((value) => `<option value="${escapeHtml(value)}"></option>`).join('');
+        input.setAttribute('list', datalistId);
+      }
+      function initializeFormHistoryAutocomplete(form) {
+        if (!form?.id) return;
+        form.querySelectorAll('input[data-history-key]').forEach((input) => {
+          const fieldKey = input.dataset.historyKey;
+          attachHistoryDatalist(input, form.id, fieldKey);
+        });
+      }
+      function persistFormHistoryFromForm(form) {
+        if (!form) return;
+        const entries = {};
+        form.querySelectorAll('input[data-history-key]').forEach((input) => {
+          const fieldKey = input.dataset.historyKey;
+          const value = input.type === 'checkbox' ? '' : input.value;
+          if (!fieldKey) return;
+          const normalized = normalizeHistoryValue(value);
+          if (normalized === '') return;
+          entries[fieldKey] = entries[fieldKey] || [];
+          entries[fieldKey].push(normalized);
+        });
+        persistFormHistoryEntries(entries);
+      }
+      function resetCreateFormForNextEntry() {
         resetFormState(createForm, 'createFormAlert');
         createForm.reset();
+        createForm.querySelector('[name="supplier_id"]').value = '';
+        const purchaseDateField = createForm.querySelector('[name="purchase_date"]');
+        if (purchaseDateField) {
+          purchaseDateField.value = new Date().toISOString().slice(0, 10);
+        }
         setImagePreview(createForm, null);
         createForm.querySelector('input[type="checkbox"][name="is_active"]').checked = true;
         setWeightUnitFields(createForm, 'kg');
@@ -943,8 +1096,16 @@
         syncBatchCreditFields(createForm);
         setCategoryBrandEditable(createForm, true);
         updatePurchaseTotal(createForm);
+        initializeFormHistoryAutocomplete(createForm);
+        createForm.scrollTo({ top: 0, behavior: 'smooth' });
+        window.requestAnimationFrame(() => {
+          createForm.querySelector('[name="name"]')?.focus();
+        });
+      }
+      function openCreateModal() {
         createModal.classList.remove('hidden');
         createModal.classList.add('flex');
+        resetCreateFormForNextEntry();
       }
       function closeCreateModal() { createModal.classList.add('hidden'); createModal.classList.remove('flex'); }
       function openEditModal(product) { resetFormState(editForm, 'editFormAlert'); fillProductForm(editForm, product); editModal.classList.remove('hidden'); editModal.classList.add('flex'); }
@@ -1133,6 +1294,8 @@
         form.querySelector('[name="supplier_note"]').value = product.supplier_note || '';
         form.querySelector('[name="batch_code"]').value = product.batch_code || '';
         form.querySelector('[name="supplier_invoice_number"]').value = product.supplier_invoice_number || '';
+        const purchaseDateField = form.querySelector('[name="purchase_date"]');
+        if (purchaseDateField) purchaseDateField.value = product.purchase_date || '';
         form.querySelector('[name="condition"]').value = product.condition || '';
         const processedByField = form.querySelector('[name="processed_by"]');
         if (processedByField) processedByField.value = product.processed_by || '';
@@ -1154,6 +1317,7 @@
         if (form.querySelector('[name="image"]')) form.querySelector('[name="image"]').value = '';
         setImagePreview(form, product.image_url || null);
         setCategoryBrandEditable(form, true);
+        initializeFormHistoryAutocomplete(form);
       }
       function setImagePreview(form, imageUrl) {
         const preview = form.querySelector('[data-image-preview]');
@@ -1226,6 +1390,7 @@
         formData.append('supplier_note', form.querySelector('[name="supplier_note"]').value || '');
         formData.append('batch_code', form.querySelector('[name="batch_code"]').value || '');
         formData.append('supplier_invoice_number', form.querySelector('[name="supplier_invoice_number"]')?.value || '');
+        formData.append('purchase_date', form.querySelector('[name="purchase_date"]')?.value || '');
         formData.append('condition', form.querySelector('[name="condition"]').value || '');
         formData.append('processed_by', form.querySelector('[name="processed_by"]')?.value || '');
         formData.append('purchase_price', String(parseCurrencyToNumber(form.querySelector('[name="purchase_price"]').value || '')));
@@ -1354,8 +1519,16 @@
       }
       function refreshCountText() { const visibleRows = tableBody.querySelectorAll('tr[data-product-id]').length; countText.textContent = `Menampilkan ${visibleRows > 0 ? 1 : 0}-${visibleRows} dari ${pageMeta.total} barang`; }
       function escapeHtml(value) { return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;'); }
-      createForm.addEventListener('submit', async function (event) { event.preventDefault(); const payload = await submitProductForm(createForm, storeUrl, 'POST', 'createFormAlert'); if (!payload) return; upsertProductRow(payload.product, 'create'); closeCreateModal(); createForm.reset(); setImagePreview(createForm, null); updatePurchaseTotal(createForm); showToast(payload.message || 'Barang berhasil ditambahkan.'); });
-      editForm.addEventListener('submit', async function (event) { event.preventDefault(); const productId = editForm.querySelector('[name="product_id"]').value; const payload = await submitProductForm(editForm, `${updateUrlBase}/${productId}`, 'PUT', 'editFormAlert'); if (!payload) return; upsertProductRow(payload.product, 'update'); closeEditModal(); showToast(payload.message || 'Barang berhasil diperbarui.'); });
+      createForm.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        const payload = await submitProductForm(createForm, storeUrl, 'POST', 'createFormAlert');
+        if (!payload) return;
+        persistFormHistoryFromForm(createForm);
+        upsertProductRow(payload.product, 'create');
+        resetCreateFormForNextEntry();
+        showToast((payload.message || 'Barang berhasil ditambahkan.') + ' Silakan lanjut input barang berikutnya.');
+      });
+      editForm.addEventListener('submit', async function (event) { event.preventDefault(); const productId = editForm.querySelector('[name="product_id"]').value; const payload = await submitProductForm(editForm, `${updateUrlBase}/${productId}`, 'PUT', 'editFormAlert'); if (!payload) return; persistFormHistoryFromForm(editForm); upsertProductRow(payload.product, 'update'); closeEditModal(); showToast(payload.message || 'Barang berhasil diperbarui.'); });
       createForm.querySelector('[name="stock"]')?.addEventListener('input', () => updatePurchaseTotal(createForm));
       editForm.querySelector('[name="stock"]')?.addEventListener('input', () => updatePurchaseTotal(editForm));
       createForm.querySelector('[name="payment_type"]')?.addEventListener('change', () => syncBatchCreditFields(createForm));
@@ -1382,5 +1555,7 @@
       syncWeightUnitFields(editForm);
       syncBatchCreditFields(createForm);
       syncBatchCreditFields(editForm);
+      initializeFormHistoryAutocomplete(createForm);
+      initializeFormHistoryAutocomplete(editForm);
     </script>
 </x-filament-panels::page>

@@ -260,32 +260,13 @@
                 @if($errors->any())
                     <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ $errors->first() }}</div>
                 @endif
-                <div class="mb-4 flex items-center justify-between">
+                <div class="mb-4">
                     <div>
                         <h3 class="text-2xl md:text-xl font-bold text-slate-700">Daftar Produk</h3>
                         <p class="mt-1 text-xs text-slate-500">
-                            Menampilkan {{ count($products) }} dari {{ number_format((int) ($totalFilteredProducts ?? count($products)), 0, ',', '.') }} barang
-                            @if(!empty($showAllProducts))
-                                secara penuh.
-                            @else
-                                di tampilan ringkas.
-                            @endif
+                            Menampilkan {{ count($products) }} dari {{ number_format((int) ($totalFilteredProducts ?? count($products)), 0, ',', '.') }} barang di tampilan ringkas.
                         </p>
                     </div>
-                    @php
-                        $toggleQuery = request()->query();
-                        if (!empty($showAllProducts)) {
-                            unset($toggleQuery['show_all']);
-                        } else {
-                            $toggleQuery['show_all'] = 1;
-                        }
-                    @endphp
-                    <a
-                        href="{{ route($transactionDashboardRoute, $toggleQuery) }}"
-                        class="inline-flex items-center rounded-xl border border-emerald-200 bg-white px-3 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50"
-                    >
-                        {{ !empty($showAllProducts) ? 'Tampilkan Ringkas' : 'Lihat Semua' }}
-                    </a>
                 </div>
 
                 <div class="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4">

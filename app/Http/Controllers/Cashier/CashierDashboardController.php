@@ -77,9 +77,7 @@ class CashierDashboardController extends Controller
 
         $totalFilteredProducts = (clone $productsQuery)->count();
 
-        if (! $showAllProducts) {
-            $productsQuery->limit(12);
-        }
+        $productsQuery->limit(12);
 
         $products = $productsQuery->get();
 

@@ -40,6 +40,8 @@ Route::middleware('guest')->group(function (): void {
 Route::middleware('auth')->post('/logout', [WebLoginController::class, 'destroy'])->name('logout');
 
 Route::middleware(['auth', 'role:admin,admin_besar'])->prefix('admin/dashboard')->group(function (): void {
+    Route::get('/products/suggestions', [AdminDashboardProductController::class, 'suggestions'])
+        ->name('admin.dashboard.products.suggestions');
     Route::post('/products', [AdminDashboardProductController::class, 'store'])
         ->name('admin.dashboard.products.store');
     Route::put('/products/{product}', [AdminDashboardProductController::class, 'update'])

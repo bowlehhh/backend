@@ -526,6 +526,8 @@
                       @php
                         $stock = (int) ($product['stock'] ?? 0);
                         $low = $stock <= 5;
+                        $partNumber = trim((string) ($product['part_number'] ?? $product['barcode'] ?? $product['sku'] ?? '')) ?: '-';
+                        $partName = trim((string) ($product['part_name'] ?? $product['name'] ?? '')) ?: '-';
                         $unit = trim((string) ($product['unit'] ?? '')) ?: '-';
                         $stockUnit = $unit !== '-' ? $unit : 'Unit';
                         $weight = $product['weight'] ?? null;
@@ -554,12 +556,12 @@
                             <div>
                               @if (!empty($product['supplier_id']))
                                 <a href="{{ url('/admin/suppliers/' . $product['supplier_id']) }}#riwayat-pembelian" class="inline-flex max-w-full cursor-pointer flex-col text-left" title="Lihat detail supplier">
-                                  <p class="sf-part-number transition-colors hover:text-primary">{{ $product['sku'] ?? '-' }}</p>
-                                  <p class="sf-product-name">{{ $product['name'] ?? '-' }}</p>
+                                  <p class="sf-part-number transition-colors hover:text-primary">{{ $partNumber }}</p>
+                                  <p class="sf-product-name">{{ $partName }}</p>
                                 </a>
                               @else
-                                <p class="sf-part-number">{{ $product['sku'] ?? '-' }}</p>
-                                <p class="sf-product-name">{{ $product['name'] ?? '-' }}</p>
+                                <p class="sf-part-number">{{ $partNumber }}</p>
+                                <p class="sf-product-name">{{ $partName }}</p>
                               @endif
                             </div>
                           </div>
@@ -749,6 +751,7 @@
       const imagePreviewTarget = document.getElementById('imagePreviewTarget');
       const imagePreviewTitle = document.getElementById('imagePreviewTitle');
       const pageMeta = { currentPage: {{ (int) ($pagination['current_page'] ?? 1) }}, perPage: {{ (int) ($pagination['per_page'] ?? (count($products) ?: 10)) }}, total: {{ (int) ($pagination['total'] ?? count($products)) }} };
+      const productSuggestionUrl = {{ Illuminate\Support\Js::from(route('admin.dashboard.products.suggestions')) }};
       const storeUrl = {{ Illuminate\Support\Js::from(route('admin.dashboard.products.store')) }};
       const updateUrlBase = {{ Illuminate\Support\Js::from(url('/admin/dashboard/products')) }};
       const csrfToken = {{ Illuminate\Support\Js::from(csrf_token()) }};
@@ -759,6 +762,8 @@
       const supplierOptionSeeds = {{ Illuminate\Support\Js::from($supplierOptions) }};
       const formHistoryStorageKey = 'admin-dashboard-product-form-history-v1';
       const formHistoryLimit = 300;
+      let partNumberSuggestionTimer;
+      let partNumberSuggestionAbortController = null;
       const globalSearchInput = document.getElementById('globalSearchInput');
       globalSearchInput?.addEventListener('input', () => {
         if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
@@ -1097,9 +1102,10 @@
         setCategoryBrandEditable(createForm, true);
         updatePurchaseTotal(createForm);
         initializeFormHistoryAutocomplete(createForm);
+        hidePartNumberSuggestions(createForm);
         createForm.scrollTo({ top: 0, behavior: 'smooth' });
         window.requestAnimationFrame(() => {
-          createForm.querySelector('[name="name"]')?.focus();
+          createForm.querySelector('[name="barcode"]')?.focus();
         });
       }
       function openCreateModal() {
@@ -1319,6 +1325,147 @@
         setCategoryBrandEditable(form, true);
         initializeFormHistoryAutocomplete(form);
       }
+      function applyAutofillProductToCreateForm(form, product) {
+        if (!form || !product) return;
+        form.querySelector('[name="barcode"]').value = product.barcode || product.part_number || product.sku || '';
+        form.querySelector('[name="name"]').value = product.part_name || product.name || '';
+        form.querySelector('[name="unit"]').value = product.unit || '';
+        form.querySelector('[name="weight"]').value = product.weight || '';
+        setWeightUnitFields(form, product.weight_unit || 'kg');
+        form.querySelector('[name="slug"]').value = product.slug || '';
+        form.querySelector('[name="category"]').value = product.category || '';
+        form.querySelector('[name="brand"]').value = product.brand || '';
+        form.querySelector('[name="supplier_id"]').value = product.supplier_id || '';
+        form.querySelector('[name="supplier_name"]').value = product.supplier_name || '';
+        const supplierBranchField = form.querySelector('[name="supplier_branch"]');
+        if (supplierBranchField) supplierBranchField.value = product.supplier_branch || '';
+        form.querySelector('[name="supplier_phone"]').value = product.supplier_phone || '';
+        form.querySelector('[name="supplier_address"]').value = product.supplier_address || '';
+        form.querySelector('[name="supplier_note"]').value = product.supplier_note || '';
+        form.querySelector('[name="condition"]').value = product.condition || '';
+        const purchasePriceField = form.querySelector('[name="purchase_price"]');
+        if (purchasePriceField) purchasePriceField.value = formatRupiahInput(product.purchase_price_value ?? '');
+        const expeditionCostField = form.querySelector('[name="expedition_cost"]');
+        if (expeditionCostField) expeditionCostField.value = formatRupiahInput(product.expedition_cost_value ?? '');
+        const sellingPriceField = form.querySelector('[name="selling_price"]');
+        if (sellingPriceField) sellingPriceField.value = formatRupiahInput(product.selling_price_value ?? '');
+        const paymentTypeField = form.querySelector('[name="payment_type"]');
+        if (paymentTypeField) paymentTypeField.value = product.payment_type || 'LUNAS';
+        const creditDaysField = form.querySelector('[name="credit_days"]');
+        if (creditDaysField) creditDaysField.value = product.credit_days || '';
+        syncBatchCreditFields(form);
+        updatePurchaseTotal(form);
+      }
+      function getPartNumberAutofillElements(form) {
+        if (!form) return {};
+        const wrap = form.querySelector('[data-part-number-autofill]');
+        return {
+          wrap,
+          input: form.querySelector('[name="barcode"]'),
+          panel: wrap?.querySelector('[data-part-number-suggestions]'),
+          helper: form.querySelector('[data-part-number-helper]'),
+        };
+      }
+      function hidePartNumberSuggestions(form) {
+        const { panel, helper } = getPartNumberAutofillElements(form);
+        if (panel) {
+          panel.innerHTML = '';
+          panel.classList.add('hidden');
+        }
+        helper?.classList.add('hidden');
+      }
+      function renderPartNumberSuggestions(form, items) {
+        const { panel, helper } = getPartNumberAutofillElements(form);
+        if (!panel) return;
+        if (!Array.isArray(items) || items.length === 0) {
+          hidePartNumberSuggestions(form);
+          return;
+        }
+        panel.innerHTML = items.map((item) => {
+          const serialized = encodeURIComponent(JSON.stringify(item));
+          return `
+            <button type="button" class="flex w-full items-start justify-between gap-3 border-b border-outline-variant px-3 py-2.5 text-left last:border-b-0 hover:bg-surface-container" data-part-number-select="${serialized}">
+              <span class="min-w-0">
+                <span class="block truncate text-[13px] font-semibold text-on-surface">${escapeHtml(item.part_number || item.barcode || item.sku || '-')}</span>
+                <span class="mt-0.5 block truncate text-[12px] text-on-surface-variant">${escapeHtml(item.part_name || item.name || '-')}</span>
+              </span>
+              <span class="shrink-0 text-right text-[11px] text-on-surface-variant">
+                <span class="block">${escapeHtml(item.brand || '-')}</span>
+                <span class="block">${escapeHtml(item.supplier_name || '-')}</span>
+              </span>
+            </button>
+          `;
+        }).join('');
+        panel.classList.remove('hidden');
+        helper?.classList.remove('hidden');
+        panel.querySelectorAll('[data-part-number-select]').forEach((button) => {
+          button.addEventListener('click', () => {
+            try {
+              const product = JSON.parse(decodeURIComponent(button.dataset.partNumberSelect || ''));
+              applyAutofillProductToCreateForm(form, product);
+            } catch (error) {
+              // Abaikan bila data rekomendasi rusak.
+            }
+            hidePartNumberSuggestions(form);
+            form.querySelector('[name="name"]')?.focus();
+          });
+        });
+      }
+      async function fetchPartNumberSuggestions(form, query) {
+        if (partNumberSuggestionAbortController) {
+          partNumberSuggestionAbortController.abort();
+        }
+        partNumberSuggestionAbortController = new AbortController();
+        try {
+          const url = new URL(productSuggestionUrl, window.location.origin);
+          url.searchParams.set('q', query);
+          const response = await fetch(url.toString(), {
+            headers: {
+              'Accept': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest',
+            },
+            signal: partNumberSuggestionAbortController.signal,
+          });
+          if (!response.ok) {
+            hidePartNumberSuggestions(form);
+            return;
+          }
+          const payload = await response.json().catch(() => ({}));
+          renderPartNumberSuggestions(form, Array.isArray(payload.items) ? payload.items : []);
+        } catch (error) {
+          if (error.name !== 'AbortError') {
+            hidePartNumberSuggestions(form);
+          }
+        }
+      }
+      function initializePartNumberAutofill(form) {
+        if (!form || form.dataset.partNumberAutofillBound === '1') return;
+        const { input, wrap } = getPartNumberAutofillElements(form);
+        if (!input || !wrap) return;
+        form.dataset.partNumberAutofillBound = '1';
+        input.addEventListener('input', () => {
+          input.value = String(input.value || '').toUpperCase();
+          const query = input.value.trim();
+          if (partNumberSuggestionTimer) clearTimeout(partNumberSuggestionTimer);
+          if (query.length < 2) {
+            hidePartNumberSuggestions(form);
+            return;
+          }
+          partNumberSuggestionTimer = setTimeout(() => {
+            fetchPartNumberSuggestions(form, query);
+          }, 220);
+        });
+        input.addEventListener('focus', () => {
+          const query = String(input.value || '').trim();
+          if (query.length >= 2) {
+            fetchPartNumberSuggestions(form, query);
+          }
+        });
+        document.addEventListener('click', (event) => {
+          if (wrap.contains(event.target)) return;
+          hidePartNumberSuggestions(form);
+        });
+      }
       function setImagePreview(form, imageUrl) {
         const preview = form.querySelector('[data-image-preview]');
         if (!preview) return;
@@ -1465,6 +1612,8 @@
         const expeditionValue = product.expedition_cost_value ?? product.expedition_cost ?? product.shipping_cost ?? 0;
         const expeditionNumber = parseCurrencyToNumber(expeditionValue);
         const expeditionCost = `Rp ${Number.isFinite(expeditionNumber) ? Math.round(expeditionNumber).toLocaleString('id-ID') : '0'}`;
+        const partNumber = String(product.part_number || product.barcode || product.sku || '-').trim() || '-';
+        const partName = String(product.part_name || product.name || '-').trim() || '-';
         const encodedProduct = encodeURIComponent(JSON.stringify(product));
         return `
           <tr class="hover:bg-surface-container-low transition-colors group" data-product-id="${product.id}">
@@ -1474,8 +1623,8 @@
                   ${product.image_url ? `<button type="button" class="h-full w-full" onclick='openImagePreview(${JSON.stringify(product.image_url)}, ${JSON.stringify(product.name || 'Foto barang')})'><img src="${escapeHtml(product.image_url)}" alt="${escapeHtml(product.name || 'Foto barang')}" class="h-full w-full object-cover"></button>` : `<span class="material-symbols-outlined text-primary">inventory_2</span>`}
                 </div>
                 <div>
-                  <p class="sf-part-number">${escapeHtml(product.sku || '-')}</p>
-                  <p class="sf-product-name">${escapeHtml(product.name || '-')}</p>
+                  <p class="sf-part-number">${escapeHtml(partNumber)}</p>
+                  <p class="sf-product-name">${escapeHtml(partName)}</p>
                 </div>
               </div>
             </td>
@@ -1557,5 +1706,6 @@
       syncBatchCreditFields(editForm);
       initializeFormHistoryAutocomplete(createForm);
       initializeFormHistoryAutocomplete(editForm);
+      initializePartNumberAutofill(createForm);
     </script>
 </x-filament-panels::page>

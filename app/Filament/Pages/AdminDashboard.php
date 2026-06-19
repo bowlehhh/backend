@@ -306,11 +306,15 @@ class AdminDashboard extends Page
         $mappedItems = $items->map(function ($item) {
             $details = $this->getProductDetails((int) $item->id);
             $stock = (int) ($details['stock'] ?? 0);
+            $partNumber = $item->barcode ?: 'SKU-' . str_pad((string) $item->id, 4, '0', STR_PAD_LEFT);
+            $partName = $item->product_name ?? '-';
 
             return [
                 'id' => $item->id,
-                'name' => $item->product_name ?? '-',
-                'sku' => $item->barcode ?: 'SKU-' . str_pad((string) $item->id, 4, '0', STR_PAD_LEFT),
+                'name' => $partName,
+                'part_name' => $partName,
+                'sku' => $partNumber,
+                'part_number' => $partNumber,
                 'barcode' => $item->barcode,
                 'created_at' => $item->created_at ? \Illuminate\Support\Carbon::parse($item->created_at)->format('d M Y H:i') : '-',
                 'unit' => $details['unit'] ?? null,

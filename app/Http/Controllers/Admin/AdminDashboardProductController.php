@@ -14,6 +14,7 @@ use App\Models\StockHistory;
 use App\Models\Supplier;
 use App\Support\AdminBesarCache;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -21,6 +22,50 @@ use Illuminate\Support\Str;
 
 class AdminDashboardProductController extends Controller
 {
+    public function suggestions(Request $request): JsonResponse
+    {
+        $query = trim((string) $request->query('q', ''));
+
+        if (mb_strlen($query) < 2) {
+            return response()->json(['items' => []]);
+        }
+
+        $nameColumn = Schema::hasColumn('products', 'name') ? 'name' : 'nama_barang';
+        $barcodeColumn = Schema::hasColumn('products', 'barcode') ? 'barcode' : null;
+
+        $products = Product::query()
+            ->with(['category', 'brand', 'latestBatch.supplier'])
+            ->when(Schema::hasColumn('products', 'deleted_at'), fn ($builder) => $builder->whereNull('deleted_at'))
+            ->when($barcodeColumn, function ($builder) use ($barcodeColumn, $query, $nameColumn) {
+                $builder
+                    ->where(function ($nested) use ($barcodeColumn, $query, $nameColumn) {
+                        $nested
+                            ->where($barcodeColumn, 'like', $query . '%')
+                            ->orWhere($barcodeColumn, 'like', '%' . $query . '%')
+                            ->orWhere($nameColumn, 'like', '%' . $query . '%');
+                    })
+                    ->orderByRaw(
+                        "CASE
+                            WHEN {$barcodeColumn} LIKE ? THEN 0
+                            WHEN {$barcodeColumn} LIKE ? THEN 1
+                            ELSE 2
+                        END",
+                        [$query . '%', '%' . $query . '%']
+                    );
+            }, function ($builder) use ($query, $nameColumn) {
+                $builder->where($nameColumn, 'like', '%' . $query . '%');
+            })
+            ->orderByDesc('id')
+            ->limit(8)
+            ->get()
+            ->map(fn (Product $product) => $this->makeProductPayload($product))
+            ->values();
+
+        return response()->json([
+            'items' => $products,
+        ]);
+    }
+
     public function store(StoreDashboardProductRequest $request): JsonResponse
     {
         $product = DB::transaction(function () use ($request): Product {
@@ -276,13 +321,17 @@ class AdminDashboardProductController extends Controller
     private function makeProductPayload(Product $product): array
     {
         $batch = $product->latestBatch;
+        $partNumber = $product->barcode ?: 'SKU-' . str_pad((string) $product->id, 4, '0', STR_PAD_LEFT);
+        $partName = $product->name;
 
         return [
             'id' => $product->id,
-            'name' => $product->name,
+            'name' => $partName,
+            'part_name' => $partName,
             'slug' => $product->slug,
             'created_at' => $product->created_at?->format('d M Y H:i'),
-            'sku' => $product->barcode ?: 'SKU-' . str_pad((string) $product->id, 4, '0', STR_PAD_LEFT),
+            'sku' => $partNumber,
+            'part_number' => $partNumber,
             'barcode' => $product->barcode,
             'unit' => $product->unit,
             'weight' => $product->weight,

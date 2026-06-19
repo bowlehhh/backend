@@ -3,8 +3,12 @@
   <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
     <div>
       <label class="mb-1 block text-[12px] font-medium text-on-surface">Part Number</label>
-      <input type="text" name="barcode" data-history-key="barcode" autocomplete="off" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] uppercase focus:border-primary focus:outline-none">
+      <div class="relative" data-part-number-autofill>
+        <input type="text" name="barcode" data-history-key="barcode" autocomplete="off" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] uppercase focus:border-primary focus:outline-none">
+        <div data-part-number-suggestions class="absolute left-0 right-0 top-[calc(100%+0.35rem)] z-20 hidden overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-xl"></div>
+      </div>
       <p class="mt-1 text-[11px] leading-4 text-on-surface-variant">Boleh sama kalau kondisi atau waktu input berbeda.</p>
+      <p class="mt-1 hidden text-[11px] leading-4 text-primary" data-part-number-helper>Pilih rekomendasi untuk isi otomatis data barang yang pernah dibuat.</p>
       <p class="mt-1 text-xs text-error" data-error-for="barcode"></p>
     </div>
     <div>

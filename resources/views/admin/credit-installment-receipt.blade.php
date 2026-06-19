@@ -222,7 +222,7 @@
         <div class="actions">
             <button class="btn fill" onclick="window.print()">Print Nota</button>
             <a class="btn" href="{{ route('admin.credits.installment.receipt', ['batch' => $batch->id, 'installment' => $installment->id, 'pdf' => 1]) }}">Download PDF</a>
-            <a class="btn" href="{{ url('/admin/products') }}">Kembali ke Barang</a>
+            <a class="btn" href="{{ url('/admin/products') }}">Kembali ke Daftar Stok</a>
         </div>
     @endif
 </div>

@@ -78,6 +78,9 @@ class InvoiceService
             ->values();
 
         return [
+            'discount_percent' => (float) (($groupedItems->sum('subtotal') ?: 0) > 0
+                ? (((float) ($sale->discount_amount ?? 0) / (float) $groupedItems->sum('subtotal')) * 100)
+                : 0),
             'store_name' => config('app.name'),
             'invoice_number' => $sale->invoice_number,
             'transaction_date' => $sale->created_at?->format('Y-m-d H:i:s'),
@@ -86,6 +89,8 @@ class InvoiceService
             'paid_amount' => (float) $sale->paid_amount,
             'down_payment_amount' => (float) $sale->paid_amount,
             'change_amount' => (float) $sale->change_amount,
+            'discount_amount' => (float) ($sale->discount_amount ?? 0),
+            'subtotal_before_discount' => (float) $groupedItems->sum('subtotal'),
             'total' => (float) $sale->total,
             'credit_amount' => (float) ($sale->credit_amount ?? 0),
             'remaining_credit_amount' => (float) ($sale->credit_amount ?? 0),

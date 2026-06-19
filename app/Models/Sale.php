@@ -23,6 +23,7 @@ class Sale extends Model
         'cashier_service_name',
         'cashier_phone',
         'total',
+        'discount_amount',
         'payment_method',
         'paid_amount',
         'change_amount',
@@ -35,6 +36,7 @@ class Sale extends Model
     {
         return [
             'total' => 'decimal:2',
+            'discount_amount' => 'decimal:2',
             'paid_amount' => 'decimal:2',
             'change_amount' => 'decimal:2',
             'credit_amount' => 'decimal:2',

@@ -73,7 +73,7 @@ class AdminDashboardProductController extends Controller
             $category = $this->resolveCategory($payload);
             $brand = $this->resolveBrand($payload);
             $supplier = $this->resolveSupplier($payload);
-            $name = trim((string) ($payload['name'] ?? '')) ?: 'Barang Baru';
+            $name = trim((string) ($payload['name'] ?? '')) ?: 'Stok Baru';
             $slugSource = $this->resolveSlugSource($payload, $name);
             $purchasePrice = (float) ($payload['purchase_price'] ?? 0);
             $sellingPrice = (float) ($payload['selling_price'] ?? 0);
@@ -149,7 +149,7 @@ class AdminDashboardProductController extends Controller
                 'action' => 'product_created',
                 'subject_type' => Product::class,
                 'subject_id' => $product->id,
-                'title' => 'Tambah Barang',
+                'title' => 'Tambah Stok',
                 'description' => 'Menambahkan barang baru dan stok awal dari dashboard admin.',
                 'meta' => [
                     'product_name' => $product->name,
@@ -167,7 +167,7 @@ class AdminDashboardProductController extends Controller
         AdminBesarCache::forgetToday();
 
         return response()->json([
-            'message' => 'Barang berhasil ditambahkan.',
+            'message' => 'Stok berhasil ditambahkan.',
             'product' => $this->makeProductPayload($product),
         ], JsonResponse::HTTP_CREATED);
     }
@@ -273,7 +273,7 @@ class AdminDashboardProductController extends Controller
                 'action' => 'product_updated',
                 'subject_type' => Product::class,
                 'subject_id' => $product->id,
-                'title' => 'Edit Barang',
+                'title' => 'Edit Stok',
                 'description' => 'Memperbarui data barang dari dashboard admin.',
                 'meta' => [
                     'product_name' => $product->name,
@@ -292,7 +292,7 @@ class AdminDashboardProductController extends Controller
         AdminBesarCache::forgetToday();
 
         return response()->json([
-            'message' => 'Barang berhasil diperbarui.',
+            'message' => 'Stok berhasil diperbarui.',
             'product' => $this->makeProductPayload($product),
         ]);
     }

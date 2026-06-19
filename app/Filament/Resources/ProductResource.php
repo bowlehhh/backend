@@ -32,11 +32,11 @@ class ProductResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-cube';
 
-    protected static ?string $navigationLabel = 'Barang';
+    protected static ?string $navigationLabel = 'Daftar Stok';
 
-    protected static ?string $modelLabel = 'Barang';
+    protected static ?string $modelLabel = 'Stok';
 
-    protected static ?string $pluralModelLabel = 'Barang';
+    protected static ?string $pluralModelLabel = 'Daftar Stok';
 
     protected static UnitEnum|string|null $navigationGroup = 'Inventory';
 
@@ -45,12 +45,12 @@ class ProductResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Informasi Barang')
+            Section::make('Informasi Stok')
                 ->description('Kelola data master produk untuk inventory dan POS.')
                 ->schema([
                     Grid::make(2)->schema([
                         TextInput::make('name')
-                            ->label('Nama Barang')
+                            ->label('Nama Stok')
                             ->required()
                             ->live(onBlur: true)
                             ->afterStateUpdated(function (Set $set, ?string $state): void {
@@ -111,7 +111,7 @@ class ProductResource extends Resource
                             ->required()
                             ->formatStateUsing(fn (?Product $record): string => $record?->latestBatch?->supplier?->name ?? ''),
                         TextInput::make('supplier_branch')
-                            ->label('Nama Barang')
+                            ->label('Nama Stok')
                             ->readOnly()
                             ->formatStateUsing(fn (?Product $record): string => $record?->latestBatch?->supplier?->branch ?? ''),
                         TextInput::make('supplier_phone')
@@ -137,7 +137,7 @@ class ProductResource extends Resource
             ->searchable()
             ->columns([
                 TextColumn::make('name')
-                    ->label('Nama Barang')
+                    ->label('Nama Stok')
                     ->searchable()
                     ->sortable()
                     ->description(fn (Product $record): string => collect([
@@ -199,7 +199,7 @@ class ProductResource extends Resource
             ])
             ->toolbarActions([
                 \Filament\Actions\CreateAction::make()
-                    ->label('Tambah Barang'),
+                    ->label('Tambah Stok'),
             ]);
     }
 

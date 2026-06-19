@@ -78,6 +78,11 @@ class SaleResource extends JsonResource
             'customer_phone' => $this->customer_phone,
             'cashier_service_name' => $this->cashier_service_name,
             'cashier_phone' => $this->cashier_phone,
+            'discount_percent' => (float) ((($groupedItems->sum('subtotal') ?: 0) > 0)
+                ? (((float) ($this->discount_amount ?? 0) / (float) $groupedItems->sum('subtotal')) * 100)
+                : 0),
+            'discount_amount' => (float) ($this->discount_amount ?? 0),
+            'subtotal_before_discount' => (float) $groupedItems->sum('subtotal'),
             'total' => (float) $this->total,
             'payment_method' => $this->payment_method,
             'paid_amount' => (float) $this->paid_amount,

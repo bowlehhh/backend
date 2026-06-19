@@ -89,12 +89,12 @@ class CheckoutService
      */
     public function checkout(User $cashier, array $payload): Sale
     {
-        $datePart = now()->format('Ymd');
-        $this->acquireInvoiceNumberLock($datePart);
+        $invoicePeriod = now()->format('Ym');
+        $this->acquireInvoiceNumberLock($invoicePeriod);
         $sale = null;
 
         try {
-            $sale = DB::transaction(function () use ($cashier, $payload, $datePart): Sale {
+            $sale = DB::transaction(function () use ($cashier, $payload, $invoicePeriod): Sale {
                 $itemsPayload = collect($payload['items']);
                 $partNumbers = $itemsPayload
                     ->map(fn (array $item): string => $this->normalizePartNumberKey(
@@ -347,6 +347,11 @@ class CheckoutService
                     }
                 }
 
+                $discountPercent = isset($payload['discount_amount']) ? max(0, min(100, (float) $payload['discount_amount'])) : 0.0;
+                $discountAmount = $total > 0 ? round(($total * $discountPercent) / 100, 2) : 0.0;
+                $discountAmount = min($total, $discountAmount);
+                $totalAfterDiscount = max(0, $total - $discountAmount);
+
                 $paymentMethod = strtolower((string) ($payload['payment_method'] ?? 'cash'));
                 $paidAmount = isset($payload['paid_amount']) ? (float) $payload['paid_amount'] : 0.0;
                 $creditAmount = 0.0;
@@ -361,17 +366,17 @@ class CheckoutService
                 }
 
                 if ($paymentMethod === 'cash') {
-                    if ($paidAmount < $total) {
+                    if ($paidAmount < $totalAfterDiscount) {
                         throw ValidationException::withMessages([
                             'paid_amount' => ['Jumlah bayar harus sama atau lebih besar dari total.'],
                         ]);
                     }
 
-                    $changeAmount = max(0, $paidAmount - $total);
+                    $changeAmount = max(0, $paidAmount - $totalAfterDiscount);
                 } elseif ($paymentMethod === 'credit') {
                     // Kredit dapat memakai DP parsial. Sisa akan disimpan di credit_amount.
-                    $paidAmount = min($total, max(0, $paidAmount));
-                    $creditAmount = max(0, $total - $paidAmount);
+                    $paidAmount = min($totalAfterDiscount, max(0, $paidAmount));
+                    $creditAmount = max(0, $totalAfterDiscount - $paidAmount);
 
                     if ($creditAmount > 0) {
                         $dueDateInput = $payload['credit_due_date'] ?? null;
@@ -401,20 +406,21 @@ class CheckoutService
                         $creditDays = Carbon::today()->diffInDays($creditDueDate);
                     }
                 } else {
-                    $paidAmount = $paidAmount > 0 ? $paidAmount : $total;
-                    $changeAmount = max(0, $paidAmount - $total);
+                    $paidAmount = $paidAmount > 0 ? $paidAmount : $totalAfterDiscount;
+                    $changeAmount = max(0, $paidAmount - $totalAfterDiscount);
                 }
 
                 $sale = Sale::create([
                     'user_id' => $cashier->id,
-                    'invoice_number' => $this->generateInvoiceNumber($datePart),
+                    'invoice_number' => $this->generateInvoiceNumber($invoicePeriod),
                     'customer_name' => $payload['customer_name'] ?? null,
                     'customer_phone' => $payload['customer_phone'] ?? null,
                     'po_number' => $payload['po_number'] ?? null,
                     'site_name' => $payload['site_name'] ?? null,
                     'cashier_service_name' => $payload['cashier_service_name'] ?? null,
                     'cashier_phone' => $payload['cashier_phone'] ?? null,
-                    'total' => $total,
+                    'total' => $totalAfterDiscount,
+                    'discount_amount' => $discountAmount,
                     'payment_method' => $paymentMethod,
                     'paid_amount' => $paidAmount,
                     'change_amount' => $changeAmount,
@@ -454,20 +460,20 @@ class CheckoutService
                 return $sale->load(['user:id,name', 'items']);
             });
         } finally {
-            $this->releaseInvoiceNumberLock($datePart);
+            $this->releaseInvoiceNumberLock($invoicePeriod);
         }
 
         AdminBesarCache::forgetToday();
         return $sale;
     }
 
-    private function acquireInvoiceNumberLock(string $datePart): void
+    private function acquireInvoiceNumberLock(string $invoicePeriod): void
     {
         if (! in_array(DB::getDriverName(), ['mysql', 'mariadb'], true)) {
             return;
         }
 
-        $lockName = 'sales_invoice_number_' . $datePart;
+        $lockName = 'sales_invoice_number_' . $invoicePeriod;
         $result = DB::selectOne('SELECT GET_LOCK(?, 10) AS lock_acquired', [$lockName]);
 
         if (! $result || (int) ($result->lock_acquired ?? 0) !== 1) {
@@ -477,13 +483,13 @@ class CheckoutService
         }
     }
 
-    private function releaseInvoiceNumberLock(string $datePart): void
+    private function releaseInvoiceNumberLock(string $invoicePeriod): void
     {
         if (! in_array(DB::getDriverName(), ['mysql', 'mariadb'], true)) {
             return;
         }
 
-        $lockName = 'sales_invoice_number_' . $datePart;
+        $lockName = 'sales_invoice_number_' . $invoicePeriod;
 
         try {
             DB::selectOne('SELECT RELEASE_LOCK(?) AS lock_released', [$lockName]);
@@ -492,10 +498,11 @@ class CheckoutService
         }
     }
 
-    private function generateInvoiceNumber(string $datePart): string
+    private function generateInvoiceNumber(string $invoicePeriod): string
     {
-        // Format: INV-YYYYMMDD-0001, reset counter per hari.
-        $prefix = "INV-{$datePart}-";
+        // Format baru: INV-YYYYMM-0001, nomor urut kontinyu per bulan.
+        // Invoice lama tetap aman dan tidak diubah.
+        $prefix = "INV-{$invoicePeriod}-";
 
         $nextNumber = Sale::withTrashed()
             ->where('invoice_number', 'like', "{$prefix}%")

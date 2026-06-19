@@ -10,7 +10,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detail Barang - {{ $product->barcode ?? '-' }}</title>
+    <title>Detail Stok - {{ $product->barcode ?? '-' }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -23,24 +23,24 @@
     <div class="mb-5 rounded-2xl border border-[#d4dbd7] bg-white px-5 py-4 card-shadow">
         <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
-                <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">Detail Barang</h1>
+                <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">Detail Stok</h1>
                 <p class="mt-1 text-[#52615a]">Pantau riwayat pembelian admin, transaksi kasir, retur, dan nota per part number.</p>
             </div>
             <div class="flex flex-wrap gap-2">
                 <a href="{{ route('admin.product-groups.receipt', ['product' => $product->id]) }}" class="rounded-xl border border-[#bccac0] bg-white px-4 py-2 text-sm font-semibold text-[#006948] hover:bg-[#eef7f3]">Print Nota</a>
-                <a href="{{ url('/admin/products') }}" class="rounded-xl border border-[#bccac0] bg-white px-4 py-2 text-sm font-semibold text-[#006948] hover:bg-[#eef7f3]">Kembali ke Barang</a>
-                <a href="{{ url('/admin/admin-module?type=product-groups') }}" class="rounded-xl border border-[#bccac0] bg-white px-4 py-2 text-sm font-semibold text-[#006948] hover:bg-[#eef7f3]">Kelompok Barang</a>
+                <a href="{{ url('/admin/products') }}" class="rounded-xl border border-[#bccac0] bg-white px-4 py-2 text-sm font-semibold text-[#006948] hover:bg-[#eef7f3]">Kembali ke Daftar Stok</a>
+                <a href="{{ url('/admin/admin-module?type=product-groups') }}" class="rounded-xl border border-[#bccac0] bg-white px-4 py-2 text-sm font-semibold text-[#006948] hover:bg-[#eef7f3]">Kelompok Stok</a>
             </div>
         </div>
     </div>
 
     <section class="mb-4 rounded-2xl border border-[#d4dbd7] bg-white overflow-hidden card-shadow">
         <div class="border-b border-[#d4dbd7] px-5 py-3 bg-[#f8fbfa]">
-            <h2 class="text-lg font-bold text-[#193429]">Informasi Barang</h2>
+            <h2 class="text-lg font-bold text-[#193429]">Informasi Stok</h2>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4 p-5">
             <div><p class="text-xs uppercase tracking-wide text-[#5c6b64]">Part Number</p><p class="mt-1 text-2xl font-semibold">{{ $product->barcode ?? '-' }}</p></div>
-            <div><p class="text-xs uppercase tracking-wide text-[#5c6b64]">Nama Barang</p><p class="mt-1 text-2xl font-semibold">{{ $product->name ?? '-' }}</p></div>
+            <div><p class="text-xs uppercase tracking-wide text-[#5c6b64]">Nama Stok</p><p class="mt-1 text-2xl font-semibold">{{ $product->name ?? '-' }}</p></div>
             <div><p class="text-xs uppercase tracking-wide text-[#5c6b64]">Kategori</p><p class="mt-1 text-2xl font-semibold">{{ $product->category?->name ?? '-' }}</p></div>
             <div><p class="text-xs uppercase tracking-wide text-[#5c6b64]">Merek</p><p class="mt-1 text-2xl font-semibold">{{ $product->brand?->name ?? '-' }}</p></div>
             <div><p class="text-xs uppercase tracking-wide text-[#5c6b64]">Unit</p><p class="mt-1 text-2xl font-semibold">{{ $product->unit ?? '-' }}</p></div>

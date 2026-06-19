@@ -24,7 +24,7 @@ class ProductGroupCsvExportController extends Controller
             };
 
             $writeRow(['SURYA DUTA MULTINDO']);
-            $writeRow(['Export Kelompok Barang - per part number, histori pembelian, dan histori penjualan']);
+            $writeRow(['Export Kelompok Stok - per part number, histori pembelian, dan histori penjualan']);
             $writeRow([]);
 
             $summary = $report['summary'] ?? [];
@@ -39,7 +39,7 @@ class ProductGroupCsvExportController extends Controller
             $writeRow([]);
 
             foreach (($report['groups'] ?? []) as $group) {
-                $writeRow(['Part Number', $group['part_number'] ?? '-', 'Nama Barang', $group['part_name'] ?? '-']);
+                $writeRow(['Part Number', $group['part_number'] ?? '-', 'Nama Stok', $group['part_name'] ?? '-']);
                 $writeRow(['Kategori', $group['category'] ?? '-', 'Merek', $group['brand'] ?? '-', 'Unit', $group['unit'] ?? '-', 'Stok Aktif', (string) ((int) ($group['total_stock'] ?? 0))]);
                 $writeRow(['Pembelian Admin']);
 

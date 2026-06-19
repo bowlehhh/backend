@@ -30,9 +30,9 @@
         .item-table th, .item-table td { overflow-wrap: anywhere; word-break: break-word; }
         .item-table .col-no { width: 6%; }
         .item-table .col-name { width: 23%; }
-        .item-table .col-brand { width: 12%; }
+        .item-table .col-brand { width: 11%; }
         .item-table .col-part { width: 16%; }
-        .item-table .col-qty { width: 10%; }
+        .item-table .col-qty { width: 11%; }
         .item-table .col-unit { width: 8%; }
         .item-table .col-price { width: 12%; }
         .item-table .col-total { width: 13%; }
@@ -88,9 +88,9 @@
             .item-table td { padding: 5px 5px; font-size: 10px; line-height: 1.2; vertical-align: top; }
             .item-table .col-no { width: 6%; text-align: center; }
             .item-table .col-name { width: 23%; }
-            .item-table .col-brand { width: 12%; }
+            .item-table .col-brand { width: 11%; }
             .item-table .col-part { width: 16%; }
-            .item-table .col-qty { width: 10%; text-align: center; }
+            .item-table .col-qty { width: 11%; text-align: center; }
             .item-table .col-unit { width: 8%; text-align: center; }
             .item-table .col-price { width: 12%; text-align: right; }
             .item-table .col-total { width: 13%; text-align: right; }
@@ -219,6 +219,11 @@
     if ($displayItemPages->isEmpty()) {
         $displayItemPages = collect([collect([])]);
     }
+    $saleSubtotalBeforeDiscount = (float) $displayItems->sum('subtotal');
+    $saleDiscountAmount = (float) ($sale->discount_amount ?? 0);
+    $saleDiscountPercent = $saleSubtotalBeforeDiscount > 0
+        ? (($saleDiscountAmount / $saleSubtotalBeforeDiscount) * 100)
+        : 0;
     $paymentStatus = ($isCredit && $creditOutstanding > 0) ? 'BELUM LUNAS' : 'LUNAS';
     $finalGrandTotal = $isCredit ? $creditOutstanding : (float) $sale->total;
     $remainingAfterEntry = max(0, (float) $sale->total - $downPayment);
@@ -327,7 +332,7 @@
                 <td class="desc col-name">
                     <strong>{{ $item['product_name'] }}</strong>
                 </td>
-                <td class="desc col-brand">{{ $item['brand_name'] !== '' ? $item['brand_name'] : '-' }}</td>
+                <td class="desc col-brand"><strong>{{ $item['brand_name'] !== '' ? $item['brand_name'] : '-' }}</strong></td>
                 <td class="desc col-part"><span style="font-size: 9px; color: #64748b;">{{ $item['part_number'] }}</span></td>
                 <td class="col-qty" style="text-align:center;">{{ $item['qty'] }}</td>
                 <td class="col-unit" style="text-align:center;">{{ $item['unit'] }}</td>
@@ -408,7 +413,10 @@
 
     @if($loop->last)
     <table class="totals">
-        <tr><td class="label">SUBTOTAL</td><td class="num">Rp {{ number_format((float) $sale->total, 0, ',', '.') }}</td></tr>
+        <tr><td class="label">SUBTOTAL</td><td class="num">Rp {{ number_format($saleSubtotalBeforeDiscount, 0, ',', '.') }}</td></tr>
+        @if($saleDiscountAmount > 0)
+            <tr><td class="label">DISKON {{ $saleDiscountPercent > 0 ? '(' . rtrim(rtrim(number_format($saleDiscountPercent, 2, '.', ''), '0'), '.') . '%)' : '' }}</td><td class="num">- Rp {{ number_format($saleDiscountAmount, 0, ',', '.') }}</td></tr>
+        @endif
         @if($isCredit)
             <tr><td class="label">DP / UANG MUKA</td><td class="num">Rp {{ number_format($downPayment, 0, ',', '.') }}</td></tr>
             @if($lastInstallment)

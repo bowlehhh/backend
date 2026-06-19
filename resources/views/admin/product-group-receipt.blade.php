@@ -28,7 +28,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nota Detail Barang - {{ $product->barcode ?? '-' }}</title>
+    <title>Nota Detail Stok - {{ $product->barcode ?? '-' }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
@@ -550,7 +550,7 @@
         <div class="topbar">
             <div class="brand-block">
                 <h1 class="store-name">{{ strtoupper($storeName) }}</h1>
-                <p class="doc-title">Nota Detail Barang / Part Number</p>
+                <p class="doc-title">Nota Detail Stok / Part Number</p>
                 <p class="doc-sub">
                     Part Number: <strong>{{ $partNumber }}</strong> &middot; Nama Barang: <strong>{{ $partName }}</strong>
                 </p>
@@ -771,7 +771,7 @@
             <div class="actions">
                 <button type="button" class="btn primary" onclick="window.print()">Print Nota</button>
                 <a class="btn secondary" href="{{ route('admin.product-groups.show', ['product' => $product->id]) }}">Kembali ke Detail</a>
-                <a class="btn secondary" href="{{ url('/admin/products') }}">Kembali ke Barang</a>
+                <a class="btn secondary" href="{{ url('/admin/products') }}">Kembali ke Daftar Stok</a>
             </div>
         @endif
     </div>

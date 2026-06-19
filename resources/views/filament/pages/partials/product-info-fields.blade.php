@@ -1,5 +1,5 @@
 <div class="rounded-[1.1rem] border border-outline-variant bg-surface p-3.5">
-  <h3 class="mb-2.5 text-[15px] font-semibold leading-tight text-on-surface">Card 1: Informasi Barang</h3>
+  <h3 class="mb-2.5 text-[15px] font-semibold leading-tight text-on-surface">Card 1: Informasi Stok</h3>
   <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
     <div>
       <label class="mb-1 block text-[12px] font-medium text-on-surface">Part Number</label>
@@ -62,7 +62,7 @@
       <p class="mt-1 text-xs text-error" data-error-for="brand"></p>
     </div>
     <div class="md:col-span-2">
-      <label class="mb-1 block text-[12px] font-medium text-on-surface">Foto Barang</label>
+      <label class="mb-1 block text-[12px] font-medium text-on-surface">Foto Stok</label>
       <input type="file" name="image" accept="image/*" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none">
       <p class="mt-1 text-xs text-error" data-error-for="image"></p>
       <img data-image-preview class="mt-2.5 hidden h-16 w-16 rounded-lg border border-outline-variant object-cover" alt="Preview foto barang">

@@ -77,8 +77,6 @@ class CashierDashboardController extends Controller
 
         $totalFilteredProducts = (clone $productsQuery)->count();
 
-        $productsQuery->limit(12);
-
         $products = $productsQuery->get();
 
         $rawCart = collect((array) $request->session()->get('cashier_cart', []))->values();

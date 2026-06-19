@@ -60,8 +60,23 @@
         display: inline-block;
         vertical-align: middle;
       }
-      .table-container::-webkit-scrollbar { height: 8px; }
-      .table-container::-webkit-scrollbar-thumb { background: #bccac0; border-radius: 10px; }
+      .table-container {
+        scrollbar-width: none;
+      }
+      .table-container::-webkit-scrollbar { height: 0; }
+      .table-container::-webkit-scrollbar-thumb { background: transparent; }
+      .sf-top-scroll {
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: thin;
+        scrollbar-color: #bccac0 transparent;
+      }
+      .sf-top-scroll::-webkit-scrollbar { height: 10px; }
+      .sf-top-scroll::-webkit-scrollbar-thumb { background: #bccac0; border-radius: 10px; }
+      .sf-top-scroll::-webkit-scrollbar-track { background: transparent; }
+      .sf-top-scroll-inner {
+        height: 1px;
+      }
       .custom-shadow { box-shadow: 0 2px 4px rgba(0,0,0,.04); }
       html.sf-dashboard-page,
       .sf-dashboard-page,
@@ -129,6 +144,14 @@
         margin-left: var(--sf-sidebar-w);
         height: calc(100vh - var(--sf-topbar-h));
         overflow-y: auto;
+        padding-bottom: 96px;
+      }
+      .sf-content::after {
+        content: '';
+        display: block;
+        height: 120px;
+        width: 100%;
+        flex-shrink: 0;
       }
       .sf-nav-item { font-size: 13px; }
       .sf-nav-item .material-symbols-outlined { font-size: 16px; }
@@ -270,6 +293,10 @@
           margin-left: 0;
           height: auto;
           overflow: visible;
+          padding-bottom: 96px;
+        }
+        .sf-content::after {
+          height: 120px;
         }
         .sf-wrap header {
           padding-left: 1rem !important;
@@ -343,17 +370,17 @@
               @endif
               <a class="sf-nav-item flex items-center gap-2.5 bg-primary text-on-primary rounded-lg px-3 py-2 font-medium" href="{{ url('/admin/products') }}">
                 <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">inventory_2</span>
-                <span>Barang</span>
+                <span>Daftar Stok</span>
               </a>
               <a class="sf-nav-item w-full flex items-center gap-2.5 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/suppliers') }}"><span class="material-symbols-outlined">local_shipping</span><span>Supplier</span></a>
               <a class="sf-nav-item w-full flex items-center gap-2.5 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=credits') }}"><span class="material-symbols-outlined">credit_card</span><span>Kredit &amp; Utang Saya</span></a>
               <a class="sf-nav-item w-full flex items-center gap-2.5 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=supplier-transactions') }}"><span class="material-symbols-outlined">account_tree</span><span>Transaksi PT</span></a>
               <div class="space-y-1 pt-1">
-                <a class="sf-nav-item w-full flex items-center gap-2.5 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=product-groups') }}"><span class="material-symbols-outlined">inventory_2</span><span>Kelompok Barang</span></a>
+                <a class="sf-nav-item w-full flex items-center gap-2.5 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=product-groups') }}"><span class="material-symbols-outlined">inventory_2</span><span>Kelompok Stok</span></a>
                 <div class="ml-3 border-l border-outline-variant pl-3 py-1 space-y-1">
                   <a class="sf-nav-item w-full flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-medium {{ request()->routeIs('admin.transaksi.dashboard') ? 'bg-primary-container text-on-primary' : 'text-on-surface-variant hover:bg-surface-container-high' }}" href="{{ route('admin.transaksi.dashboard') }}">
                     <span class="material-symbols-outlined text-[18px]">point_of_sale</span>
-                    <span>Daftar Barang Jual</span>
+                    <span>Daftar Stok Jual</span>
                   </a>
                   <a class="sf-nav-item w-full flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-medium {{ request()->routeIs('admin.transactions.drafts') ? 'bg-primary-container text-on-primary' : 'text-on-surface-variant hover:bg-surface-container-high' }}" href="{{ route('admin.transactions.drafts') }}">
                     <span class="material-symbols-outlined text-[18px]">draft</span>
@@ -377,7 +404,7 @@
           <main class="sf-content min-h-screen p-4 md:p-6">
             <div class="flex flex-col md:flex-row md:items-end justify-between gap-3 md:gap-4 mb-4 md:mb-5">
               <div>
-                <h1 class="sf-title font-display text-headline-lg text-on-surface mb-1">Daftar Barang</h1>
+                <h1 class="sf-title font-display text-headline-lg text-on-surface mb-1">Daftar Stok</h1>
                 <p class="text-on-surface-variant text-[13px] leading-5">Kelola seluruh stok inventaris Anda di satu tempat.</p>
                 @if($isAdminBesarAccess)
                   <a href="{{ route('admin.admin-besar.index') }}" class="mt-2 inline-flex items-center gap-2 rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[12px] font-semibold text-primary hover:bg-surface-container-high">
@@ -394,7 +421,7 @@
                   <span wire:loading wire:target="createOfflineBackup">Membuat Backup...</span>
                 </button>
                 <button type="button" onclick="openCreateModal()" class="w-full md:w-auto bg-primary text-on-primary px-4 md:px-6 py-2.5 rounded-xl text-[13px] font-medium flex items-center justify-center gap-2 hover:brightness-90 transition-all active:scale-95">
-                  <span class="material-symbols-outlined">add</span>Tambah Barang
+                  <span class="material-symbols-outlined">add</span>Tambah Stok
                 </button>
               </div>
             </div>
@@ -441,7 +468,12 @@
             </div>
 
             <div class="bg-surface-container-lowest border border-outline-variant rounded-b-xl overflow-hidden custom-shadow">
-              <div class="overflow-x-auto table-container">
+              <div class="border-b border-outline-variant px-5 py-2">
+                <div class="sf-top-scroll" id="productTableTopScroll" aria-label="Scroll tabel horizontal bagian atas">
+                  <div class="sf-top-scroll-inner" id="productTableTopScrollInner"></div>
+                </div>
+              </div>
+              <div class="overflow-x-auto table-container" id="productTableBottomScroll">
                 <table class="min-w-[1500px] w-full text-left border-collapse" id="productTable">
                   <thead>
                     <tr class="bg-surface-container text-on-surface-variant border-b border-outline-variant">
@@ -590,7 +622,7 @@
         <div class="flex items-start justify-between gap-4 border-b border-outline-variant px-4 py-3">
           <div>
             <h2 class="text-[18px] font-semibold leading-tight text-on-surface">Daftar Stok Menipis</h2>
-            <p class="mt-1 text-[13px] leading-5 text-on-surface-variant">Barang yang perlu restock segera (stok <= 10).</p>
+            <p class="mt-1 text-[13px] leading-5 text-on-surface-variant">Stok yang perlu restock segera (stok <= 10).</p>
           </div>
           <button type="button" class="rounded-lg p-2 hover:bg-surface-container" onclick="closeLowStockModal()">
             <span class="material-symbols-outlined">close</span>
@@ -619,7 +651,7 @@
       <div class="sf-modal-panel mt-0 w-full max-w-xl rounded-[1.1rem] border border-outline-variant bg-surface-container-lowest shadow-2xl">
         <div class="flex items-start justify-between gap-4 border-b border-outline-variant px-4 py-4">
           <div>
-            <h2 class="text-[18px] font-semibold leading-tight text-on-surface">Tambah Barang</h2>
+            <h2 class="text-[18px] font-semibold leading-tight text-on-surface">Tambah Stok</h2>
             <p class="mt-1 text-[13px] leading-5 text-on-surface-variant">Simpan barang baru langsung dari dashboard.</p>
           </div>
           <button type="button" class="rounded-lg p-2 hover:bg-surface-container" onclick="closeCreateModal()">
@@ -634,7 +666,7 @@
           @include('filament.pages.partials.batch-info-fields', ['batchCodePlaceholder' => 'Opsional, otomatis jika kosong'])
           <div class="flex justify-end gap-3 border-t border-outline-variant pt-3">
             <button type="button" class="rounded-xl border border-outline-variant px-4 py-2.5 text-sm font-medium text-on-surface hover:bg-surface-container" onclick="closeCreateModal()">Batal</button>
-            <button type="submit" class="rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-on-primary hover:brightness-90">Simpan Barang</button>
+            <button type="submit" class="rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-on-primary hover:brightness-90">Simpan Stok</button>
           </div>
         </form>
       </div>
@@ -644,8 +676,8 @@
       <div class="sf-modal-panel mt-0 w-full max-w-xl rounded-[1.1rem] border border-outline-variant bg-surface-container-lowest shadow-2xl">
         <div class="flex items-start justify-between gap-4 border-b border-outline-variant px-4 py-4">
           <div>
-            <h2 class="text-[18px] font-semibold leading-tight text-on-surface">Edit Barang</h2>
-            <p class="mt-1 text-[13px] leading-5 text-on-surface-variant">Perbarui data barang tanpa keluar dari dashboard.</p>
+            <h2 class="text-[18px] font-semibold leading-tight text-on-surface">Edit Stok</h2>
+            <p class="mt-1 text-[13px] leading-5 text-on-surface-variant">Perbarui data stok tanpa keluar dari dashboard.</p>
           </div>
           <button type="button" class="rounded-lg p-2 hover:bg-surface-container" onclick="closeEditModal()">
             <span class="material-symbols-outlined">close</span>
@@ -660,7 +692,7 @@
           @include('filament.pages.partials.batch-info-fields', ['batchCodePlaceholder' => ''])
           <div class="flex justify-end gap-3 border-t border-outline-variant pt-3">
             <button type="button" class="rounded-xl border border-outline-variant px-4 py-2.5 text-sm font-medium text-on-surface hover:bg-surface-container" onclick="closeEditModal()">Batal</button>
-            <button type="submit" class="rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-on-primary hover:brightness-90">Update Barang</button>
+            <button type="submit" class="rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-on-primary hover:brightness-90">Update Stok</button>
           </div>
         </form>
       </div>
@@ -674,6 +706,10 @@
       let searchLoadingTimer;
       const tableBody = document.getElementById('productTableBody');
       const countText = document.getElementById('productCountText');
+      const productTable = document.getElementById('productTable');
+      const productTableTopScroll = document.getElementById('productTableTopScroll');
+      const productTableTopScrollInner = document.getElementById('productTableTopScrollInner');
+      const productTableBottomScroll = document.getElementById('productTableBottomScroll');
       const createModal = document.getElementById('createProductModal');
       const editModal = document.getElementById('editProductModal');
       const createForm = document.getElementById('createProductForm');
@@ -704,6 +740,8 @@
       const formHistoryLimit = 300;
       let partNumberSuggestionTimer;
       let partNumberSuggestionAbortController = null;
+      let syncingTopScroll = false;
+      let syncingBottomScroll = false;
       const globalSearchInput = document.getElementById('globalSearchInput');
       globalSearchInput?.addEventListener('input', () => {
         if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
@@ -868,7 +906,7 @@
       }
       function deleteProduct(id, name) {
         openConfirmModal({
-          title: 'Hapus Barang',
+          title: 'Hapus Stok',
           message: `Apakah Anda yakin ingin menghapus produk "${name}"?`,
           actionLabel: 'Ya, Hapus',
           actionClass: 'bg-error text-on-error',
@@ -1275,24 +1313,35 @@
         form.querySelector('[name="slug"]').value = product.slug || '';
         form.querySelector('[name="category"]').value = product.category || '';
         form.querySelector('[name="brand"]').value = product.brand || '';
-        form.querySelector('[name="supplier_id"]').value = product.supplier_id || '';
-        form.querySelector('[name="supplier_name"]').value = product.supplier_name || '';
+
+        form.querySelector('[name="supplier_id"]').value = '';
+        form.querySelector('[name="supplier_name"]').value = '';
         const supplierBranchField = form.querySelector('[name="supplier_branch"]');
-        if (supplierBranchField) supplierBranchField.value = product.supplier_branch || '';
-        form.querySelector('[name="supplier_phone"]').value = product.supplier_phone || '';
-        form.querySelector('[name="supplier_address"]').value = product.supplier_address || '';
-        form.querySelector('[name="supplier_note"]').value = product.supplier_note || '';
-        form.querySelector('[name="condition"]').value = product.condition || '';
+        if (supplierBranchField) supplierBranchField.value = '';
+        form.querySelector('[name="supplier_phone"]').value = '';
+        form.querySelector('[name="supplier_address"]').value = '';
+        form.querySelector('[name="supplier_note"]').value = '';
+        form.querySelector('[name="condition"]').value = '';
         const purchasePriceField = form.querySelector('[name="purchase_price"]');
-        if (purchasePriceField) purchasePriceField.value = formatRupiahInput(product.purchase_price_value ?? '');
+        if (purchasePriceField) purchasePriceField.value = '';
         const expeditionCostField = form.querySelector('[name="expedition_cost"]');
-        if (expeditionCostField) expeditionCostField.value = formatRupiahInput(product.expedition_cost_value ?? '');
+        if (expeditionCostField) expeditionCostField.value = '';
         const sellingPriceField = form.querySelector('[name="selling_price"]');
-        if (sellingPriceField) sellingPriceField.value = formatRupiahInput(product.selling_price_value ?? '');
+        if (sellingPriceField) sellingPriceField.value = '';
+        const stockField = form.querySelector('[name="stock"]');
+        if (stockField) stockField.value = '';
+        const batchCodeField = form.querySelector('[name="batch_code"]');
+        if (batchCodeField) batchCodeField.value = '';
+        const supplierInvoiceField = form.querySelector('[name="supplier_invoice_number"]');
+        if (supplierInvoiceField) supplierInvoiceField.value = '';
+        const purchaseDateField = form.querySelector('[name="purchase_date"]');
+        if (purchaseDateField) purchaseDateField.value = '';
         const paymentTypeField = form.querySelector('[name="payment_type"]');
-        if (paymentTypeField) paymentTypeField.value = product.payment_type || 'LUNAS';
+        if (paymentTypeField) paymentTypeField.value = 'LUNAS';
         const creditDaysField = form.querySelector('[name="credit_days"]');
-        if (creditDaysField) creditDaysField.value = product.credit_days || '';
+        if (creditDaysField) creditDaysField.value = '';
+        const creditDueDateField = form.querySelector('[name="credit_due_date"]');
+        if (creditDueDateField) creditDueDateField.value = '';
         syncBatchCreditFields(form);
         updatePurchaseTotal(form);
       }
@@ -1600,11 +1649,34 @@
         }
         syncNotificationProducts(product);
         refreshCountText();
+        syncTopTableScrollbarWidth();
       }
       function syncNotificationProducts(product) {
         const index = productsForNotification.findIndex((item) => Number(item.id) === Number(product.id));
         if (index >= 0) { productsForNotification[index] = product; return; }
         productsForNotification.unshift(product);
+      }
+      function syncTopTableScrollbarWidth() {
+        if (!productTableTopScroll || !productTableTopScrollInner || !productTableBottomScroll || !productTable) return;
+        const targetWidth = Math.max(productTable.scrollWidth, productTableBottomScroll.scrollWidth, productTableBottomScroll.clientWidth);
+        productTableTopScrollInner.style.width = `${targetWidth}px`;
+      }
+      function initializeTopTableScrollbar() {
+        if (!productTableTopScroll || !productTableBottomScroll) return;
+        syncTopTableScrollbarWidth();
+        productTableTopScroll.addEventListener('scroll', () => {
+          if (syncingBottomScroll) return;
+          syncingTopScroll = true;
+          productTableBottomScroll.scrollLeft = productTableTopScroll.scrollLeft;
+          window.requestAnimationFrame(() => { syncingTopScroll = false; });
+        });
+        productTableBottomScroll.addEventListener('scroll', () => {
+          if (syncingTopScroll) return;
+          syncingBottomScroll = true;
+          productTableTopScroll.scrollLeft = productTableBottomScroll.scrollLeft;
+          window.requestAnimationFrame(() => { syncingBottomScroll = false; });
+        });
+        window.addEventListener('resize', syncTopTableScrollbarWidth);
       }
       function refreshCountText() { const visibleRows = tableBody.querySelectorAll('tr[data-product-id]').length; countText.textContent = `Menampilkan ${visibleRows > 0 ? 1 : 0}-${visibleRows} dari ${pageMeta.total} barang`; }
       function escapeHtml(value) { return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;'); }
@@ -1615,9 +1687,9 @@
         persistFormHistoryFromForm(createForm);
         upsertProductRow(payload.product, 'create');
         resetCreateFormForNextEntry();
-        showToast((payload.message || 'Barang berhasil ditambahkan.') + ' Silakan lanjut input barang berikutnya.');
+        showToast((payload.message || 'Stok berhasil ditambahkan.') + ' Silakan lanjut input stok berikutnya.');
       });
-      editForm.addEventListener('submit', async function (event) { event.preventDefault(); const productId = editForm.querySelector('[name="product_id"]').value; const payload = await submitProductForm(editForm, `${updateUrlBase}/${productId}`, 'PUT', 'editFormAlert'); if (!payload) return; persistFormHistoryFromForm(editForm); upsertProductRow(payload.product, 'update'); closeEditModal(); showToast(payload.message || 'Barang berhasil diperbarui.'); });
+      editForm.addEventListener('submit', async function (event) { event.preventDefault(); const productId = editForm.querySelector('[name="product_id"]').value; const payload = await submitProductForm(editForm, `${updateUrlBase}/${productId}`, 'PUT', 'editFormAlert'); if (!payload) return; persistFormHistoryFromForm(editForm); upsertProductRow(payload.product, 'update'); closeEditModal(); showToast(payload.message || 'Stok berhasil diperbarui.'); });
       createForm.querySelector('[name="stock"]')?.addEventListener('input', () => updatePurchaseTotal(createForm));
       editForm.querySelector('[name="stock"]')?.addEventListener('input', () => updatePurchaseTotal(editForm));
       createForm.querySelector('[name="payment_type"]')?.addEventListener('change', () => syncBatchCreditFields(createForm));
@@ -1647,5 +1719,7 @@
       initializeFormHistoryAutocomplete(createForm);
       initializeFormHistoryAutocomplete(editForm);
       initializePartNumberAutofill(createForm);
+      initializeTopTableScrollbar();
+      syncTopTableScrollbarWidth();
     </script>
 </x-filament-panels::page>

@@ -7,6 +7,10 @@
 @endphp
 
 <x-filament-panels::page>
+    <link rel="stylesheet" href="{{ asset('css/app-production.css') }}">
+    @if (app()->environment('local'))
+        @vite('resources/css/app.css')
+    @endif
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
@@ -20,6 +24,13 @@
         margin-left: calc(50% - 50vw);
         margin-right: calc(50% - 50vw);
         font-size: 13px;
+      }
+      .sf-wrap h1,
+      .sf-wrap h2,
+      .sf-wrap h3,
+      .sf-wrap h4,
+      .sf-wrap p {
+        margin: 0 !important;
       }
       .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; display: inline-block; vertical-align: middle; }
       html.sf-dashboard-page,
@@ -67,9 +78,23 @@
       }
       .sf-shell { width: 100%; max-width: 100%; margin: 0; padding: 0; }
       .sf-layout { display: block; }
-      .sf-sidebar { position: fixed; top: var(--sf-topbar-h); left: 0; width: var(--sf-sidebar-w); height: calc(100vh - var(--sf-topbar-h)); border-right: 1px solid #d4dbd7; overflow: hidden; z-index: 30; display: flex; flex-direction: column; background: #fff; }
-      .sf-main-scroll { min-width: 0; width: calc(100% - var(--sf-sidebar-w)); margin-left: var(--sf-sidebar-w); height: calc(100vh - var(--sf-topbar-h)); overflow-y: auto; }
+      .sf-sidebar { position: fixed; top: var(--sf-topbar-h); left: 0; width: var(--sf-sidebar-w); height: calc(100vh - var(--sf-topbar-h)); padding: 18px 16px 10px !important; border-right: 1px solid #d4dbd7; overflow: hidden; z-index: 30; display: flex; flex-direction: column; background: #fff; }
+      .sf-sidebar nav { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding-right: 4px; }
+      .sf-content { min-width: 0; width: calc(100% - var(--sf-sidebar-w)); margin-left: var(--sf-sidebar-w); height: calc(100vh - var(--sf-topbar-h)); overflow-y: auto; padding: 16px 16px 96px !important; }
+      .sf-content::after { content: ''; display: block; height: 120px; width: 100%; flex-shrink: 0; }
       .sf-nav-item { font-size: 13px; }
+      .sf-title { font-size: 26px !important; line-height: 32px !important; }
+      .sf-wrap .text-headline-lg { font-size: 24px !important; line-height: 30px !important; }
+      .sf-wrap .text-on-surface { color: #191c1e !important; }
+      .sf-wrap .text-on-surface-variant { color: #52615a !important; }
+      .admin-panel-card { margin-bottom: 12px !important; padding: 12px !important; }
+      .page-title-block { display: block; margin-bottom: 20px !important; }
+      .page-title-copy { display: flex; flex-direction: column; gap: 4px; }
+      .page-title-copy h1,
+      .page-title-copy p { margin: 0 !important; }
+      .brand-title,
+      .brand-subtitle { line-height: 1.15 !important; }
+      .logout-slot { margin-top: auto; padding-top: 14px !important; padding-bottom: 8px !important; }
       .sf-wrap .custom-shadow { box-shadow: 0 1px 3px rgba(0,0,0,.03); }
       .sf-wrap .rounded-xl { border-radius: 10px !important; }
       .sf-wrap .rounded-2xl { border-radius: 12px !important; }
@@ -87,33 +112,32 @@
       @media (max-width: 1279px) {
         .sf-layout { display: block; }
         .sf-sidebar { display: none; }
-        .sf-main-scroll { width: 100%; margin-left: 0; height: auto; overflow: visible; }
+        .sf-content { width: 100%; margin-left: 0; height: auto; overflow: visible; padding: 12px !important; }
         .sf-wrap header { height: 56px !important; padding-left: 14px !important; padding-right: 14px !important; }
-        .sf-main-scroll { padding: 12px !important; }
-        .sf-main-scroll h1 { font-size: 28px !important; line-height: 34px !important; }
-        .sf-main-scroll .text-5xl { font-size: 30px !important; line-height: 36px !important; }
-        .sf-main-scroll table th, .sf-main-scroll table td { white-space: nowrap; font-size: 13px !important; }
+        .sf-content h1 { font-size: 28px !important; line-height: 34px !important; }
+        .sf-content .text-5xl { font-size: 30px !important; line-height: 36px !important; }
+        .sf-content table th, .sf-content table td { white-space: nowrap; font-size: 13px !important; }
       }
     </style>
 
-    <div class="sf-wrap bg-[#f7f9fb] text-[#191c1e] min-h-screen overflow-x-hidden">
-      <header class="bg-white border-b border-[#d4dbd7] flex justify-between items-center px-5 h-16 w-full sticky top-0 z-50">
+    <div class="sf-wrap bg-background text-on-surface min-h-screen overflow-x-hidden">
+      <header class="bg-surface-container-lowest text-primary border-b border-outline-variant flex justify-between items-center px-5 h-16 w-full sticky top-0 z-50">
         <div class="flex items-center gap-4">
-          <span class="block leading-none text-xl font-bold text-[#006948]">Surya Duta Multindo</span>
+          <span class="block leading-none text-[18px] font-bold text-primary">Surya Duta Multindo</span>
         </div>
       </header>
 
       <div class="sf-shell">
       <div class="sf-layout">
-        <aside class="sf-sidebar lg:flex flex-col w-full p-4 pb-6 bg-white hidden">
-          <div class="mb-4 rounded-lg border border-[#d4dbd7] bg-[#f2f4f6] p-3">
+        <aside class="sf-sidebar lg:flex flex-col w-full p-4 bg-white hidden">
+          <div class="admin-panel-card mb-3 rounded-lg border border-[#d4dbd7] bg-[#f2f4f6] p-3">
             <div class="flex items-center gap-2">
-              <div class="h-8 w-8 rounded-lg bg-[#006948] text-white flex items-center justify-center">
-                <span class="material-symbols-outlined text-sm">inventory</span>
+              <div class="h-7 w-7 rounded-lg bg-[#006948] text-white flex items-center justify-center">
+                <span class="material-symbols-outlined text-[14px]">inventory</span>
               </div>
               <div>
-                <p class="text-sm font-semibold text-[#006948]">{{ $isAdminBesarAccess ? 'Admin Besar Panel' : 'Admin Panel' }}</p>
-                <p class="text-[10px] uppercase tracking-wide text-[#52615a]">{{ $isAdminBesarAccess ? 'Gudang Access Mode' : 'Management Mode' }}</p>
+                <p class="brand-title text-[13px] font-semibold text-[#006948]">{{ $isAdminBesarAccess ? 'Admin Besar Panel' : 'Admin Panel' }}</p>
+                <p class="brand-subtitle text-[10px] uppercase tracking-wide text-[#52615a]">{{ $isAdminBesarAccess ? 'Gudang Access Mode' : 'Management Mode' }}</p>
               </div>
             </div>
           </div>
@@ -126,7 +150,7 @@
             @endif
             <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium" href="{{ url('/admin/products') }}">
               <span class="material-symbols-outlined">inventory_2</span>
-              <span>Barang</span>
+              <span>Daftar Stok</span>
             </a>
             <a class="sf-nav-item flex items-center gap-3 bg-[#006948] text-white rounded-lg px-3 py-2 font-medium" href="{{ url('/admin/suppliers') }}">
               <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">local_shipping</span>
@@ -141,11 +165,11 @@
             <a class="sf-nav-item w-full flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=supplier-transactions') }}">
               <span class="material-symbols-outlined">account_tree</span><span>Transaksi PT</span>
             </a>
-            <a class="sf-nav-item w-full mt-auto flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=product-groups') }}">
-              <span class="material-symbols-outlined">inventory_2</span><span>Kelompok Barang</span>
+            <a class="sf-nav-item w-full flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=product-groups') }}">
+              <span class="material-symbols-outlined">inventory_2</span><span>Kelompok Stok</span>
             </a>
           </nav>
-          <div class="mt-4 pt-3 pb-5 border-t border-[#d4dbd7]">
+          <div class="logout-slot pt-3 border-t border-[#d4dbd7]">
             <form method="POST" action="{{ route('logout') }}" class="js-admin-logout-form">
               @csrf
               <button type="submit" class="sf-nav-item w-full flex items-center gap-3 text-[#ba1a1a] px-3 py-2 hover:bg-[#ffdad6] transition-all rounded-lg font-medium text-left">
@@ -156,11 +180,11 @@
           </div>
         </aside>
 
-        <main class="sf-main-scroll p-4 md:p-6">
-          <div class="flex items-center justify-between mb-5 md:mb-6">
-            <div>
-              <h1 class="text-4xl font-semibold text-[#191c1e]">Daftar Supplier</h1>
-              <p class="text-[#52615a] text-base">Kelola data supplier dengan tampilan yang konsisten.</p>
+        <main class="sf-content min-h-screen p-4 md:p-6">
+          <div class="page-title-block mb-5 md:mb-6">
+            <div class="page-title-copy">
+              <h1 class="sf-title font-display text-headline-lg text-on-surface leading-none">Daftar Supplier</h1>
+              <p class="text-on-surface-variant text-[13px] leading-5">Kelola data supplier dengan tampilan yang konsisten.</p>
               @if($isAdminBesarAccess)
                 <a href="{{ route('admin.admin-besar.index') }}" class="mt-2 inline-flex items-center gap-2 rounded-lg border border-[#bccac0] bg-white px-3 py-2 text-[12px] font-semibold text-[#006948] hover:bg-[#f2f4f6]">
                   <span class="material-symbols-outlined text-[18px]">arrow_back</span>
@@ -193,7 +217,7 @@
                   <th class="px-5 py-4">Tipe Supplier</th>
                   <th class="px-5 py-4">Alamat Supplier</th>
                   <th class="px-5 py-4">Telepon</th>
-                  <th class="px-5 py-4">Total Barang</th>
+                  <th class="px-5 py-4">Total Stok</th>
                   <th class="px-5 py-4">Total Stok</th>
                   <th class="px-5 py-4 text-right">Aksi</th>
                 </tr>

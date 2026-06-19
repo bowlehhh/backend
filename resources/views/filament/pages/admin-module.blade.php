@@ -35,12 +35,16 @@
     $salesListActive = ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? request()->routeIs('admin.admin-besar.index') : request()->routeIs('admin.transaksi.dashboard');
     $draftsActive = ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? request()->routeIs('admin.admin-besar.index') : request()->routeIs('admin.transactions.drafts');
     $historyActive = ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? request()->routeIs('admin.admin-besar.history*') : request()->routeIs('admin.transactions.history*');
-    $salesListLabel = ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? 'Dashboard Admin Besar' : 'Daftar Barang Jual';
+    $salesListLabel = ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? 'Dashboard Admin Besar' : 'Daftar Stok Jual';
     $draftsLabel = ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? 'Ringkasan Admin Besar' : 'Draft Tertunda';
     $historyLabel = ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? 'History Admin Besar' : 'History & Nota';
 @endphp
 
 <x-filament-panels::page>
+    <link rel="stylesheet" href="{{ asset('css/app-production.css') }}">
+    @if (app()->environment('local'))
+        @vite('resources/css/app.css')
+    @endif
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
@@ -60,12 +64,21 @@
         margin-top: 0;
         font-size: 13px;
       }
+      .sf-wrap h1,
+      .sf-wrap h2,
+      .sf-wrap h3,
+      .sf-wrap h4,
+      .sf-wrap p {
+        margin: 0 !important;
+      }
       .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; display: inline-block; vertical-align: middle; }
       /* Hard override: always hide native Filament shell on this custom page */
       .fi-sidebar,
       .fi-topbar,
+      .fi-topbar-ctn,
       .fi-header,
       .fi-page-header,
+      .fi-layout-sidebar-toggle-btn-ctn,
       .fi-breadcrumbs {
         display: none !important;
       }
@@ -93,6 +106,8 @@
       }
       .sf-dashboard-page .fi-sidebar,
       .sf-dashboard-page .fi-topbar,
+      .sf-dashboard-page .fi-topbar-ctn,
+      .sf-dashboard-page .fi-layout-sidebar-toggle-btn-ctn,
       .sf-dashboard-page .fi-header { display: none !important; }
       .sf-dashboard-page .fi-main,
       .sf-dashboard-page .fi-page,
@@ -105,6 +120,11 @@
         min-height: 100% !important;
         overflow: visible !important;
       }
+      .sf-dashboard-page .fi-page-header-main-ctn,
+      .sf-dashboard-page .fi-page-main {
+        padding: 0 !important;
+        gap: 0 !important;
+      }
       html.sf-dashboard-page,
       .sf-dashboard-page,
       .sf-dashboard-page body,
@@ -112,17 +132,15 @@
         min-height: 100% !important;
         overflow: hidden !important;
       }
-      .sf-layout {
-        display: block;
-        height: calc(100vh - var(--sf-topbar-h));
-        overflow: hidden;
-      }
+      .sf-shell { width: 100%; max-width: 100%; margin: 0; padding: 0; }
+      .sf-layout { display: block; }
       .sf-sidebar {
         position: fixed;
         left: 0;
         top: var(--sf-topbar-h);
         width: var(--sf-sidebar-w);
         height: calc(100vh - var(--sf-topbar-h));
+        padding: 18px 16px 10px !important;
         border-right: 1px solid #d4dbd7;
         overflow: hidden;
         display: flex;
@@ -134,8 +152,10 @@
         flex: 1 1 auto;
         min-height: 0;
         overflow-y: auto;
+        padding-right: 4px;
       }
-      .sf-main-scroll {
+      .sf-main-scroll,
+      .sf-content {
         height: calc(100vh - var(--sf-topbar-h));
         min-width: 0;
         width: calc(100% - var(--sf-sidebar-w));
@@ -143,8 +163,51 @@
         overflow-x: hidden;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
+        box-sizing: border-box;
+        scroll-padding-bottom: 96px;
+      }
+      .sf-content {
+        padding: 14px 16px 96px !important;
+        padding-bottom: 96px;
+      }
+      .sf-content::after {
+        content: '';
+        display: block;
+        height: 120px;
+        width: 100%;
+        flex-shrink: 0;
       }
       .sf-nav-item { font-size: 14px; }
+      .sf-title { font-size: 26px !important; line-height: 32px !important; }
+      .sf-wrap .text-headline-lg { font-size: 24px !important; line-height: 30px !important; }
+      .sf-wrap .text-on-surface { color: #191c1e !important; }
+      .sf-wrap .text-on-surface-variant { color: #52615a !important; }
+      .admin-panel-card {
+        margin-bottom: 12px !important;
+        padding: 12px !important;
+      }
+      .page-title-block {
+        display: block;
+        margin-bottom: 20px !important;
+      }
+      .page-title-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .page-title-copy h1,
+      .page-title-copy p {
+        margin: 0 !important;
+      }
+      .sf-sidebar .brand-title,
+      .sf-sidebar .brand-subtitle {
+        line-height: 1.15 !important;
+      }
+      .sf-sidebar .logout-slot {
+        margin-top: auto;
+        padding-top: 14px !important;
+        padding-bottom: 8px !important;
+      }
       .sf-sidebar-collapsed { --sf-sidebar-w: var(--sf-sidebar-collapsed-w); }
       .sf-sidebar-collapsed .sf-sidebar .nav-label,
       .sf-sidebar-collapsed .sf-sidebar .brand-title,
@@ -195,19 +258,27 @@
           pointer-events: none;
           z-index: 30;
         }
-        .sf-main-scroll {
+        .sf-main-scroll,
+        .sf-content {
           width: 100%;
           margin-left: 0;
           height: auto;
           overflow: visible;
         }
         .sf-wrap header { height: 56px !important; padding-left: 14px !important; padding-right: 14px !important; }
-        .sf-main-scroll { padding: 12px !important; }
-        .sf-main-scroll h1 { font-size: 28px !important; line-height: 34px !important; }
-        .sf-main-scroll .px-6 { padding-left: 12px !important; padding-right: 12px !important; }
-        .sf-main-scroll .py-4 { padding-top: 10px !important; padding-bottom: 10px !important; }
+        .sf-content::after { height: 120px; }
+        .sf-main-scroll,
+        .sf-content { padding: 12px !important; }
+        .sf-main-scroll h1,
+        .sf-content h1 { font-size: 28px !important; line-height: 34px !important; }
+        .sf-main-scroll .px-6,
+        .sf-content .px-6 { padding-left: 12px !important; padding-right: 12px !important; }
+        .sf-main-scroll .py-4,
+        .sf-content .py-4 { padding-top: 10px !important; padding-bottom: 10px !important; }
         .sf-main-scroll table th,
-        .sf-main-scroll table td { font-size: 13px !important; white-space: nowrap; }
+        .sf-main-scroll table td,
+        .sf-content table th,
+        .sf-content table td { font-size: 13px !important; white-space: nowrap; }
         .sf-wrap .sf-toolbar {
           display: grid;
           grid-template-columns: 1fr;
@@ -224,38 +295,49 @@
       }
       @media (max-width: 767px) {
         .sf-wrap header { padding-left: 12px !important; padding-right: 12px !important; }
-        .sf-wrap .sf-main-scroll { padding: 12px !important; }
-        .sf-wrap .sf-main-scroll h1 { font-size: 24px !important; line-height: 30px !important; }
-        .sf-wrap .sf-main-scroll .text-[40px] { font-size: 24px !important; line-height: 30px !important; }
-        .sf-wrap .sf-main-scroll .grid-cols-1.sm\\:grid-cols-2.xl\\:grid-cols-5 { gap: 12px !important; }
+        .sf-wrap .sf-main-scroll,
+        .sf-wrap .sf-content { padding: 12px !important; }
+        .sf-wrap .sf-title { font-size: 22px !important; line-height: 28px !important; }
+        .sf-wrap .sf-main-scroll h1,
+        .sf-wrap .sf-content h1 { font-size: 24px !important; line-height: 30px !important; }
+        .sf-wrap .sf-main-scroll .text-[40px],
+        .sf-wrap .sf-content .text-[40px] { font-size: 24px !important; line-height: 30px !important; }
+        .sf-wrap .sf-main-scroll .grid-cols-1.sm\\:grid-cols-2.xl\\:grid-cols-5,
+        .sf-wrap .sf-content .grid-cols-1.sm\\:grid-cols-2.xl\\:grid-cols-5 { gap: 12px !important; }
         .sf-wrap .sf-header-actions { gap: 8px; }
         .sf-wrap .sf-header-actions > div { width: 32px !important; height: 32px !important; }
         .sf-wrap .sf-header-actions .material-symbols-outlined { font-size: 20px; }
       }
+      @media (min-width: 768px) {
+        .sf-content {
+          padding: 16px 16px 96px !important;
+        }
+      }
     </style>
 
-      <div class="sf-wrap bg-[#f7f9fb] text-[#191c1e] antialiased h-screen overflow-hidden">
-      <header class="bg-white border-b border-[#d4dbd7] shadow-sm flex justify-between items-center px-5 h-16 w-full sticky top-0 z-50">
+      <div class="sf-wrap bg-background text-on-surface antialiased min-h-screen overflow-x-hidden">
+      <header class="bg-surface-container-lowest text-primary border-b border-outline-variant shadow-sm flex justify-between items-center px-5 h-16 w-full sticky top-0 z-50">
         <div class="flex items-center gap-3">
-          <button id="mobileSidebarBtn" type="button" class="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#bccac0] bg-white text-[#3d4a42] hover:bg-[#f1f4f2]" aria-label="Buka navigasi">
+          <button id="mobileSidebarBtn" type="button" class="lg:hidden inline-flex h-9 w-9 items-center justify-center rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container" aria-label="Buka navigasi">
             <span class="material-symbols-outlined">menu</span>
           </button>
-          <div class="flex items-center gap-4"><span class="font-display text-[18px] font-bold text-[#006948] leading-none">Surya Duta Multindo</span></div>
+          <div class="flex items-center gap-4"><span class="font-display text-[18px] font-bold text-primary leading-none">Surya Duta Multindo</span></div>
         </div>
-        <button id="toggleSidebarBtn" type="button" class="hidden lg:inline-flex items-center gap-1 rounded-lg border border-[#bccac0] px-3 py-2 text-sm text-[#3d4a42] hover:bg-[#f1f4f2]">
+        <button id="toggleSidebarBtn" type="button" class="hidden lg:inline-flex items-center gap-1 rounded-lg border border-outline-variant px-3 py-2 text-sm text-on-surface hover:bg-surface-container">
           <span class="material-symbols-outlined text-base">left_panel_close</span>
           <span>Sidebar</span>
         </button>
       </header>
 
+      <div class="sf-shell">
       <div class="sf-layout">
         <div id="mobileSidebarBackdrop" class="sf-mobile-sidebar-backdrop lg:hidden"></div>
-        <aside class="sf-sidebar flex flex-col w-full p-4 pb-6 bg-white">
-          <div class="admin-panel-card mb-4 rounded-lg border border-[#d4dbd7] bg-[#f2f4f6] p-3">
+        <aside class="sf-sidebar flex flex-col w-full p-4 bg-white">
+          <div class="admin-panel-card mb-3 rounded-lg border border-[#d4dbd7] bg-[#f2f4f6] p-3">
             <div class="flex items-center gap-2">
-              <div class="h-8 w-8 rounded-lg bg-[#006948] text-white flex items-center justify-center"><span class="material-symbols-outlined text-sm">inventory</span></div>
+              <div class="h-7 w-7 rounded-lg bg-[#006948] text-white flex items-center justify-center"><span class="material-symbols-outlined text-[14px]">inventory</span></div>
               <div>
-                <p class="brand-title text-sm font-semibold text-[#006948]">{{ ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? 'Admin Besar Panel' : 'Admin Panel' }}</p>
+                <p class="brand-title text-[13px] font-semibold text-[#006948]">{{ ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? 'Admin Besar Panel' : 'Admin Panel' }}</p>
                 <p class="brand-subtitle text-[10px] uppercase tracking-wide text-[#52615a]">{{ ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? 'Executive Mode' : ($isAdminBesarGudangModuleAccess ? 'Gudang Access Mode' : 'Management Mode') }}</p>
               </div>
             </div>
@@ -271,12 +353,12 @@
               @if($isAdminBesarGudangModuleAccess)
                 <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] rounded-lg font-medium" href="{{ route('admin.admin-besar.index') }}"><span class="material-symbols-outlined">arrow_back</span><span class="nav-label">Kembali ke Admin Besar</span></a>
               @endif
-              <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] rounded-lg font-medium" href="{{ url('/admin/products') }}"><span class="material-symbols-outlined">inventory_2</span><span class="nav-label">Barang</span></a>
+              <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] rounded-lg font-medium" href="{{ url('/admin/products') }}"><span class="material-symbols-outlined">inventory_2</span><span class="nav-label">Daftar Stok</span></a>
               <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] rounded-lg font-medium" href="{{ url('/admin/suppliers') }}"><span class="material-symbols-outlined">local_shipping</span><span class="nav-label">Supplier</span></a>
               <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'credits' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ $creditsUrl }}"><span class="material-symbols-outlined">credit_card</span><span class="nav-label">Kredit &amp; Utang Saya</span></a>
               <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'supplier-transactions' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ $supplierTransactionsUrl }}"><span class="material-symbols-outlined">account_tree</span><span class="nav-label">Transaksi PT/CV</span></a>
-              <div class="mt-auto space-y-1">
-                <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'product-groups' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ $productGroupsUrl }}"><span class="material-symbols-outlined">inventory_2</span><span class="nav-label">Kelompok Barang</span></a>
+              <div class="space-y-1 pt-1">
+                <a class="sf-nav-item flex items-center gap-3 px-3 py-2 rounded-lg font-medium {{ $type === 'product-groups' ? 'bg-[#006948] text-white' : 'text-[#47534d] hover:bg-[#eceef0]' }}" href="{{ $productGroupsUrl }}"><span class="material-symbols-outlined">inventory_2</span><span class="nav-label">Kelompok Stok</span></a>
                 <div class="ml-3 border-l border-[#d4dbd7] pl-3 py-1 space-y-1">
                   <a class="sf-nav-item flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium {{ $salesListActive ? 'bg-[#e8fff4] text-[#006948]' : 'text-[#52615a] hover:bg-[#f2f4f6]' }}" href="{{ $salesListUrl }}">
                     <span class="material-symbols-outlined text-[18px]">point_of_sale</span>
@@ -294,7 +376,7 @@
               </div>
             @endif
           </nav>
-          <div class="mt-4 pt-3 pb-5 border-t border-[#d4dbd7]">
+          <div class="logout-slot pt-3 border-t border-[#d4dbd7]">
             <form method="POST" action="{{ route('logout') }}" class="js-admin-logout-form">
               @csrf
               <button type="submit" class="sf-nav-item w-full flex items-center gap-3 text-[#ba1a1a] px-3 py-2 hover:bg-[#ffdad6] rounded-lg font-medium text-left">
@@ -305,12 +387,14 @@
           </div>
         </aside>
 
-        <main class="sf-main-scroll p-4 md:p-6">
+        <main class="sf-content min-h-screen p-4 md:p-6">
           @if ($type !== 'taxonomy')
-            <div class="flex items-end justify-between gap-4 mb-6">
-              <div>
-                <h1 class="text-[40px] leading-[48px] font-semibold text-[#191c1e]">{{ $title }}</h1>
-                <p class="text-[#52615a]">Kelola data {{ strtolower($title) }} dengan tampilan konsisten seperti halaman barang.</p>
+            <div class="page-title-block mb-4 md:mb-5">
+              <div class="page-title-copy">
+                <h1 class="sf-title font-display text-headline-lg text-on-surface leading-none mt-0 mb-1">{{ $title }}</h1>
+                <p class="mt-0 text-on-surface-variant text-[13px] leading-5">
+                  Kelola data {{ strtolower($title) }} dengan tampilan konsisten seperti halaman daftar stok.
+                </p>
               </div>
             </div>
           @endif
@@ -708,7 +792,17 @@
                       </thead>
                       <tbody class="divide-y divide-[#e4e8e6]">
                         @forelse ($monthGroup['rows'] as $group)
-                          <tr class="hover:bg-[#f6f8f7] transition-colors">
+                          @php
+                            $ptDetailUrl = $supplierTransactionsUrl . '&pt=' . urlencode($group['pt_name']);
+                          @endphp
+                          <tr
+                            class="cursor-pointer hover:bg-[#f6f8f7] transition-colors"
+                            onclick="window.location.href={{ Illuminate\Support\Js::from($ptDetailUrl) }}"
+                            onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); window.location.href={{ Illuminate\Support\Js::from($ptDetailUrl) }}; }"
+                            tabindex="0"
+                            role="link"
+                            aria-label="Buka detail {{ $group['pt_name'] }}"
+                          >
                             <td class="px-6 py-4 font-semibold">{{ $group['pt_name'] }}</td>
                             <td class="px-6 py-4">{{ number_format((int) $group['total_transaksi'], 0, ',', '.') }}</td>
                             <td class="px-6 py-4">{{ number_format((int) $group['total_qty'], 0, ',', '.') }}</td>
@@ -717,8 +811,14 @@
                             <td class="px-6 py-4">{{ number_format((int) $group['jatuh_tempo'], 0, ',', '.') }}</td>
                             <td class="px-6 py-4">{{ number_format((int) $group['lunas'], 0, ',', '.') }}</td>
                             <td class="px-6 py-4">{{ $group['terakhir_beli'] }}</td>
-                            <td class="px-6 py-4 text-right">
-                              <a href="{{ $supplierTransactionsUrl . '&pt=' . urlencode($group['pt_name']) }}" class="inline-flex items-center rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm text-[#006948] hover:bg-[#f1f4f2]">Detail</a>
+                            <td class="relative z-10 px-6 py-4 text-right">
+                              <a
+                                href="{{ $ptDetailUrl }}"
+                                class="inline-flex items-center rounded-lg border border-[#bccac0] bg-white px-3 py-1.5 text-sm font-medium text-[#006948] hover:bg-[#f1f4f2]"
+                                onclick="event.stopPropagation()"
+                              >
+                                Detail
+                              </a>
                             </td>
                           </tr>
                         @empty
@@ -1304,6 +1404,7 @@
             </div>
           @endif
         </main>
+      </div>
       </div>
     </div>
 

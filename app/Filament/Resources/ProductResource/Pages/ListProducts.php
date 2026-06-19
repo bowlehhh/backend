@@ -18,7 +18,7 @@ class ListProducts extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make()->label('Tambah Barang'),
+            CreateAction::make()->label('Tambah Stok'),
         ];
     }
 }

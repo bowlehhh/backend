@@ -24,7 +24,7 @@ class AdminSalesController extends Controller
         $historyUrl = $isAdminBesar
             ? url('/admin/admin-besar/history')
             : url('/admin/products');
-        $historyLabel = $isAdminBesar ? 'Kembali ke History' : 'Kembali ke Barang';
+        $historyLabel = $isAdminBesar ? 'Kembali ke History' : 'Kembali ke Daftar Stok';
 
         if ($request->boolean('pdf')) {
             $pdf = Pdf::loadView('cashier.receipt', [

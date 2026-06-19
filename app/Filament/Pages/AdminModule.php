@@ -48,7 +48,7 @@ class AdminModule extends Page
         $modules = [
             'credits' => ['label' => 'Kredit & Utang Saya', 'icon' => 'credit_card'],
             'supplier-transactions' => ['label' => 'Transaksi PT/CV', 'icon' => 'account_tree'],
-            'product-groups' => ['label' => 'Kelompok Barang', 'icon' => 'inventory_2'],
+            'product-groups' => ['label' => 'Kelompok Stok', 'icon' => 'inventory_2'],
             'reports' => ['label' => 'Laporan', 'icon' => 'analytics'],
             'users' => ['label' => 'User', 'icon' => 'group'],
         ];

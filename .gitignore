@@ -19,6 +19,7 @@
 /public/hot
 /public/storage
 /bootstrap/cache/*.php
+/bootstrap/cache/*.tmp
 /bootstrap/cache/filament
 /storage/*.key
 /storage/framework/views/*.php

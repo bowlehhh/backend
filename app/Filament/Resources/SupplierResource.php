@@ -48,7 +48,7 @@ class SupplierResource extends Resource
                     Grid::make(2)->schema([
                         TextInput::make('name')->label('Nama Supplier')->required()->maxLength(255),
                         TextInput::make('branch')
-                            ->label('Nama Barang')
+                            ->label('Nama Stok')
                             ->disabled()
                             ->dehydrated(false)
                             ->formatStateUsing(function (?Supplier $record): string {
@@ -89,7 +89,7 @@ class SupplierResource extends Resource
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('total_products')
-                    ->label('Total Barang')
+                    ->label('Total Stok')
                     ->state(fn (Supplier $record): int => $record->productBatches()->distinct('product_id')->count())
                     ->badge()
                     ->color('primary')
@@ -100,7 +100,7 @@ class SupplierResource extends Resource
                     ->badge()
                     ->color('success'),
                 TextColumn::make('product_names')
-                    ->label('Nama Barang')
+                    ->label('Nama Stok')
                     ->state(function (Supplier $record): string {
                         return $record->productBatches()
                             ->with('product:id,name')
@@ -115,7 +115,7 @@ class SupplierResource extends Resource
                     ->wrap()
                     ->toggleable(),
                 TextColumn::make('branch')
-                    ->label('Catatan Barang')
+                    ->label('Catatan Stok')
                     ->toggleable(),
                 TextColumn::make('phone')
                     ->label('Telepon')
@@ -130,7 +130,7 @@ class SupplierResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->actions([
-                ViewAction::make()->label('Lihat Barang'),
+                ViewAction::make()->label('Lihat Stok'),
                 EditAction::make(),
                 DeleteAction::make(),
             ])

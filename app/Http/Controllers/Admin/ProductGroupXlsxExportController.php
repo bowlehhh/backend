@@ -23,7 +23,7 @@ class ProductGroupXlsxExportController extends Controller
         $report = $reportService->build();
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Kelompok Barang');
+        $sheet->setTitle('Kelompok Stok');
         $sheet->setShowGridLines(false);
         $sheet->getPageSetup()
             ->setOrientation(PageSetup::ORIENTATION_LANDSCAPE)
@@ -36,7 +36,7 @@ class ProductGroupXlsxExportController extends Controller
 
         $row = 1;
         $this->writeMergedRow($sheet, $row, self::LAST_COL, ['SURYA DUTA MULTINDO'], $this->styleTitle());
-        $this->writeMergedRow($sheet, $row, self::LAST_COL, ['Export Kelompok Barang - per part number, histori pembelian, dan histori penjualan'], $this->styleSubtitle());
+        $this->writeMergedRow($sheet, $row, self::LAST_COL, ['Export Kelompok Stok - per part number, histori pembelian, dan histori penjualan'], $this->styleSubtitle());
         $row++;
 
         $metaRows = [

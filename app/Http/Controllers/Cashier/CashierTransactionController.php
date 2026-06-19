@@ -308,6 +308,12 @@ class CashierTransactionController extends Controller
         }
 
         $cart = (array) $request->session()->get('cashier_cart', []);
+        $snapshotSync = $this->syncCartFromSnapshot($cart, $request);
+        if ($snapshotSync['error'] !== null) {
+            return back()->withErrors(['cart' => $snapshotSync['error']]);
+        }
+
+        $cart = $snapshotSync['cart'];
         $partNumber = $this->getBatchPartNumber($batch);
         $mergedKey = $this->findMergedCartItemKeyByPartNumber($cart, $partNumber);
         $key = (string) $batch->id;
@@ -318,8 +324,16 @@ class CashierTransactionController extends Controller
             $key = $existingKey;
         }
 
-        $currentLineQty = (int) ($cart[$key]['qty'] ?? 0);
-        $currentSubtotal = (float) ($cart[$key]['merged_subtotal'] ?? ((float) ($cart[$key]['price'] ?? $batch->selling_price) * $currentLineQty));
+        $visibleQtyInput = $request->input('current_visible_qty');
+        $hasVisibleQtyInput = $visibleQtyInput !== null && $visibleQtyInput !== '';
+        $currentLineQty = $hasVisibleQtyInput
+            ? max(0, (int) $visibleQtyInput)
+            : (int) ($cart[$key]['qty'] ?? 0);
+        $currentVisiblePrice = $this->parseCurrencyInput($request->input('current_visible_price'));
+        $isVisibleMergedLine = (bool) $request->boolean('current_visible_merge_stock');
+        $currentSubtotal = $isVisibleMergedLine && $currentVisiblePrice !== null
+            ? $currentVisiblePrice
+            : (float) ($cart[$key]['merged_subtotal'] ?? ((float) ($cart[$key]['price'] ?? $batch->selling_price) * $currentLineQty));
         $currentAllocations = $this->normalizeStockAllocations($cart[$key] ?? []);
         $nextQty = $currentLineQty + 1;
         $availableStock = $mergedKey !== null
@@ -328,7 +342,12 @@ class CashierTransactionController extends Controller
         $nextSubtotal = $mergedKey !== null
             ? $currentSubtotal + (float) $batch->selling_price
             : (float) $batch->selling_price * $nextQty;
-        $nextPrice = $nextQty > 0 ? $nextSubtotal / $nextQty : (float) $batch->selling_price;
+        $baseUnitPrice = ! $mergedKey && $currentVisiblePrice !== null
+            ? $currentVisiblePrice
+            : (float) ($cart[$key]['price'] ?? $batch->selling_price);
+        $nextPrice = $mergedKey !== null
+            ? ($nextQty > 0 ? $nextSubtotal / $nextQty : (float) $batch->selling_price)
+            : $baseUnitPrice;
 
         if ($mergedKey !== null) {
             $currentAllocations[(int) $batch->id] = ($currentAllocations[(int) $batch->id] ?? 0) + 1;
@@ -345,7 +364,7 @@ class CashierTransactionController extends Controller
             'product_batch_id' => $batch->id,
             'product_name' => $product->name,
             'part_number' => $partNumber,
-            'price' => $mergedKey !== null ? $nextPrice : (float) $batch->selling_price,
+            'price' => $mergedKey !== null ? $nextPrice : $baseUnitPrice,
             'qty' => $nextQty,
             'merged_subtotal' => $mergedKey !== null ? $nextSubtotal : null,
             'merge_stock' => (bool) ($cart[$key]['merge_stock'] ?? false),
@@ -369,6 +388,12 @@ class CashierTransactionController extends Controller
         $qty = max(0, (int) $request->input('qty', 1));
         $priceInput = $request->input('price');
         $cart = (array) $request->session()->get('cashier_cart', []);
+        $snapshotSync = $this->syncCartFromSnapshot($cart, $request);
+        if ($snapshotSync['error'] !== null) {
+            return back()->withErrors(['cart' => $snapshotSync['error']]);
+        }
+
+        $cart = $snapshotSync['cart'];
         $partNumber = $this->getBatchPartNumber($batch);
         $key = (string) $batch->id;
 
@@ -406,7 +431,8 @@ class CashierTransactionController extends Controller
             return back()->withErrors(['cart' => "Stok {$cart[$key]['product_name']} tidak cukup."]);
         }
 
-        $price = $priceInput !== null ? (float) $priceInput : (float) ($cart[$key]['price'] ?? $batch->selling_price);
+        $parsedPrice = $this->parseCurrencyInput($priceInput);
+        $price = $priceInput !== null ? (float) ($parsedPrice ?? 0) : (float) ($cart[$key]['price'] ?? $batch->selling_price);
         if ($price < 0) {
             return back()->withErrors(['cart' => 'Harga jual tidak boleh kurang dari 0.']);
         }
@@ -517,6 +543,106 @@ class CashierTransactionController extends Controller
         $request->session()->put('cashier_cart', $cart);
 
         return back()->with('success', 'Stok berhasil digabung.');
+    }
+
+    protected function parseCurrencyInput(mixed $value): ?float
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $normalized = preg_replace('/[^\d]/', '', (string) $value);
+        if ($normalized === null || $normalized === '') {
+            return null;
+        }
+
+        return (float) $normalized;
+    }
+
+    protected function syncCartFromSnapshot(array $cart, Request $request): array
+    {
+        $snapshotRaw = $request->input('cart_snapshot');
+        if (! is_string($snapshotRaw) || trim($snapshotRaw) === '') {
+            return ['cart' => $cart, 'error' => null];
+        }
+
+        $snapshot = json_decode($snapshotRaw, true);
+        if (! is_array($snapshot)) {
+            return ['cart' => $cart, 'error' => null];
+        }
+
+        $rebuiltCart = [];
+
+        foreach ($snapshot as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+
+            $batchId = (int) ($item['product_batch_id'] ?? 0);
+            if ($batchId <= 0) {
+                continue;
+            }
+
+            $batch = ProductBatch::query()->find($batchId);
+            if (! $batch) {
+                continue;
+            }
+
+            $batch->loadMissing('product:id,name,barcode,is_active');
+            $product = $batch->product;
+            if (! $product || ! $product->is_active) {
+                continue;
+            }
+
+            $partNumber = $this->getBatchPartNumber($batch);
+            $qty = max(0, (int) ($item['qty'] ?? 0));
+            if ($qty === 0) {
+                continue;
+            }
+
+            $mergeStock = (bool) ($item['merge_stock'] ?? false);
+            $availableStock = $mergeStock
+                ? $this->getAvailableStockByPartNumber($partNumber)
+                : $this->getBatchStock($batch);
+
+            if ($qty > $availableStock) {
+                return [
+                    'cart' => $cart,
+                    'error' => "Stok {$product->name} tidak cukup.",
+                ];
+            }
+
+            $lineTotal = max(
+                0,
+                (float) ($item['line_total'] ?? ($mergeStock ? ($item['price'] ?? 0) : ((float) ($item['price'] ?? 0) * $qty)))
+            );
+            $unitPrice = $mergeStock
+                ? ($qty > 0 ? ($lineTotal / $qty) : 0)
+                : max(0, (float) ($item['price'] ?? 0));
+            $key = (string) ($mergeStock ? $partNumber : $batchId);
+            $existingAllocations = $mergeStock && isset($cart[$key])
+                ? $this->normalizeStockAllocations($cart[$key])
+                : [];
+            $normalizedAllocations = $mergeStock && array_sum($existingAllocations) === $qty
+                ? $existingAllocations
+                : [$batchId => $qty];
+
+            $rebuiltCart[$key] = [
+                'product_id' => $product->id,
+                'product_batch_id' => $batchId,
+                'product_name' => (string) ($item['product_name'] ?? $product->name),
+                'part_number' => $partNumber,
+                'price' => $unitPrice,
+                'qty' => $qty,
+                'merged_subtotal' => $mergeStock ? $lineTotal : null,
+                'merge_stock' => $mergeStock,
+                'stock_allocations' => $mergeStock
+                    ? $normalizedAllocations
+                    : [$batchId => $qty],
+            ];
+        }
+
+        return ['cart' => $rebuiltCart, 'error' => null];
     }
 
     public function remove(Request $request, ProductBatch $batch): RedirectResponse
@@ -687,7 +813,8 @@ class CashierTransactionController extends Controller
         }
 
         $paymentMethod = (string) $request->input('payment_method', 'cash');
-        $paidAmount = (float) $request->input('paid_amount', 0);
+        $paidAmount = (float) ($this->parseCurrencyInput($request->input('paid_amount')) ?? 0);
+        $discountPercent = max(0, min(100, (float) $request->input('discount_amount', 0)));
         $creditDays = (int) $request->input('credit_days', 0);
         $creditDueDate = trim((string) $request->input('credit_due_date', ''));
         $customerName = trim((string) $request->input('customer_name', ''));
@@ -702,6 +829,7 @@ class CashierTransactionController extends Controller
             $sale = $this->checkoutService->checkout($request->user(), [
                 'payment_method' => $paymentMethod,
                 'paid_amount' => $paidAmount,
+                'discount_amount' => $discountPercent,
                 'credit_days' => $creditDays > 0 ? $creditDays : null,
                 'credit_due_date' => $creditDueDate !== '' ? $creditDueDate : null,
                 'customer_name' => $customerName !== '' ? mb_substr($customerName, 0, 100) : null,

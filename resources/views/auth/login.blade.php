@@ -221,7 +221,7 @@
                 <div class="rounded-[22px] border border-white/15 bg-white/88 p-4 shadow-[0_22px_55px_rgba(0,0,0,0.18)]">
                     <div class="flex h-full items-center justify-between gap-4">
                         <div>
-                            <h3 class="text-[14px] font-bold text-[#12324a]">Pengelolaan Barang</h3>
+                            <h3 class="text-[14px] font-bold text-[#12324a]">Pengelolaan Stok</h3>
                             <p class="mt-1 text-[12px] leading-5 text-slate-600">Sistem terintegrasi untuk stok, transaksi, dan laporan.</p>
                         </div>
                         <span class="material-symbols-outlined text-primary text-[26px]">architecture</span>

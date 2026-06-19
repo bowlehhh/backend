@@ -42,13 +42,13 @@
                 <p class="px-1 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Master Data</p>
                 <div class="mt-2 space-y-1">
                     <a href="{{ url('/admin/products') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-white">
-                        <span class="material-symbols-outlined">inventory_2</span><span class="font-semibold">Barang</span>
+                        <span class="material-symbols-outlined">inventory_2</span><span class="font-semibold">Daftar Stok</span>
                     </a>
                     <a href="{{ url('/admin/suppliers') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-white">
                         <span class="material-symbols-outlined">local_shipping</span><span class="font-semibold">Supplier</span>
                     </a>
                     <a href="{{ url('/admin/admin-module?type=product-groups') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-white">
-                        <span class="material-symbols-outlined">inventory_2</span><span class="font-semibold">Kelompok Barang</span>
+                        <span class="material-symbols-outlined">inventory_2</span><span class="font-semibold">Kelompok Stok</span>
                     </a>
                 </div>
             </div>

@@ -53,6 +53,9 @@
 @php
     $creditDaysValue = old('credit_days', '');
     $currentUser = auth()->user();
+    $initialDiscountPercent = max(0, min(100, (float) old('discount_amount', 0)));
+    $initialDiscountAmount = $subtotal > 0 ? (($subtotal * $initialDiscountPercent) / 100) : 0;
+    $initialCartTotal = max(0, $subtotal - $initialDiscountAmount);
     $isAdminBesarGudangAccess = $currentUser?->isAdminBesar() && request()->routeIs('admin.transaksi.dashboard', 'admin.transactions.*');
     $isTransactionDashboard = request()->routeIs('cashier.dashboard', 'admin.transaksi.dashboard');
     $transactionDashboardRoute = $isAdminBesarGudangAccess ? 'admin.transaksi.dashboard' : 'cashier.dashboard';
@@ -67,6 +70,31 @@
     $cartHoldRoute = $isAdminBesarGudangAccess ? 'admin.transactions.cart.hold' : 'cashier.cart.hold';
     $checkoutRoute = $isAdminBesarGudangAccess ? 'admin.transactions.checkout' : 'cashier.checkout';
     $backToAdminBesarRoute = route('admin.admin-besar.index');
+    $productGridClasses = $showAllProducts
+        ? 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-3'
+        : 'grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4';
+    $productCardMediaClasses = $showAllProducts
+        ? 'relative h-24 sm:h-28 lg:h-32 bg-slate-100'
+        : 'relative h-36 md:h-44 bg-slate-100';
+    $productCardWrapperClasses = $showAllProducts
+        ? 'rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm'
+        : 'rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm';
+    $productCardBodyClasses = $showAllProducts ? 'p-2.5' : 'p-3';
+    $productCategoryClasses = $showAllProducts
+        ? 'text-[9px] font-bold uppercase tracking-tight text-emerald-700'
+        : 'text-[10px] font-bold uppercase tracking-tight text-emerald-700';
+    $productPartNumberClasses = $showAllProducts
+        ? 'font-bold text-slate-900 text-base sm:text-lg leading-tight line-clamp-2 break-words'
+        : 'font-bold text-slate-900 text-xl md:text-lg line-clamp-1';
+    $productNameClasses = $showAllProducts
+        ? 'mt-1 text-[11px] text-slate-500 line-clamp-2'
+        : 'mt-1 text-xs text-slate-500 line-clamp-1';
+    $productPriceClasses = $showAllProducts
+        ? 'text-lg sm:text-xl font-extrabold text-emerald-700 leading-tight'
+        : 'text-2xl md:text-2xl font-extrabold text-emerald-700';
+    $productAddButtonClasses = $showAllProducts
+        ? 'inline-flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg'
+        : 'inline-flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-xl';
 @endphp
 <div class="h-screen overflow-hidden bg-[#f7f9fb]">
     <aside class="hidden lg:flex fixed inset-y-0 left-0 z-30 w-[340px] flex-col border-r border-slate-300 bg-white">
@@ -112,7 +140,7 @@
                 <div class="mt-2 space-y-1">
                     <a href="{{ url('/admin/products') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-white">
                         <span class="material-symbols-outlined">inventory_2</span>
-                        <span class="font-semibold">Barang</span>
+                        <span class="font-semibold">Daftar Stok</span>
                     </a>
                     <a href="{{ url('/admin/suppliers') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-white">
                         <span class="material-symbols-outlined">local_shipping</span>
@@ -120,7 +148,7 @@
                     </a>
                     <a href="{{ url('/admin/admin-module?type=product-groups') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-white">
                         <span class="material-symbols-outlined">inventory_2</span>
-                        <span class="font-semibold">Kelompok Barang</span>
+                        <span class="font-semibold">Kelompok Stok</span>
                     </a>
                 </div>
             </div>
@@ -138,18 +166,30 @@
                             <p class="text-sm font-semibold">{{ $item['product_name'] }}</p>
                             <p class="mt-1 text-xs text-slate-500">Part No: {{ $item['part_number'] }}</p>
                             <p class="mt-1 text-xs text-slate-500">
-                                Stok INV: {{ number_format((int) ($item['batch_stock'] ?? 0), 0, ',', '.') }}
+                                Stok INV:
+                                <span
+                                    data-cart-batch-stock
+                                    data-batch-base-stock="{{ (int) ($item['batch_stock'] ?? 0) }}"
+                                    data-product-batch-id="{{ (int) $item['product_batch_id'] }}"
+                                >{{ number_format((int) ($item['batch_stock'] ?? 0), 0, ',', '.') }}</span>
                                 @if((int) ($item['available_stock'] ?? 0) > (int) ($item['batch_stock'] ?? 0))
-                                    | total gabungan: {{ number_format((int) ($item['available_stock'] ?? 0), 0, ',', '.') }}
+                                    | total gabungan:
+                                    <span
+                                        data-cart-available-stock
+                                        data-available-base-stock="{{ (int) ($item['available_stock'] ?? 0) }}"
+                                        data-part-number="{{ $item['part_number'] }}"
+                                    >{{ number_format((int) ($item['available_stock'] ?? 0), 0, ',', '.') }}</span>
                                 @endif
                             </p>
                             <div class="mt-2 flex justify-between text-sm">
                                 <form method="POST" action="{{ route($cartUpdateRoute, $item['product_batch_id']) }}" class="flex flex-col gap-2" data-cart-item-form data-merge-stock="{{ !empty($item['merge_stock']) ? '1' : '0' }}" data-product-id="{{ (int) $item['product_id'] }}" data-product-batch-id="{{ (int) $item['product_batch_id'] }}" data-product-name="{{ $item['product_name'] }}" data-part-number="{{ $item['part_number'] }}">
                                     @csrf
+                                    <input type="hidden" name="cart_snapshot" value="" data-cart-snapshot />
                                     <div class="flex items-center gap-2">
                                         <label class="text-xs text-slate-500">Qty</label>
-                                        <input type="number" min="0" max="{{ (int) ($item['max_qty'] ?? 0) }}" name="qty" value="{{ $item['qty'] }}" class="w-16 rounded-lg border border-slate-300 px-2 py-1" data-cart-qty data-max-stock="{{ (int) ($item['max_qty'] ?? 0) }}" />
+                                        <input type="number" min="0" max="{{ (int) ($item['max_qty'] ?? 0) }}" name="qty" value="{{ $item['qty'] }}" class="w-20 rounded-lg border border-slate-300 px-2 py-1" data-cart-qty data-max-stock="{{ (int) ($item['max_qty'] ?? 0) }}" />
                                     </div>
+                                    <p class="hidden text-[11px] font-medium text-red-500" data-cart-qty-warning></p>
                                     <div class="flex items-center gap-2">
                                         <label class="text-xs text-slate-500">{{ !empty($item['merge_stock']) ? 'Total Harga' : 'Harga' }}</label>
                                         <input
@@ -232,7 +272,7 @@
                 <div class="mt-3 flex items-center gap-4">
                     <form id="search-form" method="GET" action="{{ route($transactionDashboardRoute) }}" class="relative flex-1">
                         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">search</span>
-                        <input id="product-search-input" type="text" name="q" value="{{ $search }}" placeholder="Cari produk berdasarkan nama atau barcode..." autocomplete="off" class="h-11 w-full rounded-xl border border-slate-300 bg-slate-50 pl-10 pr-4 text-sm focus:border-emerald-500 focus:ring-emerald-500" />
+                        <input id="product-search-input" type="text" name="q" value="{{ $search }}" placeholder="Cari produk berdasarkan part number, nama, atau barcode..." autocomplete="off" class="h-11 w-full rounded-xl border border-slate-300 bg-slate-50 pl-10 pr-4 text-sm focus:border-emerald-500 focus:ring-emerald-500" />
                         <div id="product-search-popup" class="absolute left-0 right-0 top-[48px] z-40 hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg"></div>
                     </form>
                     <div class="hidden lg:flex items-center gap-3">
@@ -261,15 +301,37 @@
                     <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ $errors->first() }}</div>
                 @endif
                 <div class="mb-4">
-                    <div>
-                        <h3 class="text-2xl md:text-xl font-bold text-slate-700">Daftar Produk</h3>
-                        <p class="mt-1 text-xs text-slate-500">
-                            Menampilkan {{ count($products) }} dari {{ number_format((int) ($totalFilteredProducts ?? count($products)), 0, ',', '.') }} barang di tampilan ringkas.
-                        </p>
+                    <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                        <h3 class="text-2xl md:text-xl font-bold text-slate-700">Daftar Stok</h3>
+                        <div class="space-y-2 md:text-right">
+                            <p class="mt-1 text-xs text-slate-500">
+                                @if($showAllProducts)
+                                    Menampilkan semua {{ number_format((int) ($totalFilteredProducts ?? count($products)), 0, ',', '.') }} stok aktif dengan mode rapat.
+                                @else
+                                    Menampilkan semua {{ number_format((int) ($totalFilteredProducts ?? count($products)), 0, ',', '.') }} stok aktif di tampilan normal.
+                                @endif
+                            </p>
+                            <div>
+                                @php
+                                    $toggleQuery = request()->query();
+                                    if ($showAllProducts) {
+                                        unset($toggleQuery['show_all']);
+                                    } else {
+                                        $toggleQuery['show_all'] = 1;
+                                    }
+                                @endphp
+                                <a
+                                    href="{{ route($transactionDashboardRoute, $toggleQuery) }}"
+                                    class="inline-flex items-center rounded-xl border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50"
+                                >
+                                    {{ $showAllProducts ? 'Kembali ke Tampilan Normal' : 'Lihat Semua Stok' }}
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4">
+                <div class="{{ $productGridClasses }}">
                     @forelse($products as $product)
                         @php
                             $batch = $product->batches->first();
@@ -277,29 +339,49 @@
                             $price = (float) ($batch?->selling_price ?? 0);
                             $image = $product->image_path ? asset('storage/' . ltrim($product->image_path, '/')) : null;
                             $partNumber = trim((string) ($product->barcode ?? '')) ?: '-';
+                            $batchId = (int) ($batch?->id ?? 0);
+                            $canAddToCart = $batchId > 0 && $stock > 0;
                         @endphp
-                        <article class="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-                            <div class="relative h-36 md:h-44 bg-slate-100">
+                        <article class="{{ $productCardWrapperClasses }}">
+                            <div class="{{ $productCardMediaClasses }}">
                                 @if($image)
                                     <img src="{{ $image }}" alt="{{ $product->name }}" class="h-full w-full object-cover" />
                                 @else
                                     <div class="h-full w-full flex items-center justify-center text-slate-400">
-                                        <span class="material-symbols-outlined text-5xl">inventory_2</span>
+                                        <span class="material-symbols-outlined {{ $showAllProducts ? 'text-4xl' : 'text-5xl' }}">inventory_2</span>
                                     </div>
                                 @endif
                                 <span class="absolute right-2 top-2 rounded-lg px-2 py-1 text-xs font-semibold {{ $stock <= 5 ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700' }}">
-                                    Stok: {{ $stock }}
+                                    <span
+                                        data-product-stock-badge
+                                        data-product-batch-id="{{ $batchId }}"
+                                        data-base-stock="{{ $stock }}"
+                                    >Stok: {{ $stock }}</span>
                                 </span>
                             </div>
-                            <div class="p-3">
-                                <p class="text-[10px] font-bold uppercase tracking-tight text-emerald-700">{{ $product->category?->name ?? '-' }}</p>
-                                <h3 class="font-bold text-slate-900 text-xl md:text-lg line-clamp-1">{{ $partNumber }}</h3>
-                                <p class="mt-1 text-xs text-slate-500 line-clamp-1">{{ $product->name }}</p>
-                                <div class="mt-3 flex items-center justify-between">
-                                    <p class="text-2xl md:text-2xl font-extrabold text-emerald-700">Rp {{ number_format($price, 0, ',', '.') }}</p>
-                                    <form method="POST" action="{{ route($cartAddRoute, $batch) }}">
+                            <div class="{{ $productCardBodyClasses }}">
+                                <p class="{{ $productCategoryClasses }}">{{ $product->category?->name ?? '-' }}</p>
+                                <h3 class="{{ $productPartNumberClasses }}">{{ $partNumber }}</h3>
+                                <p class="{{ $productNameClasses }}">{{ $product->name }}</p>
+                                <div class="mt-3 flex items-center justify-between gap-2">
+                                    <p class="{{ $productPriceClasses }}">Rp {{ number_format($price, 0, ',', '.') }}</p>
+                                    <form
+                                        method="POST"
+                                        action="{{ $batch ? route($cartAddRoute, $batch) : '#' }}"
+                                        data-add-to-cart-form
+                                        data-product-batch-id="{{ $batchId }}"
+                                        data-part-number="{{ strtoupper(trim($partNumber)) }}"
+                                    >
                                         @csrf
-                                        <button type="submit" class="inline-flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-xl bg-emerald-700 text-white hover:bg-emerald-600">
+                                        <input type="hidden" name="cart_snapshot" value="" data-cart-snapshot />
+                                        <input type="hidden" name="current_visible_qty" value="" data-current-visible-qty />
+                                        <input type="hidden" name="current_visible_price" value="" data-current-visible-price />
+                                        <input type="hidden" name="current_visible_merge_stock" value="0" data-current-visible-merge-stock />
+                                        <button
+                                            type="submit"
+                                            class="{{ $productAddButtonClasses }} {{ $canAddToCart ? 'bg-emerald-700 text-white hover:bg-emerald-600' : 'cursor-not-allowed bg-slate-200 text-slate-400' }}"
+                                            @disabled(! $canAddToCart)
+                                        >
                                             <span class="material-symbols-outlined">add</span>
                                         </button>
                                     </form>
@@ -318,10 +400,11 @@
                 <div class="min-h-0 flex-1 overflow-y-auto custom-scrollbar px-5 py-4 space-y-4">
                     <div class="space-y-2 text-sm">
                         <div class="flex justify-between"><span>Subtotal</span><span data-cart-subtotal>Rp {{ number_format($subtotal, 0, ',', '.') }}</span></div>
+                        <div class="flex justify-between"><span data-discount-label>Diskon ({{ rtrim(rtrim(number_format($initialDiscountPercent, 2, '.', ''), '0'), '.') }}%)</span><span data-cart-discount>Rp {{ number_format($initialDiscountAmount, 0, ',', '.') }}</span></div>
                     </div>
                     <div class="mt-3 flex items-end justify-between">
                         <span class="text-xs tracking-wide text-slate-500">TOTAL HARGA</span>
-                        <span class="text-4xl font-extrabold text-emerald-700" data-cart-total>Rp {{ number_format($cartTotal, 0, ',', '.') }}</span>
+                        <span class="text-4xl font-extrabold text-emerald-700" data-cart-total>Rp {{ number_format($initialCartTotal, 0, ',', '.') }}</span>
                     </div>
                     <div class="mt-4 grid grid-cols-2 gap-3">
                         <button id="print-invoice-btn" type="button" class="rounded-xl border border-emerald-700 px-3 py-3 text-sm font-semibold text-emerald-700">Print Invoice</button>
@@ -347,7 +430,7 @@
                                     type="text"
                                     inputmode="numeric"
                                     name="paid_amount"
-                                    value="{{ old('payment_method') === 'credit' ? old('paid_amount', '0') : old('paid_amount', number_format((float) ceil($cartTotal), 0, ',', '.')) }}"
+                                    value="{{ old('payment_method') === 'credit' ? old('paid_amount', '0') : old('paid_amount', number_format((float) ceil($initialCartTotal), 0, ',', '.')) }}"
                                     class="rounded-xl border border-slate-300 px-3 py-2 text-sm"
                                     placeholder="Jumlah bayar"
                                     data-rupiah-input
@@ -356,6 +439,20 @@
                                 />
                                 <p data-payment-summary class="text-[11px] font-medium text-slate-500">DP: Rp 0 | Sisa kredit: Rp 0</p>
                             </div>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Diskon (%)</label>
+                            <input
+                                type="number"
+                                min="0"
+                                max="100"
+                                step="0.01"
+                                name="discount_amount"
+                                value="{{ old('discount_amount', '0') }}"
+                                class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                                placeholder="Masukkan persen diskon"
+                                data-discount-input
+                            />
                         </div>
                         <div data-credit-days-wrap class="{{ old('payment_method') === 'credit' ? '' : 'hidden' }} space-y-2">
                             <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
@@ -388,6 +485,7 @@
         <div class="leading-tight">
             <p class="text-[10px] text-slate-500 font-medium">Subtotal</p>
             <p class="font-bold text-slate-800" data-cart-subtotal>Rp {{ number_format($subtotal, 0, ',', '.') }}</p>
+            <p class="mt-1 text-[10px] text-slate-500 font-medium"><span data-discount-label>Diskon ({{ rtrim(rtrim(number_format($initialDiscountPercent, 2, '.', ''), '0'), '.') }}%)</span>: <span data-cart-discount>Rp {{ number_format($initialDiscountAmount, 0, ',', '.') }}</span></p>
         </div>
         <div class="flex gap-2">
             <form method="POST" action="{{ route($cartHoldRoute) }}">
@@ -401,7 +499,8 @@
         @csrf
         <input data-print-receipt-input type="hidden" name="print_receipt" value="0" />
         <input type="hidden" name="payment_method" value="{{ old('payment_method', 'cash') }}" />
-        <input type="hidden" name="paid_amount" value="{{ old('payment_method') === 'credit' ? old('paid_amount', '0') : old('paid_amount', (int) ceil($cartTotal)) }}" />
+        <input type="hidden" name="paid_amount" value="{{ old('payment_method') === 'credit' ? old('paid_amount', '0') : old('paid_amount', (int) ceil($initialCartTotal)) }}" />
+        <input type="hidden" name="discount_amount" value="{{ old('discount_amount', '0') }}" />
         <input type="hidden" name="credit_days" value="" />
         <input type="hidden" name="credit_due_date" value="{{ old('credit_due_date', '') }}" />
         <input type="hidden" name="cashier_service_name" value="" />
@@ -476,12 +575,14 @@
             </div>
             <input id="mobile-confirm-cashier-name" type="text" maxlength="100" value="{{ old('cashier_service_name', '') }}" autocomplete="off" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Nama petugas / admin" />
             <input id="mobile-confirm-customer-name" type="text" maxlength="100" value="{{ old('customer_name', '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Nama pembeli (opsional)" />
+            <input id="mobile-confirm-discount-amount" type="number" min="0" max="100" step="0.01" value="{{ old('discount_amount', '0') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Diskon (%)" data-select-all-on-focus />
             <input id="mobile-confirm-po-number" type="text" maxlength="100" value="{{ old('po_number', '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="P.O. No (opsional)" />
             <input id="mobile-confirm-site-name" type="text" maxlength="100" value="{{ old('site_name', '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Site (opsional)" />
         </div>
 
         <div class="mt-4 space-y-1 rounded-xl bg-slate-50 p-3 text-sm">
             <div class="flex justify-between"><span>Subtotal</span><span id="confirm-subtotal">Rp 0</span></div>
+            <div class="flex justify-between"><span id="confirm-discount-label">Diskon (0%)</span><span id="confirm-discount">Rp 0</span></div>
             <div class="mt-1 flex justify-between text-base font-bold"><span>Total</span><span id="confirm-total">Rp 0</span></div>
         </div>
 
@@ -504,6 +605,8 @@
     const modal = document.getElementById('sale-confirm-modal');
     const itemsBox = document.getElementById('sale-confirm-items');
     const confirmSubtotal = document.getElementById('confirm-subtotal');
+    const confirmDiscount = document.getElementById('confirm-discount');
+    const confirmDiscountLabel = document.getElementById('confirm-discount-label');
     const confirmTotal = document.getElementById('confirm-total');
     const confirmCustomer = document.getElementById('confirm-customer');
     const confirmPoNumber = document.getElementById('confirm-po-number');
@@ -519,12 +622,15 @@
     const mobileCreditDaysWrap = document.getElementById('mobile-credit-days-wrap');
     const mobileConfirmCashierName = document.getElementById('mobile-confirm-cashier-name');
     const mobileConfirmCustomerName = document.getElementById('mobile-confirm-customer-name');
+    const mobileConfirmDiscountAmount = document.getElementById('mobile-confirm-discount-amount');
     const mobileConfirmPoNumber = document.getElementById('mobile-confirm-po-number');
     const mobileConfirmSiteName = document.getElementById('mobile-confirm-site-name');
     const cancelBtn = document.getElementById('cancel-confirm-btn');
     const submitBtn = document.getElementById('submit-confirm-btn');
     const desktopPaymentMethod = desktopCheckoutForm?.querySelector('[data-payment-method]');
     const desktopPaidAmountInput = desktopCheckoutForm?.querySelector('[data-paid-amount-input]');
+    const desktopDiscountInput = desktopCheckoutForm?.querySelector('[data-discount-input]');
+    const discountLabels = Array.from(document.querySelectorAll('[data-discount-label]'));
     const desktopPaymentAmountLabel = desktopCheckoutForm?.querySelector('[data-payment-amount-label]');
     const desktopPaymentSummary = desktopCheckoutForm?.querySelector('[data-payment-summary]');
     const desktopCreditDaysWrap = desktopCheckoutForm?.querySelector('[data-credit-days-wrap]');
@@ -535,7 +641,7 @@
 
     const cartItems = @json($cartItems);
     const subtotal = Number(@json($subtotal));
-    const total = Number(@json($cartTotal));
+    const total = Number(@json($initialCartTotal));
     const searchSuggestions = @json($searchSuggestions);
     const nextResetAtIso = @json($nextResetAtIso);
 
@@ -551,15 +657,10 @@
             return;
         }
 
-        const maxStock = Number(input.dataset.maxStock || 0);
         let value = Number(input.value || 0);
 
         if (Number.isNaN(value) || value < 0) {
             value = 0;
-        }
-
-        if (maxStock > 0 && value > maxStock) {
-            value = maxStock;
         }
 
         input.value = String(value);
@@ -656,16 +757,39 @@
     });
 
     const subtotalDisplays = Array.from(document.querySelectorAll('[data-cart-subtotal]'));
+    const discountDisplays = Array.from(document.querySelectorAll('[data-cart-discount]'));
     const totalDisplays = Array.from(document.querySelectorAll('[data-cart-total]'));
     let liveSubtotal = subtotal;
+    let liveDiscount = Number(@json((float) $initialDiscountAmount));
     let liveTotal = total;
+
+    const getActiveDiscountPercent = () => {
+        if (activeCheckoutForm?.id === 'checkout-form-mobile') {
+            return Math.max(0, Math.min(100, Number(mobileConfirmDiscountAmount?.value || 0)));
+        }
+
+        return Math.max(0, Math.min(100, Number(desktopDiscountInput?.value || 0)));
+    };
+
+    const formatPercentLabel = (value) => {
+        const numeric = Number(value || 0);
+        const safe = Number.isFinite(numeric) ? numeric : 0;
+        return `${safe.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1')}%`;
+    };
 
     const syncSummaryValues = () => {
         subtotalDisplays.forEach((el) => {
             el.textContent = `Rp ${toRupiah(liveSubtotal)}`;
         });
+        discountDisplays.forEach((el) => {
+            el.textContent = `Rp ${toRupiah(liveDiscount)}`;
+        });
         totalDisplays.forEach((el) => {
             el.textContent = `Rp ${toRupiah(liveTotal)}`;
+        });
+        const percentLabel = `Diskon (${formatPercentLabel(getActiveDiscountPercent())})`;
+        discountLabels.forEach((el) => {
+            el.textContent = percentLabel;
         });
     };
 
@@ -688,28 +812,216 @@
         });
 
         liveSubtotal = nextTotal;
-        liveTotal = nextTotal;
+        const activeDiscountPercent = getActiveDiscountPercent();
+        liveDiscount = Math.min(liveSubtotal, (liveSubtotal * activeDiscountPercent) / 100);
+        liveTotal = Math.max(0, liveSubtotal - liveDiscount);
         syncSummaryValues();
+        syncVisibleStocks();
+    };
+
+    const collectReservedQtyByBatch = () => {
+        const reservedMap = new Map();
+
+        document.querySelectorAll('[data-cart-item-form]').forEach((form) => {
+            const batchId = Number(form.dataset.productBatchId || 0);
+            const qty = Number(form.querySelector('[data-cart-qty]')?.value || 0);
+
+            if (batchId <= 0 || qty <= 0) {
+                return;
+            }
+
+            reservedMap.set(batchId, (reservedMap.get(batchId) || 0) + qty);
+        });
+
+        return reservedMap;
+    };
+
+    const collectReservedQtyByPartNumber = () => {
+        const reservedMap = new Map();
+
+        document.querySelectorAll('[data-cart-item-form]').forEach((form) => {
+            const partNumber = String(form.dataset.partNumber || '').trim().toUpperCase();
+            const qty = Number(form.querySelector('[data-cart-qty]')?.value || 0);
+
+            if (!partNumber || qty <= 0) {
+                return;
+            }
+
+            reservedMap.set(partNumber, (reservedMap.get(partNumber) || 0) + qty);
+        });
+
+        return reservedMap;
+    };
+
+    const syncVisibleStocks = () => {
+        const reservedByBatch = collectReservedQtyByBatch();
+        const reservedByPartNumber = collectReservedQtyByPartNumber();
+
+        document.querySelectorAll('[data-product-stock-badge]').forEach((badge) => {
+            const batchId = Number(badge.dataset.productBatchId || 0);
+            const baseStock = Number(badge.dataset.baseStock || 0);
+            const reservedQty = reservedByBatch.get(batchId) || 0;
+            const displayStock = Math.max(0, baseStock - reservedQty);
+
+            badge.textContent = `Stok: ${displayStock}`;
+            const wrapper = badge.closest('span');
+            if (wrapper) {
+                wrapper.classList.toggle('bg-red-100', displayStock <= 5);
+                wrapper.classList.toggle('text-red-700', displayStock <= 5);
+                wrapper.classList.toggle('bg-emerald-100', displayStock > 5);
+                wrapper.classList.toggle('text-emerald-700', displayStock > 5);
+            }
+        });
+
+        document.querySelectorAll('[data-cart-batch-stock]').forEach((stockEl) => {
+            const batchId = Number(stockEl.dataset.productBatchId || 0);
+            const baseStock = Number(stockEl.dataset.batchBaseStock || 0);
+            const reservedQty = reservedByBatch.get(batchId) || 0;
+            stockEl.textContent = toRupiah(Math.max(0, baseStock - reservedQty));
+        });
+
+        document.querySelectorAll('[data-cart-available-stock]').forEach((stockEl) => {
+            const partNumber = String(stockEl.dataset.partNumber || '').trim().toUpperCase();
+            const baseStock = Number(stockEl.dataset.availableBaseStock || 0);
+            const reservedQty = reservedByPartNumber.get(partNumber) || 0;
+            stockEl.textContent = toRupiah(Math.max(0, baseStock - reservedQty));
+        });
+    };
+
+    const syncQtyWarning = (form) => {
+        if (!form) {
+            return true;
+        }
+
+        const qtyInput = form.querySelector('[data-cart-qty]');
+        const warningEl = form.querySelector('[data-cart-qty-warning]');
+        const maxStock = Number(qtyInput?.dataset.maxStock || 0);
+        const qty = Number(qtyInput?.value || 0);
+
+        if (!qtyInput || !warningEl) {
+            return true;
+        }
+
+        const isInvalid = maxStock >= 0 && qty > maxStock;
+
+        qtyInput.classList.toggle('border-red-400', isInvalid);
+        qtyInput.classList.toggle('text-red-600', isInvalid);
+        qtyInput.classList.toggle('focus:border-red-500', isInvalid);
+        qtyInput.classList.toggle('focus:ring-red-500', isInvalid);
+        warningEl.classList.toggle('hidden', !isInvalid);
+
+        if (isInvalid) {
+            warningEl.textContent = `Stok tidak cukup. Maksimal ${toRupiah(maxStock)}.`;
+            return false;
+        }
+
+        warningEl.textContent = '';
+        return true;
     };
 
     document.querySelectorAll('[data-cart-price]').forEach((input) => {
-        input.addEventListener('input', recalculateCartSummary);
+        input.addEventListener('input', () => {
+            recalculateCartSummary();
+
+            const form = input.closest('[data-cart-item-form]');
+            if (!form) {
+                return;
+            }
+
+            syncQtyWarning(form);
+        });
     });
 
     document.querySelectorAll('[data-cart-qty]').forEach((input) => {
         clampQtyInput(input);
+        syncQtyWarning(input.closest('[data-cart-item-form]'));
         input.addEventListener('input', () => {
             clampQtyInput(input);
             recalculateCartSummary();
-        });
 
-        input.addEventListener('blur', () => {
-            clampQtyInput(input);
-            recalculateCartSummary();
+            const form = input.closest('[data-cart-item-form]');
+            if (!form) {
+                return;
+            }
+
+            syncQtyWarning(form);
         });
     });
 
     recalculateCartSummary();
+
+    const findMatchingCartForm = (batchId, partNumber) => {
+        const normalizedPartNumber = String(partNumber || '').trim().toUpperCase();
+        const cartForms = Array.from(document.querySelectorAll('[data-cart-item-form]'));
+
+        return cartForms.find((form) => Number(form.dataset.productBatchId || 0) === Number(batchId))
+            || cartForms.find((form) => String(form.dataset.partNumber || '').trim().toUpperCase() === normalizedPartNumber)
+            || null;
+    };
+
+    document.querySelectorAll('[data-add-to-cart-form]').forEach((form) => {
+        form.addEventListener('submit', (event) => {
+            const batchId = Number(form.dataset.productBatchId || 0);
+            const partNumber = form.dataset.partNumber || '';
+            const matchingCartForm = findMatchingCartForm(batchId, partNumber);
+
+            const qtyField = form.querySelector('[data-current-visible-qty]');
+            const priceField = form.querySelector('[data-current-visible-price]');
+            const mergeField = form.querySelector('[data-current-visible-merge-stock]');
+            const snapshotField = form.querySelector('[data-cart-snapshot]');
+
+            if (snapshotField) {
+                snapshotField.value = JSON.stringify(collectLiveCartItems());
+            }
+
+            if (!matchingCartForm) {
+                if (qtyField) qtyField.value = '';
+                if (priceField) priceField.value = '';
+                if (mergeField) mergeField.value = '0';
+                return;
+            }
+
+            const qtyInput = matchingCartForm.querySelector('[data-cart-qty]');
+            const priceInput = matchingCartForm.querySelector('[data-cart-price]');
+
+            clampQtyInput(qtyInput);
+            if (!syncQtyWarning(matchingCartForm)) {
+                event.preventDefault();
+                qtyInput?.focus();
+                return;
+            }
+
+            if (qtyField) {
+                qtyField.value = String(Number(qtyInput?.value || 0));
+            }
+
+            if (priceField) {
+                priceField.value = sanitizeRupiahValue(priceInput?.value || 0);
+            }
+
+            if (mergeField) {
+                mergeField.value = matchingCartForm.dataset.mergeStock === '1' ? '1' : '0';
+            }
+        });
+    });
+
+    document.querySelectorAll('[data-cart-item-form]').forEach((form) => {
+        form.addEventListener('submit', (event) => {
+            const qtyInput = form.querySelector('[data-cart-qty]');
+
+            clampQtyInput(qtyInput);
+            if (!syncQtyWarning(form)) {
+                event.preventDefault();
+                qtyInput?.focus();
+                return;
+            }
+
+            const snapshotField = form.querySelector('[data-cart-snapshot]');
+            if (snapshotField) {
+                snapshotField.value = JSON.stringify(collectLiveCartItems());
+            }
+        });
+    });
 
     const syncPaymentSummary = (methodInput, amountInput, labelEl, summaryEl) => {
         const isCredit = (methodInput?.value || 'cash') === 'credit';
@@ -790,6 +1102,16 @@
     mobileConfirmPaymentMethod?.addEventListener('change', syncCreditDueVisibility);
     desktopPaidAmountInput?.addEventListener('input', () => syncPaymentSummary(desktopPaymentMethod, desktopPaidAmountInput, desktopPaymentAmountLabel, desktopPaymentSummary));
     mobileConfirmPaidAmount?.addEventListener('input', () => syncPaymentSummary(mobileConfirmPaymentMethod, mobileConfirmPaidAmount, mobileConfirmPaidLabel, mobileConfirmPaymentSummary));
+    desktopDiscountInput?.addEventListener('input', () => {
+        recalculateCartSummary();
+        syncPaymentSummary(desktopPaymentMethod, desktopPaidAmountInput, desktopPaymentAmountLabel, desktopPaymentSummary);
+    });
+    mobileConfirmDiscountAmount?.addEventListener('input', () => {
+        recalculateCartSummary();
+        confirmDiscount.textContent = `Rp ${toRupiah(liveDiscount)}`;
+        confirmTotal.textContent = `Rp ${toRupiah(liveTotal)}`;
+        syncPaymentSummary(mobileConfirmPaymentMethod, mobileConfirmPaidAmount, mobileConfirmPaidLabel, mobileConfirmPaymentSummary);
+    });
     desktopCreditDaysInput?.addEventListener('change', syncCreditDueVisibility);
     mobileConfirmCreditDays?.addEventListener('change', syncCreditDueVisibility);
     syncCreditDueVisibility();
@@ -820,6 +1142,7 @@
             if (isMobileCheckout) {
                 mobileConfirmPaymentMethod.value = form.querySelector('input[name="payment_method"]')?.value || 'cash';
                 mobileConfirmPaidAmount.value = formatRupiahInputValue(form.querySelector('input[name="paid_amount"]')?.value || (mobileConfirmPaymentMethod.value === 'credit' ? 0 : liveTotal));
+                mobileConfirmDiscountAmount.value = form.querySelector('input[name="discount_amount"]')?.value || desktopDiscountInput?.value || 0;
                 mobileConfirmCreditDays.value = form.querySelector('[name="credit_days"]')?.value || '';
                 mobileConfirmCashierName.value = form.querySelector('input[name="cashier_service_name"]')?.value || '';
                 mobileConfirmCustomerName.value = form.querySelector('input[name="customer_name"]')?.value || '';
@@ -850,7 +1173,16 @@
             confirmCustomer.textContent = customerName !== '' ? customerName : '-';
             confirmPoNumber.textContent = poNumber !== '' ? poNumber : '-';
             confirmSiteName.textContent = siteName !== '' ? siteName : '-';
+            const activeDiscountPercent = isMobileCheckout
+                ? Math.max(0, Math.min(100, Number(mobileConfirmDiscountAmount?.value || 0)))
+                : Math.max(0, Math.min(100, Number(desktopDiscountInput?.value || 0)));
+            liveDiscount = Math.min(liveSubtotal, (liveSubtotal * activeDiscountPercent) / 100);
+            liveTotal = Math.max(0, liveSubtotal - liveDiscount);
             confirmSubtotal.textContent = `Rp ${toRupiah(liveSubtotal)}`;
+            if (confirmDiscountLabel) {
+                confirmDiscountLabel.textContent = `Diskon (${formatPercentLabel(activeDiscountPercent)})`;
+            }
+            confirmDiscount.textContent = `Rp ${toRupiah(liveDiscount)}`;
             confirmTotal.textContent = `Rp ${toRupiah(liveTotal)}`;
             syncCheckoutFormItems(form, liveCartItems);
             syncCreditDueVisibility();
@@ -871,6 +1203,7 @@
                 ? Math.min(liveTotal, Math.max(0, Number(sanitizeRupiahValue(mobileConfirmPaidAmount?.value || 0))))
                 : liveTotal;
             activeCheckoutForm.querySelector('input[name="paid_amount"]').value = String(mobileDownPayment);
+            activeCheckoutForm.querySelector('input[name="discount_amount"]').value = String(Math.max(0, Math.min(100, Number(mobileConfirmDiscountAmount?.value || 0))));
             activeCheckoutForm.querySelector('input[name="credit_days"]').value = (mobileConfirmPaymentMethod?.value === 'credit' ? (mobileConfirmCreditDays?.value || '') : '');
             activeCheckoutForm.querySelector('input[name="credit_due_date"]').value = (mobileConfirmPaymentMethod?.value === 'credit' ? computeDueDateFromDays(getCreditDaysValue(mobileConfirmCreditDays)) : '');
             activeCheckoutForm.querySelector('input[name="cashier_service_name"]').value = mobileConfirmCashierName?.value || '';
@@ -884,6 +1217,10 @@
                 const method = methodInput?.value || 'cash';
                 const amount = Math.min(liveTotal, Math.max(0, Number(sanitizeRupiahValue(paidInput.value || 0))));
                 paidInput.value = String(method === 'credit' ? amount : (amount > 0 ? amount : Math.round(liveTotal)));
+            }
+            const discountInput = activeCheckoutForm.querySelector('input[name="discount_amount"]');
+            if (discountInput) {
+                discountInput.value = String(Math.max(0, Math.min(100, Number(discountInput.value || 0))));
             }
             const method = activeCheckoutForm.querySelector('select[name="payment_method"]')?.value || 'cash';
             const dueInput = activeCheckoutForm.querySelector('input[name="credit_due_date"]');

@@ -42,7 +42,7 @@
                 <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">Detail Kredit</h1>
                 <p class="mt-1 text-[#52615a]">Pantau cicilan kredit, status pembayaran, dan cetak nota cicilan per transaksi.</p>
             </div>
-            <a href="{{ url('/admin/products') }}" class="rounded-xl border border-[#bccac0] bg-white px-4 py-2 text-sm font-semibold text-[#006948] hover:bg-[#eef7f3]">Kembali ke Barang</a>
+            <a href="{{ url('/admin/products') }}" class="rounded-xl border border-[#bccac0] bg-white px-4 py-2 text-sm font-semibold text-[#006948] hover:bg-[#eef7f3]">Kembali ke Daftar Stok</a>
         </div>
     </div>
 

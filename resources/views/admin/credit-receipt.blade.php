@@ -276,7 +276,7 @@
         @if(! (($pdf ?? false) || request()->boolean('pdf')))
             <div class="actions">
                 <button type="button" class="btn primary" onclick="window.print()">Print Nota</button>
-                <a class="btn" href="{{ url('/admin/products') }}">Kembali ke Barang</a>
+                <a class="btn" href="{{ url('/admin/products') }}">Kembali ke Daftar Stok</a>
                 <a class="btn" href="{{ route('admin.credits.receipt', ['batch' => $batch->id, 'pdf' => 1]) }}">Download PDF</a>
             </div>
         @endif

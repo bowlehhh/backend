@@ -11,12 +11,12 @@
     <p class="mt-1 text-xs text-error" data-error-for="supplier_invoice_number"></p>
   </div>
   <div>
-    <label class="mb-1 block text-[12px] font-medium text-on-surface">Tanggal Beli Barang</label>
+    <label class="mb-1 block text-[12px] font-medium text-on-surface">Tanggal Beli Stok</label>
     <input type="date" name="purchase_date" data-history-key="purchase_date" autocomplete="off" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none">
     <p class="mt-1 text-xs text-error" data-error-for="purchase_date"></p>
   </div>
   <div>
-    <label class="mb-1 block text-[12px] font-medium text-on-surface">Kondisi Barang <span class="text-on-surface-variant">(opsional)</span></label>
+    <label class="mb-1 block text-[12px] font-medium text-on-surface">Kondisi Stok <span class="text-on-surface-variant">(opsional)</span></label>
     <input type="text" name="condition" data-history-key="condition" autocomplete="off" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none" placeholder="Baru, bekas, layak pakai, rekondisi">
     <p class="mt-1 text-xs text-error" data-error-for="condition"></p>
   </div>
@@ -42,7 +42,7 @@
     <p class="mt-1 text-xs text-error" data-error-for="selling_price"></p>
   </div>
   <div>
-    <label class="mb-1 block text-[12px] font-medium text-on-surface">Jumlah Barang Dibeli</label>
+    <label class="mb-1 block text-[12px] font-medium text-on-surface">Jumlah Stok Dibeli</label>
     <input type="number" min="0" step="1" name="stock" data-history-key="stock" autocomplete="off" class="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] focus:border-primary focus:outline-none">
     <p class="mt-1 text-xs text-error" data-error-for="stock"></p>
   </div>

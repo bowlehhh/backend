@@ -36,7 +36,10 @@
 @endphp
 
 <x-filament-panels::page>
-    @vite('resources/css/app.css')
+    <link rel="stylesheet" href="{{ asset('css/app-production.css') }}">
+    @if (app()->environment('local'))
+        @vite('resources/css/app.css')
+    @endif
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
     <style>
@@ -114,6 +117,11 @@
         border-right: 1px solid #d4dbd7;
         overflow: hidden;
         z-index: 30;
+      }
+      .sf-sidebar nav {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
       }
       .sf-content {
         min-width: 0;
@@ -340,7 +348,7 @@
               <a class="sf-nav-item w-full flex items-center gap-2.5 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/suppliers') }}"><span class="material-symbols-outlined">local_shipping</span><span>Supplier</span></a>
               <a class="sf-nav-item w-full flex items-center gap-2.5 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=credits') }}"><span class="material-symbols-outlined">credit_card</span><span>Kredit &amp; Utang Saya</span></a>
               <a class="sf-nav-item w-full flex items-center gap-2.5 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=supplier-transactions') }}"><span class="material-symbols-outlined">account_tree</span><span>Transaksi PT</span></a>
-              <div class="mt-auto space-y-1">
+              <div class="space-y-1 pt-1">
                 <a class="sf-nav-item w-full flex items-center gap-2.5 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=product-groups') }}"><span class="material-symbols-outlined">inventory_2</span><span>Kelompok Barang</span></a>
                 <div class="ml-3 border-l border-outline-variant pl-3 py-1 space-y-1">
                   <a class="sf-nav-item w-full flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-medium {{ request()->routeIs('admin.transaksi.dashboard') ? 'bg-primary-container text-on-primary' : 'text-on-surface-variant hover:bg-surface-container-high' }}" href="{{ route('admin.transaksi.dashboard') }}">

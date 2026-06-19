@@ -74,6 +74,7 @@ class AdminDashboardProductController extends Controller
             $brand = $this->resolveBrand($payload);
             $supplier = $this->resolveSupplier($payload);
             $name = trim((string) ($payload['name'] ?? '')) ?: 'Barang Baru';
+            $slugSource = $this->resolveSlugSource($payload, $name);
             $purchasePrice = (float) ($payload['purchase_price'] ?? 0);
             $sellingPrice = (float) ($payload['selling_price'] ?? 0);
             $stock = (int) ($payload['stock'] ?? 0);
@@ -82,7 +83,7 @@ class AdminDashboardProductController extends Controller
                 'category_id' => $category?->id,
                 'brand_id' => $brand->id,
                 'name' => $name,
-                'slug' => $this->makeUniqueSlug(($payload['slug'] ?? '') ?: $name),
+                'slug' => $this->makeUniqueSlug($slugSource),
                 'barcode' => ($payload['barcode'] ?? '') ?: null,
                 'unit' => ($payload['unit'] ?? '') ?: null,
                 'weight' => ($payload['weight'] ?? null) !== null ? (float) $payload['weight'] : null,
@@ -176,12 +177,14 @@ class AdminDashboardProductController extends Controller
         $product = DB::transaction(function () use ($request, $product): Product {
             $payload = $request->validated();
             $supplier = $this->resolveSupplier($payload);
+            $resolvedName = trim((string) ($payload['name'] ?? '')) ?: $product->name;
+            $slugSource = $this->resolveSlugSource($payload, $resolvedName);
 
             $product->update([
                 'category_id' => $this->resolveCategory($payload)?->id,
                 'brand_id' => $this->resolveBrand($payload)?->id ?? $product->brand_id,
-                'name' => trim((string) ($payload['name'] ?? '')) ?: $product->name,
-                'slug' => $this->makeUniqueSlug(($payload['slug'] ?? '') ?: (trim((string) ($payload['name'] ?? '')) ?: $product->name), $product->id),
+                'name' => $resolvedName,
+                'slug' => $this->makeUniqueSlug($slugSource, $product->id),
                 'barcode' => ($payload['barcode'] ?? '') ?: null,
                 'unit' => ($payload['unit'] ?? '') ?: null,
                 'weight' => ($payload['weight'] ?? null) !== null ? (float) $payload['weight'] : null,
@@ -301,7 +304,7 @@ class AdminDashboardProductController extends Controller
         $counter = 1;
 
         while (
-            Product::query()
+            Product::withTrashed()
                 ->when($ignoreProductId, fn ($query) => $query->where('id', '!=', $ignoreProductId))
                 ->where('slug', $slug)
                 ->exists()
@@ -311,6 +314,26 @@ class AdminDashboardProductController extends Controller
         }
 
         return $slug;
+    }
+
+    private function resolveSlugSource(array $payload, string $fallbackName): string
+    {
+        $manualSlug = trim((string) ($payload['slug'] ?? ''));
+        if ($manualSlug !== '') {
+            return $manualSlug;
+        }
+
+        $name = trim((string) ($payload['name'] ?? ''));
+        if ($name !== '') {
+            return $name;
+        }
+
+        $barcode = trim((string) ($payload['barcode'] ?? ''));
+        if ($barcode !== '') {
+            return $barcode;
+        }
+
+        return $fallbackName;
     }
 
     private function generateBatchCode(Product $product): string

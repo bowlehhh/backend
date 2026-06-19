@@ -36,77 +36,9 @@
 @endphp
 
 <x-filament-panels::page>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    @vite('resources/css/app.css')
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            colors: {
-              'on-secondary-fixed-variant': '#2f2ebe',
-              'error-container': '#ffdad6',
-              'inverse-surface': '#2d3133',
-              'on-secondary-fixed': '#07006c',
-              'on-secondary': '#ffffff',
-              'on-surface-variant': '#3d4a42',
-              'surface-container-low': '#f2f4f6',
-              'on-primary-fixed': '#002114',
-              'on-tertiary-fixed-variant': '#653e00',
-              'surface-variant': '#e0e3e5',
-              primary: '#006948',
-              'secondary-fixed': '#e1e0ff',
-              'on-primary-container': '#f5fff7',
-              background: '#f7f9fb',
-              'primary-fixed': '#85f8c4',
-              secondary: '#4648d4',
-              'on-tertiary-container': '#fffbff',
-              outline: '#6d7a72',
-              'primary-container': '#00855d',
-              'secondary-container': '#6063ee',
-              'inverse-primary': '#68dba9',
-              'on-tertiary-fixed': '#2a1700',
-              'surface-container-high': '#e6e8ea',
-              error: '#ba1a1a',
-              'tertiary-fixed': '#ffddb8',
-              'surface-bright': '#f7f9fb',
-              'surface-container-lowest': '#ffffff',
-              'on-primary-fixed-variant': '#005137',
-              'surface-tint': '#006c4a',
-              'on-tertiary': '#ffffff',
-              surface: '#f7f9fb',
-              'on-surface': '#191c1e',
-              'tertiary-container': '#a36700',
-              'surface-dim': '#d8dadc',
-              'surface-container-highest': '#e0e3e5',
-              'on-secondary-container': '#fffbff',
-              'outline-variant': '#bccac0',
-              'on-error-container': '#93000a',
-              'primary-fixed-dim': '#68dba9',
-              'secondary-fixed-dim': '#c0c1ff',
-              'inverse-on-surface': '#eff1f3',
-              'tertiary-fixed-dim': '#ffb95f',
-              'on-background': '#191c1e',
-              'on-primary': '#ffffff',
-              'surface-container': '#eceef0',
-              tertiary: '#825100',
-              'on-error': '#ffffff',
-            },
-            fontFamily: { display: ['Hanken Grotesk', 'sans-serif'] },
-            fontSize: {
-              display: ['48px', { lineHeight: '56px', letterSpacing: '-0.02em', fontWeight: '700' }],
-              'headline-lg': ['32px', { lineHeight: '40px', letterSpacing: '-0.01em', fontWeight: '600' }],
-              'headline-md': ['20px', { lineHeight: '28px', fontWeight: '600' }],
-              'body-md': ['16px', { lineHeight: '24px', fontWeight: '400' }],
-              'label-md': ['14px', { lineHeight: '20px', letterSpacing: '0.01em', fontWeight: '500' }],
-              'label-sm': ['12px', { lineHeight: '16px', fontWeight: '600' }],
-            },
-          },
-        },
-      };
-    </script>
-
     <style>
       :root {
         --sf-topbar-h: 52px;

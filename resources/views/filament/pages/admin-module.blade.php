@@ -47,11 +47,19 @@
 
     <style>
       :root {
-        --sf-header-h: 64px;
-        --sf-sidebar-w: 240px;
+        --sf-topbar-h: 52px;
+        --sf-sidebar-w: 208px;
         --sf-sidebar-collapsed-w: 76px;
       }
-      .sf-wrap { font-family: 'Hanken Grotesk', sans-serif; }
+      .sf-wrap {
+        font-family: 'Hanken Grotesk', sans-serif;
+        width: 100vw;
+        max-width: 100vw;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+        margin-top: 0;
+        font-size: 13px;
+      }
       .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; display: inline-block; vertical-align: middle; }
       /* Hard override: always hide native Filament shell on this custom page */
       .fi-sidebar,
@@ -69,6 +77,7 @@
         width: 100% !important;
         margin: 0 !important;
         padding: 0 !important;
+        top: 0 !important;
       }
       html.sf-dashboard-page,
       .sf-dashboard-page,
@@ -105,15 +114,15 @@
       }
       .sf-layout {
         display: block;
-        height: calc(100vh - 64px);
+        height: calc(100vh - var(--sf-topbar-h));
         overflow: hidden;
       }
       .sf-sidebar {
         position: fixed;
         left: 0;
-        top: var(--sf-header-h);
+        top: var(--sf-topbar-h);
         width: var(--sf-sidebar-w);
-        height: calc(100vh - var(--sf-header-h));
+        height: calc(100vh - var(--sf-topbar-h));
         border-right: 1px solid #d4dbd7;
         overflow: hidden;
         display: flex;
@@ -127,7 +136,7 @@
         overflow-y: auto;
       }
       .sf-main-scroll {
-        height: calc(100vh - var(--sf-header-h));
+        height: calc(100vh - var(--sf-topbar-h));
         min-width: 0;
         width: calc(100% - var(--sf-sidebar-w));
         margin-left: var(--sf-sidebar-w);
@@ -144,6 +153,7 @@
       .sf-sidebar-collapsed .sf-sidebar .sf-nav-item span.material-symbols-outlined { margin-right: 0; }
       .sf-sidebar-collapsed .sf-sidebar .admin-panel-card { padding-left: 10px; padding-right: 10px; }
       .custom-shadow { box-shadow: 0 2px 4px rgba(0, 0, 0, .04); }
+      .sf-wrap .h-16 { height: var(--sf-topbar-h) !important; }
       .table-sort-link { display: inline-flex; align-items: center; gap: 6px; color: inherit; text-decoration: none; }
       .table-sort-link:hover { color: #006948; }
       .user-delete-modal-backdrop { background: rgba(15, 23, 42, 0.55); backdrop-filter: blur(2px); }
@@ -177,9 +187,9 @@
         .sf-sidebar {
           position: fixed;
           left: 0;
-          top: var(--sf-header-h);
+          top: var(--sf-topbar-h);
           width: min(84vw, 300px);
-          height: calc(100vh - var(--sf-header-h));
+          height: calc(100vh - var(--sf-topbar-h));
           transform: translateX(-102%);
           opacity: 0;
           pointer-events: none;
@@ -224,13 +234,13 @@
       }
     </style>
 
-    <div class="sf-wrap bg-[#f7f9fb] text-[#191c1e] antialiased h-screen w-screen max-w-none ml-[calc(50%-50vw)] mr-[calc(50%-50vw)] overflow-hidden">
-      <header class="bg-white border-b border-[#d4dbd7] shadow-sm flex justify-between items-center px-6 h-16 w-full sticky top-0 z-20">
+      <div class="sf-wrap bg-[#f7f9fb] text-[#191c1e] antialiased h-screen overflow-hidden">
+      <header class="bg-white border-b border-[#d4dbd7] shadow-sm flex justify-between items-center px-5 h-16 w-full sticky top-0 z-50">
         <div class="flex items-center gap-3">
           <button id="mobileSidebarBtn" type="button" class="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#bccac0] bg-white text-[#3d4a42] hover:bg-[#f1f4f2]" aria-label="Buka navigasi">
             <span class="material-symbols-outlined">menu</span>
           </button>
-          <div class="flex items-center gap-4"><span class="text-xl font-bold text-[#006948]">Surya Duta Multindo</span></div>
+          <div class="flex items-center gap-4"><span class="font-display text-[18px] font-bold text-[#006948] leading-none">Surya Duta Multindo</span></div>
         </div>
         <button id="toggleSidebarBtn" type="button" class="hidden lg:inline-flex items-center gap-1 rounded-lg border border-[#bccac0] px-3 py-2 text-sm text-[#3d4a42] hover:bg-[#f1f4f2]">
           <span class="material-symbols-outlined text-base">left_panel_close</span>

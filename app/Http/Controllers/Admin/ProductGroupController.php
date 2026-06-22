@@ -23,8 +23,19 @@ class ProductGroupController extends Controller
 
     public function receipt(Request $request, Product $product): View|Response
     {
+        $payload = $this->buildPayload($product);
+        $monthFilter = trim((string) $request->query('month', ''));
+
+        if (preg_match('/^\d{4}-\d{2}$/', $monthFilter) === 1) {
+            $payload = $this->filterPayloadByMonth($payload, $monthFilter);
+        } else {
+            $monthFilter = '';
+        }
+
+        $payload['selectedMonth'] = $monthFilter;
+
         return response()
-            ->view('admin.product-group-receipt', $this->buildPayload($product))
+            ->view('admin.product-group-receipt', $payload)
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
     }
 
@@ -40,7 +51,11 @@ class ProductGroupController extends Controller
             'batches' => fn ($query) => $query->with('supplier:id,name')->latest('created_at'),
             'saleItems' => fn ($query) => $query->with([
                 'sale' => fn ($saleQuery) => $saleQuery
-                    ->with('user:id,name')
+                    ->with([
+                        'user:id,name',
+                        'items:id,sale_id,product_name,qty,subtotal',
+                    ])
+                    ->withCount('items as invoice_items_count')
                     ->withSum('returns as total_return_refund', 'refund_amount')
                     ->withCount('returns as return_count'),
             ])->latest('id'),
@@ -72,16 +87,21 @@ class ProductGroupController extends Controller
             $paid = min($total, $downPayment + $installmentPaid);
             $remaining = max(0, $total - $paid);
             $status = $this->resolveBatchPaymentStatus($batch, $remaining);
-            $createdAt = $batch->created_at ? Carbon::parse($batch->created_at) : null;
-            $ts = $createdAt?->timestamp ?? 0;
+            $purchaseAt = $batch->purchase_date
+                ? Carbon::parse($batch->purchase_date)->startOfDay()
+                : ($batch->created_at ? Carbon::parse($batch->created_at) : null);
+            $ts = $purchaseAt?->timestamp ?? 0;
 
             $purchaseRows[] = [
                 'batch_id' => (int) $batch->id,
-                'tanggal' => $createdAt ? $createdAt->format('d M Y H:i') : '-',
-                'month_key' => $createdAt?->format('Y-m') ?? 'tanpa-tanggal',
-                'month_label' => $createdAt ? $this->formatMonthLabel($createdAt) : 'Tanpa Tanggal',
+                'tanggal' => $purchaseAt ? $purchaseAt->format('d M Y H:i') : '-',
+                'month_key' => $purchaseAt?->format('Y-m') ?? 'tanpa-tanggal',
+                'month_label' => $purchaseAt ? $this->formatMonthLabel($purchaseAt) : 'Tanpa Tanggal',
                 'tanggal_ts' => $ts,
+                'supplier_id' => $batch->supplier_id ? (int) $batch->supplier_id : null,
                 'supplier' => $batch->supplier?->name ?: '-',
+                'supplier_invoice_number' => trim((string) ($batch->supplier_invoice_number ?? '')) ?: '-',
+                'invoice_group_key' => $this->makePurchaseInvoiceGroupKey($batch->supplier_invoice_number, (int) $batch->id),
                 'processed_by' => trim((string) ($batch->processed_by ?? '')) ?: '-',
                 'condition' => trim((string) ($batch->condition ?? '')) ?: '-',
                 'qty' => $qty,
@@ -106,8 +126,11 @@ class ProductGroupController extends Controller
                 continue;
             }
 
-            $qty = (int) $saleItems->sum('qty');
-            $subtotal = (float) $saleItems->sum('subtotal');
+            $partQty = (int) $saleItems->sum('qty');
+            $partSubtotal = (float) $saleItems->sum('subtotal');
+            $invoiceQty = (int) collect($sale->items ?? [])->sum('qty');
+            $invoiceItemsCount = (int) ($sale->invoice_items_count ?? collect($sale->items ?? [])->count());
+            $invoiceTotal = (float) ($sale->total ?? $partSubtotal);
             $paymentMethod = strtoupper((string) ($sale->payment_method ?? 'CASH'));
             $creditAmount = (float) ($sale->credit_amount ?? 0);
             $dueDate = $sale->credit_due_date ? Carbon::parse($sale->credit_due_date) : null;
@@ -123,11 +146,17 @@ class ProductGroupController extends Controller
                 'month_label' => $createdAt ? $this->formatMonthLabel($createdAt) : 'Tanpa Tanggal',
                 'tanggal_ts' => $ts,
                 'customer' => trim((string) ($sale->customer_name ?? '')) ?: 'Pembeli Umum',
+                'site_name' => trim((string) ($sale->site_name ?? '')) ?: '-',
+                'po_number' => trim((string) ($sale->po_number ?? '')) ?: '-',
                 'cashier' => trim((string) ($sale->cashierDisplayName ?? $sale->user?->name ?? '')) ?: '-',
                 'payment_method' => $paymentMethod,
-                'qty' => $qty,
-                'total' => 'Rp ' . number_format($subtotal, 0, ',', '.'),
-                'total_value' => $subtotal,
+                'qty' => $invoiceQty,
+                'part_qty' => $partQty,
+                'invoice_items_count' => $invoiceItemsCount,
+                'part_subtotal' => 'Rp ' . number_format($partSubtotal, 0, ',', '.'),
+                'part_subtotal_value' => $partSubtotal,
+                'total' => 'Rp ' . number_format($invoiceTotal, 0, ',', '.'),
+                'total_value' => $invoiceTotal,
                 'kredit' => 'Rp ' . number_format($creditAmount, 0, ',', '.'),
                 'jatuh_tempo' => $dueDate ? $dueDate->format('d M Y') : '-',
                 'status' => $status,
@@ -142,6 +171,135 @@ class ProductGroupController extends Controller
 
         usort($purchaseRows, fn (array $a, array $b): int => ($b['tanggal_ts'] ?? 0) <=> ($a['tanggal_ts'] ?? 0));
         usort($salesRows, fn (array $a, array $b): int => ($b['tanggal_ts'] ?? 0) <=> ($a['tanggal_ts'] ?? 0));
+
+        $purchasePartners = collect($purchaseRows)
+            ->pluck('supplier')
+            ->map(fn ($value) => trim((string) $value))
+            ->filter(fn ($value) => $value !== '' && $value !== '-')
+            ->unique()
+            ->values();
+
+        $salesPartners = collect($salesRows)
+            ->map(function (array $row): string {
+                $customer = trim((string) ($row['customer'] ?? ''));
+                $site = trim((string) ($row['site_name'] ?? ''));
+
+                if ($site !== '' && $site !== '-') {
+                    return $customer !== '' && $customer !== '-'
+                        ? "{$customer} / {$site}"
+                        : $site;
+                }
+
+                return $customer !== '' ? $customer : '-';
+            })
+            ->filter(fn ($value) => $value !== '' && $value !== '-')
+            ->unique()
+            ->values();
+
+        $monthlyRecapGroups = collect(array_unique([
+            ...collect($purchaseRows)->pluck('month_key')->all(),
+            ...collect($salesRows)->pluck('month_key')->all(),
+        ]))
+            ->filter()
+            ->map(function (string $monthKey) use ($purchaseRows, $salesRows): array {
+                $monthPurchases = collect($purchaseRows)->filter(fn (array $row) => ($row['month_key'] ?? '') === $monthKey)->values();
+                $monthSales = collect($salesRows)->filter(fn (array $row) => ($row['month_key'] ?? '') === $monthKey)->values();
+                $monthLabel = (string) ($monthPurchases->first()['month_label'] ?? $monthSales->first()['month_label'] ?? 'Tanpa Tanggal');
+                $stockIn = (int) $monthPurchases->sum(fn (array $row) => (int) ($row['qty'] ?? 0));
+                $stockOut = (int) $monthSales->sum(fn (array $row) => (int) ($row['qty'] ?? 0));
+                $purchaseValue = (float) $monthPurchases->sum(fn (array $row) => (float) ($row['total_value'] ?? 0));
+                $salesValue = (float) $monthSales->sum(fn (array $row) => (float) ($row['total_value'] ?? 0));
+                $suppliers = $monthPurchases
+                    ->pluck('supplier')
+                    ->map(fn ($value) => trim((string) $value))
+                    ->filter(fn ($value) => $value !== '' && $value !== '-')
+                    ->unique()
+                    ->values();
+                $customers = $monthSales
+                    ->map(function (array $row): string {
+                        $customer = trim((string) ($row['customer'] ?? ''));
+                        $site = trim((string) ($row['site_name'] ?? ''));
+
+                        if ($site !== '' && $site !== '-') {
+                            return $customer !== '' && $customer !== '-'
+                                ? "{$customer} / {$site}"
+                                : $site;
+                        }
+
+                        return $customer !== '' ? $customer : '-';
+                    })
+                    ->filter(fn ($value) => $value !== '' && $value !== '-')
+                    ->unique()
+                    ->values();
+
+                return [
+                    'month_key' => $monthKey,
+                    'month_label' => $monthLabel,
+                    'summary' => [
+                        'purchase_count' => $monthPurchases->count(),
+                        'sales_count' => $monthSales->count(),
+                        'stock_in' => $stockIn,
+                        'stock_out' => $stockOut,
+                        'stock_net' => $stockIn - $stockOut,
+                        'purchase_value' => 'Rp ' . number_format($purchaseValue, 0, ',', '.'),
+                        'sales_value' => 'Rp ' . number_format($salesValue, 0, ',', '.'),
+                    ],
+                    'purchase_sources' => $suppliers->isNotEmpty() ? $suppliers->implode(', ') : '-',
+                    'sales_targets' => $customers->isNotEmpty() ? $customers->implode(', ') : '-',
+                ];
+            })
+            ->sortByDesc('month_key')
+            ->values()
+            ->toArray();
+
+        $purchaseInvoiceMonthGroups = collect($purchaseRows)
+            ->groupBy('month_key')
+            ->map(function ($rows, string $monthKey) {
+                $monthRows = collect($rows)->values();
+                $invoiceGroups = $monthRows
+                    ->groupBy('invoice_group_key')
+                    ->map(function ($invoiceRows, string $invoiceGroupKey) {
+                        $groupRows = collect($invoiceRows)->sortBy('tanggal_ts')->values();
+                        $firstRow = $groupRows->first();
+                        $lastRow = $groupRows->last();
+                        $statusSet = $groupRows->pluck('status')->filter()->unique()->values();
+                        $status = $statusSet->contains('JATUH TEMPO')
+                            ? 'JATUH TEMPO'
+                            : ($statusSet->contains('BELUM LUNAS') ? 'BELUM LUNAS' : 'LUNAS');
+
+                        return [
+                            'invoice_group_key' => $invoiceGroupKey,
+                            'supplier_id' => $firstRow['supplier_id'] ?? null,
+                            'supplier' => $firstRow['supplier'] ?? '-',
+                            'supplier_invoice_number' => $firstRow['supplier_invoice_number'] ?? '-',
+                            'purchase_date' => $firstRow['tanggal'] ?? '-',
+                            'purchase_date_end' => $lastRow['tanggal'] ?? '-',
+                            'items_count' => $groupRows->count(),
+                            'qty_total' => (int) $groupRows->sum(fn (array $row) => (int) ($row['qty'] ?? 0)),
+                            'total_value' => (float) $groupRows->sum(fn (array $row) => (float) ($row['total_value'] ?? 0)),
+                            'total' => 'Rp ' . number_format((float) $groupRows->sum(fn (array $row) => (float) ($row['total_value'] ?? 0)), 0, ',', '.'),
+                            'status' => $status,
+                        ];
+                    })
+                    ->sortByDesc('purchase_date')
+                    ->values()
+                    ->toArray();
+
+                return [
+                    'month_key' => $monthKey,
+                    'month_label' => (string) ($monthRows->first()['month_label'] ?? 'Tanpa Tanggal'),
+                    'summary' => [
+                        'invoice_count' => count($invoiceGroups),
+                        'items_count' => $monthRows->count(),
+                        'qty_total' => (int) $monthRows->sum(fn (array $row) => (int) ($row['qty'] ?? 0)),
+                        'total_value' => 'Rp ' . number_format((float) $monthRows->sum(fn (array $row) => (float) ($row['total_value'] ?? 0)), 0, ',', '.'),
+                    ],
+                    'invoice_groups' => $invoiceGroups,
+                ];
+            })
+            ->sortKeysDesc()
+            ->values()
+            ->toArray();
 
         $purchaseMonthGroups = collect($purchaseRows)
             ->groupBy('month_key')
@@ -210,10 +368,14 @@ class ProductGroupController extends Controller
             'product' => $product,
             'purchaseRows' => $purchaseRows,
             'salesRows' => $salesRows,
+            'monthlyRecapGroups' => $monthlyRecapGroups,
+            'purchaseInvoiceMonthGroups' => $purchaseInvoiceMonthGroups,
             'purchaseMonthGroups' => $purchaseMonthGroups,
             'salesMonthGroups' => $salesMonthGroups,
             'purchaseSummary' => $purchaseSummary,
             'salesSummary' => $salesSummary,
+            'purchasePartners' => $purchasePartners->all(),
+            'salesPartners' => $salesPartners->all(),
             'latestActivityAt' => $latestTs ? Carbon::createFromTimestamp($latestTs) : null,
             'printedAt' => now(),
         ];
@@ -227,6 +389,91 @@ class ProductGroupController extends Controller
         ];
 
         return ($months[(int) $date->format('n')] ?? $date->format('F')) . ' ' . $date->format('Y');
+    }
+
+    private function makePurchaseInvoiceGroupKey(?string $invoiceNumber, int $batchId): string
+    {
+        $invoiceNumber = trim((string) $invoiceNumber);
+
+        if ($invoiceNumber !== '') {
+            return 'invoice:' . $invoiceNumber;
+        }
+
+        return 'batch:' . $batchId;
+    }
+
+    private function filterPayloadByMonth(array $payload, string $monthKey): array
+    {
+        $payload['purchaseRows'] = collect($payload['purchaseRows'] ?? [])
+            ->filter(fn (array $row) => ($row['month_key'] ?? '') === $monthKey)
+            ->values()
+            ->all();
+
+        $payload['salesRows'] = collect($payload['salesRows'] ?? [])
+            ->filter(fn (array $row) => ($row['month_key'] ?? '') === $monthKey)
+            ->values()
+            ->all();
+
+        $payload['purchaseMonthGroups'] = collect($payload['purchaseMonthGroups'] ?? [])
+            ->filter(fn (array $group) => ($group['month_key'] ?? '') === $monthKey)
+            ->values()
+            ->all();
+
+        $payload['salesMonthGroups'] = collect($payload['salesMonthGroups'] ?? [])
+            ->filter(fn (array $group) => ($group['month_key'] ?? '') === $monthKey)
+            ->values()
+            ->all();
+
+        $payload['monthlyRecapGroups'] = collect($payload['monthlyRecapGroups'] ?? [])
+            ->filter(fn (array $group) => ($group['month_key'] ?? '') === $monthKey)
+            ->values()
+            ->all();
+
+        $payload['purchasePartners'] = collect($payload['purchaseRows'] ?? [])
+            ->pluck('supplier')
+            ->map(fn ($value) => trim((string) $value))
+            ->filter(fn ($value) => $value !== '' && $value !== '-')
+            ->unique()
+            ->values()
+            ->all();
+
+        $payload['salesPartners'] = collect($payload['salesRows'] ?? [])
+            ->map(function (array $row): string {
+                $customer = trim((string) ($row['customer'] ?? ''));
+                $site = trim((string) ($row['site_name'] ?? ''));
+
+                if ($site !== '' && $site !== '-') {
+                    return $customer !== '' && $customer !== '-'
+                        ? "{$customer} / {$site}"
+                        : $site;
+                }
+
+                return $customer !== '' ? $customer : '-';
+            })
+            ->filter(fn ($value) => $value !== '' && $value !== '-')
+            ->unique()
+            ->values()
+            ->all();
+
+        $purchaseRows = collect($payload['purchaseRows'] ?? []);
+        $salesRows = collect($payload['salesRows'] ?? []);
+
+        $payload['purchaseSummary'] = [
+            'count' => $purchaseRows->count(),
+            'value' => 'Rp ' . number_format((float) $purchaseRows->sum(fn (array $row) => (float) ($row['total_value'] ?? 0)), 0, ',', '.'),
+            'lunas' => $purchaseRows->filter(fn (array $row) => ($row['status'] ?? '') === 'LUNAS')->count(),
+            'utang' => $purchaseRows->filter(fn (array $row) => in_array(($row['status'] ?? ''), ['BELUM LUNAS', 'JATUH TEMPO'], true))->count(),
+        ];
+
+        $payload['salesSummary'] = [
+            'count' => $salesRows->count(),
+            'value' => 'Rp ' . number_format((float) $salesRows->sum(fn (array $row) => (float) ($row['total_value'] ?? 0)), 0, ',', '.'),
+            'credit' => $salesRows->filter(fn (array $row) => in_array(($row['payment_method'] ?? ''), ['CREDIT', 'KREDIT'], true))->count(),
+            'lunas' => $salesRows->filter(fn (array $row) => ($row['status'] ?? '') === 'LUNAS')->count(),
+            'retur' => (int) $salesRows->sum(fn (array $row) => (int) ($row['return_count'] ?? 0)),
+        ];
+
+        return $payload;
     }
 
     private function resolveBatchPaymentStatus(ProductBatch $batch, float $remaining): string

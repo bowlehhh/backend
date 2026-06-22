@@ -74,6 +74,14 @@
         ,
         "seed-fresh": [
             "@php artisan migrate:fresh --seed"
+        ],
+        "deploy:prod": [
+            "@php artisan optimize:clear",
+            "@php artisan storage:link --force",
+            "@php artisan migrate --force",
+            "@php artisan config:cache",
+            "@php artisan route:cache",
+            "@php artisan view:cache"
         ]
     },
     "extra": {

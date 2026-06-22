@@ -40,6 +40,9 @@ class AdminPanelProvider extends PanelProvider
             })
             ->login(AdminLogin::class)
             ->darkMode(false)
+            ->brandLogo(asset('branding/sdm-logo-horizontal.svg'))
+            ->brandLogoHeight('2.5rem')
+            ->favicon(asset('branding/sdm-mark.svg'))
             ->colors([
                 'primary' => Color::Emerald,
             ])

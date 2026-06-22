@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Dashboard Admin Besar - {{ config('app.name', 'Surya Duta Multindo') }}</title>
+    <x-brand.meta />
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
@@ -30,7 +31,9 @@
     <aside class="hidden lg:flex fixed inset-y-0 left-0 z-30 w-[280px] flex-col border-r border-slate-300 bg-white">
         <div class="border-b border-slate-200 px-6 py-6">
             <p class="text-xs font-bold uppercase tracking-[0.28em] text-slate-500">Admin Besar</p>
-            <h1 class="mt-2 text-4xl font-extrabold leading-[0.95] text-emerald-700">Surya Duta Multindo</h1>
+            <div class="mt-3">
+                <x-brand.logo variant="stacked" class="h-auto w-full max-w-[220px]" />
+            </div>
             <p class="mt-3 text-sm text-slate-500">Dashboard utama untuk pantau transaksi, nota, PT/CV, dan riwayat admin.</p>
         </div>
         <nav class="flex-1 p-4 space-y-2">

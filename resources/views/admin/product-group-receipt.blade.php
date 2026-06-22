@@ -22,13 +22,21 @@
     $activeStock = (int) ($product->batches->where('is_active', true)->sum('stock') ?? 0);
     $purchaseSummary = $purchaseSummary ?? ['count' => 0, 'value' => 'Rp 0', 'lunas' => 0, 'utang' => 0];
     $salesSummary = $salesSummary ?? ['count' => 0, 'value' => 'Rp 0', 'credit' => 0, 'lunas' => 0, 'retur' => 0];
+    $monthlyRecapGroups = $monthlyRecapGroups ?? [];
+    $purchasePartners = $purchasePartners ?? [];
+    $salesPartners = $salesPartners ?? [];
+    $selectedMonth = $selectedMonth ?? '';
+    $selectedMonthLabel = $selectedMonth !== ''
+        ? (collect($monthlyRecapGroups)->first()['month_label'] ?? collect($purchaseMonthGroups ?? [])->first()['month_label'] ?? collect($salesMonthGroups ?? [])->first()['month_label'] ?? $selectedMonth)
+        : 'Semua Bulan';
 @endphp
 <!doctype html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nota Detail Stok - {{ $product->barcode ?? '-' }}</title>
+    <title>Rekap Stok{{ $selectedMonth !== '' ? ' ' . $selectedMonthLabel : '' }} - {{ $product->barcode ?? '-' }}</title>
+    <x-brand.meta />
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
@@ -549,17 +557,18 @@
     <div class="paper">
         <div class="topbar">
             <div class="brand-block">
-                <h1 class="store-name">{{ strtoupper($storeName) }}</h1>
-                <p class="doc-title">Nota Detail Stok / Part Number</p>
+                <x-brand.logo class="h-12 w-auto" />
+                <p class="doc-title">Rekap Detail Stok / Part Number</p>
                 <p class="doc-sub">
                     Part Number: <strong>{{ $partNumber }}</strong> &middot; Nama Barang: <strong>{{ $partName }}</strong>
                 </p>
                 <div class="hero-note">
-                    Ringkasan pembelian admin, transaksi kasir, dan status per bulan.
+                    {{ $selectedMonth !== '' ? 'Rekap bulan ' . $selectedMonthLabel : 'Ringkasan pembelian admin, transaksi kasir, dan status per bulan.' }}
                 </div>
             </div>
             <div class="doc-meta">
                 <div><span class="muted">Tanggal Cetak:</span> {{ $formatNotaDate($printedAt) }}</div>
+                <div><span class="muted">Periode:</span> {{ $selectedMonthLabel }}</div>
                 <div><span class="muted">Kategori:</span> {{ $categoryName }}</div>
                 <div><span class="muted">Merek:</span> {{ $brandName }}</div>
             </div>
@@ -595,8 +604,9 @@
                     <div class="value">{{ number_format($activeStock, 0, ',', '.') }}</div>
                 </td>
                 <td colspan="2">
-                    <span class="label">Aktivitas Terakhir</span>
-                    <div class="value small">{{ $formatNotaDate($latestActivityAt) }}</div>
+                    <span class="label">Periode Rekap</span>
+                    <div class="value small">{{ $selectedMonthLabel }}</div>
+                    <div class="muted">Aktivitas terakhir: {{ $formatNotaDate($latestActivityAt) }}</div>
                 </td>
             </tr>
         </table>
@@ -629,6 +639,67 @@
                 </td>
             </tr>
         </table>
+
+        <table class="summary-table">
+            <tr>
+                <td>
+                    <span class="label">Beli Dari</span>
+                    <div class="value small">{{ count($purchasePartners) > 0 ? implode(', ', $purchasePartners) : '-' }}</div>
+                </td>
+                <td>
+                    <span class="label">Jual Ke</span>
+                    <div class="value small">{{ count($salesPartners) > 0 ? implode(', ', $salesPartners) : '-' }}</div>
+                </td>
+            </tr>
+        </table>
+
+        <div class="report-section">
+            <div class="section-head">
+                <h2 class="section-title">Rekap Bulanan Arus Stok</h2>
+                <p class="section-desc">Ringkasan barang masuk, barang keluar, nilai beli, nilai jual, dan tujuan transaksi pada periode yang dicetak.</p>
+            </div>
+            <div>
+                @forelse ($monthlyRecapGroups as $monthGroup)
+                    <div class="month-block">
+                        <div class="month-title">
+                            <div>
+                                <p class="month-label">Bulan</p>
+                                <h3 class="month-name">{{ $monthGroup['month_label'] }}</h3>
+                            </div>
+                            <div class="chip-row">
+                                <span class="chip green">Beli {{ number_format((int) ($monthGroup['summary']['purchase_count'] ?? 0), 0, ',', '.') }}</span>
+                                <span class="chip blue">Jual {{ number_format((int) ($monthGroup['summary']['sales_count'] ?? 0), 0, ',', '.') }}</span>
+                                <span class="chip amber">Masuk {{ number_format((int) ($monthGroup['summary']['stock_in'] ?? 0), 0, ',', '.') }}</span>
+                                <span class="chip orange">Keluar {{ number_format((int) ($monthGroup['summary']['stock_out'] ?? 0), 0, ',', '.') }}</span>
+                                <span class="chip {{ ((int) ($monthGroup['summary']['stock_net'] ?? 0)) >= 0 ? 'green' : 'red' }}">Netto {{ number_format((int) ($monthGroup['summary']['stock_net'] ?? 0), 0, ',', '.') }}</span>
+                            </div>
+                        </div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Nilai Beli</th>
+                                        <th>Nilai Jual</th>
+                                        <th>Beli Dari</th>
+                                        <th>Jual Ke</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="num"><strong>{{ $monthGroup['summary']['purchase_value'] ?? 'Rp 0' }}</strong></td>
+                                        <td class="num"><strong>{{ $monthGroup['summary']['sales_value'] ?? 'Rp 0' }}</strong></td>
+                                        <td>{{ $monthGroup['purchase_sources'] ?? '-' }}</td>
+                                        <td>{{ $monthGroup['sales_targets'] ?? '-' }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                @empty
+                    <div class="empty-state">Belum ada data rekap bulanan untuk periode ini.</div>
+                @endforelse
+            </div>
+        </div>
 
         <div class="report-section">
             <div class="section-head">
@@ -769,7 +840,7 @@
 
         @if(! ($pdf ?? false))
             <div class="actions">
-                <button type="button" class="btn primary" onclick="window.print()">Print Nota</button>
+                <button type="button" class="btn primary" onclick="window.print()">Print Rekap</button>
                 <a class="btn secondary" href="{{ route('admin.product-groups.show', ['product' => $product->id]) }}">Kembali ke Detail</a>
                 <a class="btn secondary" href="{{ url('/admin/products') }}">Kembali ke Daftar Stok</a>
             </div>

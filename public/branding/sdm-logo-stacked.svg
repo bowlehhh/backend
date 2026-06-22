@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 520" fill="none">
+  <defs>
+    <linearGradient id="stackTeal" x1="115" y1="48" x2="330" y2="320" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1C8A84"/>
+      <stop offset="1" stop-color="#0A5A58"/>
+    </linearGradient>
+    <linearGradient id="stackGold" x1="144" y1="38" x2="299" y2="310" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F2E0AE"/>
+      <stop offset="0.48" stop-color="#D6B779"/>
+      <stop offset="1" stop-color="#A67D3D"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(86 16)">
+    <path d="M175 0l18 25 29-12 9 29 32 2-3 33 29 14-14 28 22 23-23 22 14 28-29 14 3 33-32 2-9 29-29-12-18 25-18-25-29 12-9-29-32-2 3-33-29-14 14-28-23-22 23-23-14-28 29-14-3-33 32-2 9-29 29 12L175 0z" fill="url(#stackGold)"/>
+    <path d="M175 30c57.4 0 104 46.6 104 104s-46.6 104-104 104S71 191.4 71 134 117.6 30 175 30zm0 25c-43.6 0-79 35.4-79 79s35.4 79 79 79 79-35.4 79-79-35.4-79-79-79z" fill="url(#stackTeal)"/>
+    <path d="M175 55c43.6 0 79 35.4 79 79s-35.4 79-79 79-79-35.4-79-79 35.4-79 79-79zm0 22c-31.4 0-57 25.6-57 57s25.6 57 57 57 57-25.6 57-57-25.6-57-57-57z" fill="#071716"/>
+    <path d="M126 181l35-96h23l37 96h-24l-6-17h-35l-5 17h-25zm40-36h20l-10-31-10 31z" fill="url(#stackTeal)"/>
+    <path d="M111 169l28-15 20 29-28 15-20-29z" fill="url(#stackGold)"/>
+    <path d="M206 183l20-29 28 15-20 29-28-15z" fill="url(#stackGold)"/>
+    <path d="M165 101l10-35 10 35-10 11-10-11z" fill="url(#stackGold)"/>
+    <path d="M187 126l22 22-13 13-22-22 13-13z" fill="url(#stackGold)"/>
+    <path d="M165 135h21v21h-21z" rx="4" fill="url(#stackGold)"/>
+  </g>
+  <g transform="translate(65 352)">
+    <text x="0" y="52" fill="#0A5A58" font-family="Arial, Helvetica, sans-serif" font-size="58" font-weight="900" letter-spacing="1.5">SURYA DUTA</text>
+    <text x="54" y="104" fill="#A67D3D" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="900" letter-spacing="3">MULTINDO</text>
+    <text x="2" y="138" fill="#0A5A58" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" letter-spacing="1">DISTRIBUTOR &amp; SISTEM MANAJEMEN ALAT BERAT</text>
+  </g>
+</svg>

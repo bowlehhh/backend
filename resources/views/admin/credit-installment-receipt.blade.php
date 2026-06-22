@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nota Cicilan Kredit</title>
+    <x-brand.meta />
     <style>
         @page { size: A4 portrait; margin: 8mm; }
         * { box-sizing: border-box; }
@@ -11,6 +12,7 @@
         body { font-family: Arial, sans-serif; color:#111; background:#fff; margin: 0; padding: 0; width: 100%; overflow-x: hidden; }
         .sheet { width: 190mm; max-width: calc(100vw - 16px); margin: 8px auto; border: 2px solid #111827; padding: 16px; }
         .row { display:flex; justify-content:space-between; gap:16px; }
+        .brand-logo { height: 36px; width: auto; display: block; margin-bottom: 8px; }
         .title { font-size: 34px; font-weight: 800; margin:0; }
         .sub { margin: 4px 0; }
         table {
@@ -128,6 +130,7 @@
 <div class="sheet">
         <div class="row">
             <div>
+                <img src="{{ asset('branding/sdm-logo-horizontal.svg') }}" alt="Logo Surya Duta Multindo" class="brand-logo">
                 <h1 class="title">NOTA CICILAN KREDIT</h1>
                 <p class="sub"><strong>Supplier:</strong> {{ $batch->supplier?->name ?? '-' }}</p>
                 <p class="sub"><strong>No. Inv Supplier:</strong> {{ $supplierInvoiceNumber }}</p>

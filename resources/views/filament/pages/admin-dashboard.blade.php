@@ -341,7 +341,7 @@
           <button id="mobileSidebarBtn" type="button" class="lg:hidden inline-flex h-9 w-9 items-center justify-center rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container" aria-label="Buka navigasi">
             <span class="material-symbols-outlined">menu</span>
           </button>
-          <span class="font-display text-[18px] font-bold text-primary leading-none">Surya Duta Multindo</span>
+          <x-brand.logo class="h-9 w-auto max-w-[240px]" />
         </div>
         <div></div>
       </header>
@@ -352,8 +352,8 @@
           <aside class="sf-sidebar flex flex-col w-full p-4 bg-surface">
             <div class="mb-3 rounded-lg border border-outline-variant bg-surface-container-low p-3">
               <div class="flex items-center gap-2">
-                <div class="h-7 w-7 rounded-lg bg-primary text-on-primary flex items-center justify-center">
-                  <span class="material-symbols-outlined text-[14px]">inventory</span>
+                <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-on-primary">
+                  <x-brand.mark class="h-4 w-4" />
                 </div>
                 <div>
                   <p class="text-[13px] font-semibold text-primary leading-tight">{{ $isAdminBesarAccess ? 'Admin Besar Panel' : 'Admin Panel' }}</p>
@@ -526,15 +526,14 @@
                               @endif
                             </div>
                             <div>
-                              @if (!empty($product['supplier_id']))
-                                <a href="{{ url('/admin/suppliers/' . $product['supplier_id']) }}#riwayat-pembelian" class="inline-flex max-w-full cursor-pointer flex-col text-left" title="Lihat detail supplier">
-                                  <p class="sf-part-number transition-colors hover:text-primary">{{ $partNumber }}</p>
-                                  <p class="sf-product-name">{{ $partName }}</p>
-                                </a>
-                              @else
-                                <p class="sf-part-number">{{ $partNumber }}</p>
+                              <a
+                                href="{{ route('admin.product-groups.show', ['product' => (int) ($product['id'] ?? 0)]) }}"
+                                class="inline-flex max-w-full cursor-pointer flex-col text-left"
+                                title="Lihat detail keluar-masuk barang"
+                              >
+                                <p class="sf-part-number transition-colors hover:text-primary">{{ $partNumber }}</p>
                                 <p class="sf-product-name">{{ $partName }}</p>
-                              @endif
+                              </a>
                             </div>
                           </div>
                         </td>

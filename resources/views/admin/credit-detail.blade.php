@@ -12,6 +12,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detail Kredit - {{ $batch->product?->barcode ?? '-' }}</title>
+    <x-brand.meta />
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -39,6 +40,7 @@
     <div class="mb-5 rounded-2xl border border-[#d4dbd7] bg-white px-5 py-4 card-shadow">
         <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
+                <x-brand.logo class="mb-3 h-11 w-auto" />
                 <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">Detail Kredit</h1>
                 <p class="mt-1 text-[#52615a]">Pantau cicilan kredit, status pembayaran, dan cetak nota cicilan per transaksi.</p>
             </div>

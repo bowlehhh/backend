@@ -45,6 +45,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $isCredit ? 'Nota Kredit' : 'Nota Pembelian Lunas' }} {{ $batch->display_inventory_code }}</title>
+    <x-brand.meta />
     <style>
         @page { size: A4 portrait; margin: 8mm; }
         * { box-sizing: border-box; }
@@ -53,6 +54,7 @@
         body { margin: 0; padding: 0; background: #eef2f7; font-family: Arial, Helvetica, sans-serif; color: #0f172a; width: 100%; overflow-x: hidden; }
         .paper { width: 190mm; max-width: calc(100vw - 16px); margin: 8px auto; background: #fff; border: 2px solid #0f172a; padding: 16px; }
         .head { display: flex; justify-content: space-between; gap: 16px; }
+        .brand-logo { height: 36px; width: auto; display: block; margin-bottom: 8px; }
         .title { font-size: 28px; font-weight: 800; margin: 0; }
         .sub { margin: 6px 0 0; font-size: 13px; }
         .meta { text-align: right; font-size: 14px; font-weight: 700; }
@@ -156,6 +158,7 @@
     <div class="paper">
         <div class="head">
             <div>
+                <img src="{{ asset('branding/sdm-logo-horizontal.svg') }}" alt="Logo Surya Duta Multindo" class="brand-logo">
                 <h1 class="title">{{ strtoupper($storeName) }}</h1>
                 <p class="sub">{{ $isCredit ? 'NOTA KREDIT SUPPLIER' : 'NOTA PEMBELIAN LUNAS' }}</p>
                 <p class="sub">Supplier: <strong>{{ $supplierName }}</strong></p>

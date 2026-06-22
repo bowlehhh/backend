@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Form Retur - {{ $sale->invoice_number }}</title>
+    <x-brand.meta />
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <style>body { background-color: #f7f9fb; font-family: "Hanken Grotesk", sans-serif; }</style>
@@ -12,6 +13,7 @@
 <main class="mx-auto max-w-5xl p-4 lg:p-6">
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
+            <x-brand.logo class="mb-3 h-11 w-auto" />
             <h1 class="text-2xl font-extrabold">Form Retur Transaksi</h1>
             <p class="text-sm text-slate-500">Invoice: {{ $sale->invoice_number }} | Admin: {{ $user?->name }}</p>
         </div>

@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login - Surya Duta Multindo</title>
+    <x-brand.meta />
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
@@ -104,17 +105,13 @@
 
         <div class="relative z-10 mx-auto flex w-full max-w-[560px] flex-col justify-center">
             <header>
-                <div class="inline-flex items-center gap-2.5 rounded-full border border-[#d1e0d8] bg-white/85 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary shadow-[0_10px_30px_rgba(0,0,0,0.04)] backdrop-blur">
-                    <span class="material-symbols-outlined text-[16px]" style="font-variation-settings:'FILL' 1;">inventory_2</span>
-                    Akses Surya Duta Multindo
+                <div class="inline-flex items-center rounded-full border border-[#d1e0d8] bg-white/85 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary shadow-[0_10px_30px_rgba(0,0,0,0.04)] backdrop-blur">
+                    Akses Resmi Sistem
                 </div>
 
-                <div class="mt-5 flex items-start gap-3 text-primary sm:mt-6">
-                    <span class="material-symbols-outlined text-[40px] sm:text-[46px]" style="font-variation-settings:'FILL' 1;">inventory_2</span>
-                    <div>
-                        <h1 class="max-w-[10ch] text-[32px] font-extrabold tracking-tight leading-[0.98] sm:text-[40px] lg:text-[44px]">Surya Duta Multindo</h1>
-                        <p class="mt-3 max-w-xl text-[14px] leading-6 text-on-surface-variant sm:text-[16px]">Masuk untuk lanjut mengelola stok, transaksi, dan laporan dalam satu panel yang rapi.</p>
-                    </div>
+                <div class="mt-5 space-y-4 text-primary sm:mt-6">
+                    <x-brand.logo variant="stacked" class="h-auto w-full max-w-[220px] sm:max-w-[240px] lg:max-w-[250px]" />
+                    <p class="max-w-xl text-[14px] leading-6 text-on-surface-variant sm:text-[16px]">Masuk untuk lanjut mengelola stok, transaksi, dan laporan dalam satu panel yang rapi.</p>
                 </div>
             </header>
 

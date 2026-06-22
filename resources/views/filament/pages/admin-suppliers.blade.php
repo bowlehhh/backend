@@ -123,7 +123,7 @@
     <div class="sf-wrap bg-background text-on-surface min-h-screen overflow-x-hidden">
       <header class="bg-surface-container-lowest text-primary border-b border-outline-variant flex justify-between items-center px-5 h-16 w-full sticky top-0 z-50">
         <div class="flex items-center gap-4">
-          <span class="block leading-none text-[18px] font-bold text-primary">Surya Duta Multindo</span>
+          <x-brand.logo class="h-9 w-auto max-w-[240px]" />
         </div>
       </header>
 
@@ -132,8 +132,8 @@
         <aside class="sf-sidebar lg:flex flex-col w-full p-4 bg-white hidden">
           <div class="admin-panel-card mb-3 rounded-lg border border-[#d4dbd7] bg-[#f2f4f6] p-3">
             <div class="flex items-center gap-2">
-              <div class="h-7 w-7 rounded-lg bg-[#006948] text-white flex items-center justify-center">
-                <span class="material-symbols-outlined text-[14px]">inventory</span>
+              <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-[#006948] text-white">
+                <x-brand.mark class="h-4 w-4" />
               </div>
               <div>
                 <p class="brand-title text-[13px] font-semibold text-[#006948]">{{ $isAdminBesarAccess ? 'Admin Besar Panel' : 'Admin Panel' }}</p>

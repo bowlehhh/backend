@@ -4,12 +4,15 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nota {{ $sale->invoice_number }}</title>
+    <x-brand.meta />
     <style>
         :root { --sheet-width: 198mm; --sheet-border: 1.2px; --sheet-pad: 10px; }
         * { box-sizing: border-box; }
         html { overflow-x: hidden; }
         body { font-family: Arial, Helvetica, sans-serif; color: #111827; margin: 0; padding: 0; background: #f3f4f6; width: 100%; overflow-x: hidden; }
         .wrap { width: var(--sheet-width); max-width: calc(100vw - 16px); margin: 8px auto; background: #fff; border: var(--sheet-border) solid #111827; padding: var(--sheet-pad); box-sizing: border-box; }
+        .brand-logo-wrap { display: flex; justify-content: center; margin-bottom: 6px; }
+        .brand-logo { height: 34px; width: auto; display: block; }
         .header-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 10px; }
         .header-table td { border: 0; padding: 0; vertical-align: top; }
         .header-title { width: 100%; text-align: center; }
@@ -278,6 +281,9 @@
     <table class="header-table">
         <tr>
             <td class="header-title">
+                <div class="brand-logo-wrap">
+                    <img src="{{ asset('branding/sdm-logo-horizontal.svg') }}" alt="Logo Surya Duta Multindo" class="brand-logo">
+                </div>
                 <div class="invoice-title">{{ $invoiceTitle }}</div>
             </td>
         </tr>

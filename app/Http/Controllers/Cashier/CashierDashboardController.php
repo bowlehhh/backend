@@ -61,12 +61,17 @@ class CashierDashboardController extends Controller
             ->get(['id', 'name', 'slug']);
 
         $productsQuery = Product::query()
-            ->with(['category', 'batches' => fn ($query) => $query->where('is_active', true)->latest('id')])
+            ->with([
+                'category',
+                'brand',
+                'batches' => fn ($query) => $query->where('is_active', true)->latest('id'),
+            ])
             ->where('is_active', true)
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($q) use ($search): void {
                     $q->where('name', 'like', "%{$search}%")
                         ->orWhere('barcode', 'like', "%{$search}%")
+                        ->orWhereHas('brand', fn ($brand) => $brand->where('name', 'like', "%{$search}%"))
                         ->orWhereHas('batches.supplier', fn ($supplier) => $supplier->where('name', 'like', "%{$search}%"));
                 });
             })

@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard Penjualan - Surya Duta Multindo</title>
+    <x-brand.meta />
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
@@ -86,6 +87,9 @@
     $productPartNumberClasses = $showAllProducts
         ? 'font-bold text-slate-900 text-base sm:text-lg leading-tight line-clamp-2 break-words'
         : 'font-bold text-slate-900 text-xl md:text-lg line-clamp-1';
+    $productBrandClasses = $showAllProducts
+        ? 'mt-1 text-[11px] font-semibold uppercase tracking-wide text-slate-600 line-clamp-1'
+        : 'mt-1 text-[11px] font-semibold uppercase tracking-wide text-slate-600 line-clamp-1';
     $productNameClasses = $showAllProducts
         ? 'mt-1 text-[11px] text-slate-500 line-clamp-2'
         : 'mt-1 text-xs text-slate-500 line-clamp-1';
@@ -99,7 +103,7 @@
 <div class="h-screen overflow-hidden bg-[#f7f9fb]">
     <aside class="hidden lg:flex fixed inset-y-0 left-0 z-30 w-[340px] flex-col border-r border-slate-300 bg-white">
         <div class="px-5 py-5 border-b border-slate-200">
-            <h1 class="text-3xl font-extrabold text-emerald-700">Surya Duta Multindo</h1>
+            <x-brand.logo class="h-10 w-auto" />
             <p class="text-xs text-slate-500">{{ $isAdminBesarGudangAccess ? 'Akses Dashboard Admin Gudang' : 'Admin Penjualan - Station 01' }}</p>
         </div>
         <div class="min-h-0 flex-1 overflow-y-auto custom-scrollbar px-4 py-4 space-y-4">
@@ -243,7 +247,7 @@
             <div class="px-4 lg:px-6 py-3">
                 <div class="flex items-center justify-between lg:hidden">
                     <div>
-                        <h1 class="text-3xl font-extrabold text-emerald-700 leading-none">Surya Duta Multindo</h1>
+                        <x-brand.logo class="h-9 w-auto" />
                         <p class="mt-1 text-[10px] text-slate-500">{{ $isAdminBesarGudangAccess ? 'Akses Dashboard Admin Gudang' : 'Admin Penjualan - Station 01' }}</p>
                     </div>
                     <div class="flex items-center gap-2 text-slate-600">
@@ -362,6 +366,7 @@
                             <div class="{{ $productCardBodyClasses }}">
                                 <p class="{{ $productCategoryClasses }}">{{ $product->category?->name ?? '-' }}</p>
                                 <h3 class="{{ $productPartNumberClasses }}">{{ $partNumber }}</h3>
+                                <p class="{{ $productBrandClasses }}">{{ $product->brand?->name ?? '-' }}</p>
                                 <p class="{{ $productNameClasses }}">{{ $product->name }}</p>
                                 <div class="mt-3 flex items-center justify-between gap-2">
                                     <p class="{{ $productPriceClasses }}">Rp {{ number_format($price, 0, ',', '.') }}</p>

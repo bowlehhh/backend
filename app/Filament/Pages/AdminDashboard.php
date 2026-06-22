@@ -281,7 +281,10 @@ class AdminDashboard extends Page
 
         $items = $query
             ->select($selects)
-            ->latest('products.id')
+            ->orderByRaw($barcodeColumn ? "CASE WHEN products.{$barcodeColumn} IS NULL OR TRIM(products.{$barcodeColumn}) = '' THEN 1 ELSE 0 END" : '0')
+            ->when($barcodeColumn, fn ($builder) => $builder->orderBy("products.{$barcodeColumn}"))
+            ->orderBy("products.{$nameColumn}")
+            ->orderBy('products.id')
             ->forPage($page, $this->perPage)
             ->get();
 

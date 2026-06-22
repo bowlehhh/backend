@@ -4,12 +4,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nota Retur {{ $salesReturn->return_number }}</title>
+    <x-brand.meta />
     <style>
         @page { size: A4 portrait; margin: 8mm; }
         * { box-sizing: border-box; }
         html { overflow-x: hidden; }
         body { font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 0; background: #f3f4f6; color: #111827; width: 100%; overflow-x: hidden; }
         .wrap { width: 190mm; max-width: calc(100vw - 16px); margin: 8px auto; background: #fff; border: 2px solid #111827; padding: 14px; box-sizing: border-box; }
+        .brand-logo { height: 36px; width: auto; display: block; margin-bottom: 8px; }
         table { width: 100%; border-collapse: collapse; }
         .title { display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px; }
         .title h1 { margin: 0; font-size: 22px; }
@@ -84,6 +86,7 @@
 <div class="wrap">
     <div class="title">
         <div>
+            <img src="{{ asset('branding/sdm-logo-horizontal.svg') }}" alt="Logo Surya Duta Multindo" class="brand-logo">
             <h1>{{ strtoupper($storeName) }}</h1>
             <div style="font-size: 12px;">Dokumen retur transaksi penjualan</div>
         </div>

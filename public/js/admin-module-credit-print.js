@@ -71,6 +71,7 @@
             body { margin: 0; font-family: Arial, Helvetica, sans-serif; color: #111827; background: #fff; }
             .page { padding: 24px; }
             .header { display: flex; justify-content: space-between; gap: 16px; border-bottom: 2px solid #0b6b4a; padding-bottom: 16px; margin-bottom: 18px; }
+            .brand-logo { display: block; height: 40px; width: auto; margin-bottom: 8px; }
             .title { font-size: 24px; font-weight: 700; margin: 0 0 6px; }
             .muted { color: #4b5563; margin: 2px 0; font-size: 13px; }
             .summary { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; align-content: flex-start; }
@@ -92,8 +93,8 @@
           <div class="page">
             <div class="header">
               <div>
+                <img src="/branding/sdm-logo-horizontal.svg" alt="Logo Surya Duta Multindo" class="brand-logo">
                 <p class="title">Nota Pembelian Bulanan</p>
-                <p class="muted">Surya Duta Multindo</p>
                 <p class="muted">Periode: ${esc(monthGroup.month_label)}</p>
                 <p class="muted">Total transaksi: ${esc(summary.total_transaksi ?? 0)} | Total nilai: ${esc(summary.total_nilai ?? 'Rp 0')}</p>
               </div>

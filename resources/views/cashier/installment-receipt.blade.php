@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nota Cicilan - {{ $sale->invoice_number }}</title>
+    <x-brand.meta />
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <style>
@@ -43,10 +44,21 @@
             ? $date->locale('id')->translatedFormat('d M Y H:i l')
             : $date->locale('id')->translatedFormat('d M Y l');
     };
+
+    $saleSubtotalBeforeDiscount = (float) $sale->items->sum(function ($item) {
+        return (float) (($item->price ?? 0) * ($item->qty ?? 0));
+    });
+    $saleDiscountAmount = (float) ($sale->discount_amount ?? 0);
+    $saleDiscountPercent = $saleSubtotalBeforeDiscount > 0
+        ? ($saleDiscountAmount / $saleSubtotalBeforeDiscount) * 100
+        : 0;
+    $saleGrandTotal = (float) ($sale->total ?? max(0, $saleSubtotalBeforeDiscount - $saleDiscountAmount));
+    $saleDownPayment = (float) ($sale->paid_amount ?? 0);
 @endphp
 <main class="mx-auto max-w-3xl p-4 lg:p-6">
     <div class="mb-4 flex items-center justify-between gap-3">
         <div>
+            <x-brand.logo class="mb-3 h-11 w-auto" />
             <h1 class="text-2xl font-extrabold">Nota Cicilan</h1>
             <p class="text-sm text-slate-500">Invoice: {{ $sale->invoice_number }}</p>
         </div>
@@ -76,6 +88,43 @@
         <div class="mt-4 rounded-xl bg-slate-50 p-4">
             <p class="text-xs uppercase text-slate-500">Catatan</p>
             <p class="mt-1 text-sm">{{ $installment->note ?: '-' }}</p>
+        </div>
+
+        <div class="mt-4 overflow-hidden rounded-xl border border-slate-200">
+            <div class="border-b border-slate-200 bg-slate-50 px-4 py-3">
+                <p class="text-sm font-semibold text-slate-800">Ringkasan Invoice Awal</p>
+                <p class="text-xs text-slate-500">Diskon dari transaksi awal ikut ditampilkan di nota cicilan.</p>
+            </div>
+            <div class="grid gap-3 p-4 md:grid-cols-2">
+                <div>
+                    <p class="text-xs uppercase text-slate-500">Subtotal</p>
+                    <p class="font-semibold">Rp {{ number_format($saleSubtotalBeforeDiscount, 0, ',', '.') }}</p>
+                </div>
+                @if($saleDiscountAmount > 0)
+                    <div>
+                        <p class="text-xs uppercase text-slate-500">
+                            Diskon{{ $saleDiscountPercent > 0 ? ' (' . rtrim(rtrim(number_format($saleDiscountPercent, 2, '.', ''), '0'), '.') . '%)' : '' }}
+                        </p>
+                        <p class="font-semibold text-rose-700">- Rp {{ number_format($saleDiscountAmount, 0, ',', '.') }}</p>
+                    </div>
+                @endif
+                <div>
+                    <p class="text-xs uppercase text-slate-500">Grand Total Invoice</p>
+                    <p class="font-semibold text-slate-900">Rp {{ number_format($saleGrandTotal, 0, ',', '.') }}</p>
+                </div>
+                <div>
+                    <p class="text-xs uppercase text-slate-500">DP / Uang Muka</p>
+                    <p class="font-semibold text-emerald-700">Rp {{ number_format($saleDownPayment, 0, ',', '.') }}</p>
+                </div>
+                <div>
+                    <p class="text-xs uppercase text-slate-500">Total Cicilan Terbayar</p>
+                    <p class="font-semibold text-emerald-700">Rp {{ number_format((float) $installmentPaid, 0, ',', '.') }}</p>
+                </div>
+                <div>
+                    <p class="text-xs uppercase text-slate-500">Sisa Kredit Setelah Cicilan Ini</p>
+                    <p class="font-semibold text-amber-700">Rp {{ number_format((float) $remainingCredit, 0, ',', '.') }}</p>
+                </div>
+            </div>
         </div>
 
         <div class="mt-4 overflow-hidden rounded-xl border border-slate-200">

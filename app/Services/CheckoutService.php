@@ -500,14 +500,22 @@ class CheckoutService
 
     private function generateInvoiceNumber(string $invoicePeriod): string
     {
-        // Format baru: INV-YYYYMM-0001, nomor urut kontinyu per bulan.
-        // Invoice lama tetap aman dan tidak diubah.
+        // Lanjutkan nomor bulanan dari invoice format baru maupun format lama harian
+        // seperti INV-YYYYMMDD-0001 agar urutan bulan tidak kembali ke 0001.
         $prefix = "INV-{$invoicePeriod}-";
 
         $nextNumber = Sale::withTrashed()
-            ->where('invoice_number', 'like', "{$prefix}%")
+            ->where('invoice_number', 'like', "INV-{$invoicePeriod}%")
             ->lockForUpdate()
-            ->count() + 1;
+            ->pluck('invoice_number')
+            ->map(function (string $invoiceNumber) use ($invoicePeriod): int {
+                if (! preg_match('/^INV-' . preg_quote($invoicePeriod, '/') . '(?:\d{2})?-(\d+)$/', $invoiceNumber, $matches)) {
+                    return 0;
+                }
+
+                return (int) $matches[1];
+            })
+            ->max() + 1;
 
         return sprintf('%s%04d', $prefix, $nextNumber);
     }

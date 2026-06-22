@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Draft Penjualan - Surya Duta Multindo</title>
+    <x-brand.meta />
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
@@ -13,7 +14,7 @@
 <div class="h-screen overflow-hidden bg-[#f7f9fb]">
     <aside class="hidden lg:flex fixed inset-y-0 left-0 z-30 w-[260px] flex-col border-r border-slate-300 bg-white">
         <div class="px-5 py-5 border-b border-slate-200">
-            <h1 class="text-3xl font-extrabold text-emerald-700">Surya Duta Multindo</h1>
+            <x-brand.logo class="h-10 w-auto" />
             <p class="text-xs text-slate-500">Admin Penjualan - Station 01</p>
         </div>
         <nav class="flex-1 p-4 space-y-2">

@@ -54,8 +54,20 @@
 @php
     $creditDaysValue = old('credit_days', '');
     $currentUser = auth()->user();
-    $initialDiscountPercent = max(0, min(100, (float) old('discount_amount', 0)));
-    $initialDiscountAmount = $subtotal > 0 ? (($subtotal * $initialDiscountPercent) / 100) : 0;
+    $initialDiscountType = strtolower((string) old('discount_type', 'percent'));
+    if (! in_array($initialDiscountType, ['percent', 'nominal'], true)) {
+        $initialDiscountType = 'percent';
+    }
+    $initialDiscountRawValue = (string) old('discount_amount', '0');
+    $initialDiscountInputValue = $initialDiscountType === 'nominal'
+        ? (float) preg_replace('/[^\d]/', '', $initialDiscountRawValue)
+        : max(0, min(100, (float) str_replace(',', '.', $initialDiscountRawValue)));
+    $initialDiscountAmount = $subtotal > 0
+        ? ($initialDiscountType === 'nominal'
+            ? min((float) $subtotal, max(0, $initialDiscountInputValue))
+            : (($subtotal * $initialDiscountInputValue) / 100))
+        : 0;
+    $initialDiscountPercent = $subtotal > 0 ? (($initialDiscountAmount / $subtotal) * 100) : 0;
     $initialCartTotal = max(0, $subtotal - $initialDiscountAmount);
     $isAdminBesarGudangAccess = $currentUser?->isAdminBesar() && request()->routeIs('admin.transaksi.dashboard', 'admin.transactions.*');
     $isTransactionDashboard = request()->routeIs('cashier.dashboard', 'admin.transaksi.dashboard');
@@ -445,19 +457,29 @@
                                 <p data-payment-summary class="text-[11px] font-medium text-slate-500">DP: Rp 0 | Sisa kredit: Rp 0</p>
                             </div>
                         </div>
-                        <div class="space-y-1">
-                            <label class="block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Diskon (%)</label>
-                            <input
-                                type="number"
-                                min="0"
-                                max="100"
-                                step="0.01"
-                                name="discount_amount"
-                                value="{{ old('discount_amount', '0') }}"
-                                class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
-                                placeholder="Masukkan persen diskon"
-                                data-discount-input
-                            />
+                        <div class="grid grid-cols-[118px_minmax(0,1fr)] gap-2">
+                            <div class="space-y-1">
+                                <label class="block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Mode Diskon</label>
+                                <select name="discount_type" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" data-discount-type>
+                                    <option value="percent" @selected($initialDiscountType === 'percent')>Persen</option>
+                                    <option value="nominal" @selected($initialDiscountType === 'nominal')>Nominal</option>
+                                </select>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Nilai Diskon</label>
+                                <input
+                                    type="text"
+                                    inputmode="decimal"
+                                    name="discount_amount"
+                                    value="{{ $initialDiscountType === 'nominal' ? number_format($initialDiscountInputValue, 0, ',', '.') : rtrim(rtrim(number_format($initialDiscountInputValue, 2, '.', ''), '0'), '.') }}"
+                                    class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                                    placeholder="{{ $initialDiscountType === 'nominal' ? 'Masukkan nominal diskon' : 'Masukkan persen diskon' }}"
+                                    data-discount-input
+                                />
+                                <p class="text-[11px] font-medium text-slate-500" data-discount-helper>
+                                    Potongan: Rp {{ number_format($initialDiscountAmount, 0, ',', '.') }} | Persen efektif: {{ rtrim(rtrim(number_format($initialDiscountPercent, 2, '.', ''), '0'), '.') }}%
+                                </p>
+                            </div>
                         </div>
                         <div data-credit-days-wrap class="{{ old('payment_method') === 'credit' ? '' : 'hidden' }} space-y-2">
                             <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
@@ -505,7 +527,8 @@
         <input data-print-receipt-input type="hidden" name="print_receipt" value="0" />
         <input type="hidden" name="payment_method" value="{{ old('payment_method', 'cash') }}" />
         <input type="hidden" name="paid_amount" value="{{ old('payment_method') === 'credit' ? old('paid_amount', '0') : old('paid_amount', (int) ceil($initialCartTotal)) }}" />
-        <input type="hidden" name="discount_amount" value="{{ old('discount_amount', '0') }}" />
+        <input type="hidden" name="discount_type" value="{{ $initialDiscountType }}" />
+        <input type="hidden" name="discount_amount" value="{{ $initialDiscountType === 'nominal' ? (int) round($initialDiscountInputValue) : rtrim(rtrim(number_format($initialDiscountInputValue, 2, '.', ''), '0'), '.') }}" />
         <input type="hidden" name="credit_days" value="" />
         <input type="hidden" name="credit_due_date" value="{{ old('credit_due_date', '') }}" />
         <input type="hidden" name="cashier_service_name" value="" />
@@ -580,7 +603,16 @@
             </div>
             <input id="mobile-confirm-cashier-name" type="text" maxlength="100" value="{{ old('cashier_service_name', '') }}" autocomplete="off" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Nama petugas / admin" />
             <input id="mobile-confirm-customer-name" type="text" maxlength="100" value="{{ old('customer_name', '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Nama pembeli (opsional)" />
-            <input id="mobile-confirm-discount-amount" type="number" min="0" max="100" step="0.01" value="{{ old('discount_amount', '0') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Diskon (%)" data-select-all-on-focus />
+            <div class="grid grid-cols-[118px_minmax(0,1fr)] gap-2">
+                <select id="mobile-confirm-discount-type" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm">
+                    <option value="percent" @selected($initialDiscountType === 'percent')>Persen</option>
+                    <option value="nominal" @selected($initialDiscountType === 'nominal')>Nominal</option>
+                </select>
+                <input id="mobile-confirm-discount-amount" type="text" inputmode="decimal" value="{{ $initialDiscountType === 'nominal' ? number_format($initialDiscountInputValue, 0, ',', '.') : rtrim(rtrim(number_format($initialDiscountInputValue, 2, '.', ''), '0'), '.') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="{{ $initialDiscountType === 'nominal' ? 'Nominal diskon' : 'Diskon (%)' }}" data-select-all-on-focus />
+            </div>
+            <p class="text-[11px] font-medium text-slate-500" data-discount-helper>
+                Potongan: Rp {{ number_format($initialDiscountAmount, 0, ',', '.') }} | Persen efektif: {{ rtrim(rtrim(number_format($initialDiscountPercent, 2, '.', ''), '0'), '.') }}%
+            </p>
             <input id="mobile-confirm-po-number" type="text" maxlength="100" value="{{ old('po_number', '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="P.O. No (opsional)" />
             <input id="mobile-confirm-site-name" type="text" maxlength="100" value="{{ old('site_name', '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Site (opsional)" />
         </div>
@@ -627,6 +659,7 @@
     const mobileCreditDaysWrap = document.getElementById('mobile-credit-days-wrap');
     const mobileConfirmCashierName = document.getElementById('mobile-confirm-cashier-name');
     const mobileConfirmCustomerName = document.getElementById('mobile-confirm-customer-name');
+    const mobileConfirmDiscountType = document.getElementById('mobile-confirm-discount-type');
     const mobileConfirmDiscountAmount = document.getElementById('mobile-confirm-discount-amount');
     const mobileConfirmPoNumber = document.getElementById('mobile-confirm-po-number');
     const mobileConfirmSiteName = document.getElementById('mobile-confirm-site-name');
@@ -634,6 +667,7 @@
     const submitBtn = document.getElementById('submit-confirm-btn');
     const desktopPaymentMethod = desktopCheckoutForm?.querySelector('[data-payment-method]');
     const desktopPaidAmountInput = desktopCheckoutForm?.querySelector('[data-paid-amount-input]');
+    const desktopDiscountTypeInput = desktopCheckoutForm?.querySelector('[data-discount-type]');
     const desktopDiscountInput = desktopCheckoutForm?.querySelector('[data-discount-input]');
     const discountLabels = Array.from(document.querySelectorAll('[data-discount-label]'));
     const desktopPaymentAmountLabel = desktopCheckoutForm?.querySelector('[data-payment-amount-label]');
@@ -652,6 +686,11 @@
 
     const toRupiah = (value) => new Intl.NumberFormat('id-ID').format(Math.round(value));
     const sanitizeRupiahValue = (value) => String(value ?? '').replace(/[^\d]/g, '');
+    const sanitizeDecimalValue = (value) => {
+        const cleaned = String(value ?? '').replace(/[^0-9.,]/g, '').replace(',', '.');
+        const [whole, ...rest] = cleaned.split('.');
+        return rest.length ? `${whole}.${rest.join('')}` : whole;
+    };
     const formatRupiahInputValue = (value) => {
         const digits = sanitizeRupiahValue(value);
         return digits === '' ? '' : new Intl.NumberFormat('id-ID').format(Number(digits));
@@ -764,16 +803,54 @@
     const subtotalDisplays = Array.from(document.querySelectorAll('[data-cart-subtotal]'));
     const discountDisplays = Array.from(document.querySelectorAll('[data-cart-discount]'));
     const totalDisplays = Array.from(document.querySelectorAll('[data-cart-total]'));
+    const discountHelpers = Array.from(document.querySelectorAll('[data-discount-helper]'));
     let liveSubtotal = subtotal;
     let liveDiscount = Number(@json((float) $initialDiscountAmount));
     let liveTotal = total;
 
-    const getActiveDiscountPercent = () => {
+    const getDiscountContext = () => {
         if (activeCheckoutForm?.id === 'checkout-form-mobile') {
-            return Math.max(0, Math.min(100, Number(mobileConfirmDiscountAmount?.value || 0)));
+            return {
+                typeInput: mobileConfirmDiscountType,
+                valueInput: mobileConfirmDiscountAmount,
+            };
         }
 
-        return Math.max(0, Math.min(100, Number(desktopDiscountInput?.value || 0)));
+        return {
+            typeInput: desktopDiscountTypeInput,
+            valueInput: desktopDiscountInput,
+        };
+    };
+
+    const getActiveDiscountType = () => {
+        const { typeInput } = getDiscountContext();
+        return typeInput?.value === 'nominal' ? 'nominal' : 'percent';
+    };
+
+    const getActiveDiscountValue = () => {
+        const { valueInput } = getDiscountContext();
+        return getActiveDiscountType() === 'nominal'
+            ? Math.max(0, Number(sanitizeRupiahValue(valueInput?.value || 0)))
+            : Math.max(0, Math.min(100, Number(sanitizeDecimalValue(valueInput?.value || 0) || 0)));
+    };
+
+    const getDiscountMetrics = (subtotalValue = 0) => {
+        const discountType = getActiveDiscountType();
+        const discountValue = getActiveDiscountValue();
+        const safeSubtotal = Math.max(0, Number(subtotalValue || 0));
+        const discountAmount = safeSubtotal <= 0
+            ? 0
+            : (discountType === 'nominal'
+                ? Math.min(safeSubtotal, discountValue)
+                : Math.min(safeSubtotal, (safeSubtotal * discountValue) / 100));
+        const discountPercent = safeSubtotal > 0 ? (discountAmount / safeSubtotal) * 100 : 0;
+
+        return {
+            discountType,
+            discountValue,
+            discountAmount,
+            discountPercent,
+        };
     };
 
     const formatPercentLabel = (value) => {
@@ -782,7 +859,27 @@
         return `${safe.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1')}%`;
     };
 
+    const applyDiscountInputMode = (type, input) => {
+        if (!input) {
+            return;
+        }
+
+        if (type === 'nominal') {
+            input.inputMode = 'numeric';
+            input.placeholder = 'Masukkan nominal diskon';
+            input.value = formatRupiahInputValue(input.value);
+        } else {
+            input.inputMode = 'decimal';
+            input.placeholder = 'Masukkan persen diskon';
+            input.value = sanitizeDecimalValue(input.value);
+        }
+    };
+
+    applyDiscountInputMode(desktopDiscountTypeInput?.value || 'percent', desktopDiscountInput);
+    applyDiscountInputMode(mobileConfirmDiscountType?.value || 'percent', mobileConfirmDiscountAmount);
+
     const syncSummaryValues = () => {
+        const { discountPercent } = getDiscountMetrics(liveSubtotal);
         subtotalDisplays.forEach((el) => {
             el.textContent = `Rp ${toRupiah(liveSubtotal)}`;
         });
@@ -792,9 +889,12 @@
         totalDisplays.forEach((el) => {
             el.textContent = `Rp ${toRupiah(liveTotal)}`;
         });
-        const percentLabel = `Diskon (${formatPercentLabel(getActiveDiscountPercent())})`;
+        const percentLabel = `Diskon (${formatPercentLabel(discountPercent)})`;
         discountLabels.forEach((el) => {
             el.textContent = percentLabel;
+        });
+        discountHelpers.forEach((el) => {
+            el.textContent = `Potongan: Rp ${toRupiah(liveDiscount)} | Persen efektif: ${formatPercentLabel(discountPercent)}`;
         });
     };
 
@@ -817,8 +917,8 @@
         });
 
         liveSubtotal = nextTotal;
-        const activeDiscountPercent = getActiveDiscountPercent();
-        liveDiscount = Math.min(liveSubtotal, (liveSubtotal * activeDiscountPercent) / 100);
+        const { discountAmount } = getDiscountMetrics(liveSubtotal);
+        liveDiscount = discountAmount;
         liveTotal = Math.max(0, liveSubtotal - liveDiscount);
         syncSummaryValues();
         syncVisibleStocks();
@@ -1107,11 +1207,25 @@
     mobileConfirmPaymentMethod?.addEventListener('change', syncCreditDueVisibility);
     desktopPaidAmountInput?.addEventListener('input', () => syncPaymentSummary(desktopPaymentMethod, desktopPaidAmountInput, desktopPaymentAmountLabel, desktopPaymentSummary));
     mobileConfirmPaidAmount?.addEventListener('input', () => syncPaymentSummary(mobileConfirmPaymentMethod, mobileConfirmPaidAmount, mobileConfirmPaidLabel, mobileConfirmPaymentSummary));
+    desktopDiscountTypeInput?.addEventListener('change', () => {
+        applyDiscountInputMode(desktopDiscountTypeInput.value, desktopDiscountInput);
+        recalculateCartSummary();
+        syncPaymentSummary(desktopPaymentMethod, desktopPaidAmountInput, desktopPaymentAmountLabel, desktopPaymentSummary);
+    });
+    mobileConfirmDiscountType?.addEventListener('change', () => {
+        applyDiscountInputMode(mobileConfirmDiscountType.value, mobileConfirmDiscountAmount);
+        recalculateCartSummary();
+        confirmDiscount.textContent = `Rp ${toRupiah(liveDiscount)}`;
+        confirmTotal.textContent = `Rp ${toRupiah(liveTotal)}`;
+        syncPaymentSummary(mobileConfirmPaymentMethod, mobileConfirmPaidAmount, mobileConfirmPaidLabel, mobileConfirmPaymentSummary);
+    });
     desktopDiscountInput?.addEventListener('input', () => {
+        applyDiscountInputMode(desktopDiscountTypeInput?.value || 'percent', desktopDiscountInput);
         recalculateCartSummary();
         syncPaymentSummary(desktopPaymentMethod, desktopPaidAmountInput, desktopPaymentAmountLabel, desktopPaymentSummary);
     });
     mobileConfirmDiscountAmount?.addEventListener('input', () => {
+        applyDiscountInputMode(mobileConfirmDiscountType?.value || 'percent', mobileConfirmDiscountAmount);
         recalculateCartSummary();
         confirmDiscount.textContent = `Rp ${toRupiah(liveDiscount)}`;
         confirmTotal.textContent = `Rp ${toRupiah(liveTotal)}`;
@@ -1147,7 +1261,9 @@
             if (isMobileCheckout) {
                 mobileConfirmPaymentMethod.value = form.querySelector('input[name="payment_method"]')?.value || 'cash';
                 mobileConfirmPaidAmount.value = formatRupiahInputValue(form.querySelector('input[name="paid_amount"]')?.value || (mobileConfirmPaymentMethod.value === 'credit' ? 0 : liveTotal));
+                mobileConfirmDiscountType.value = form.querySelector('input[name="discount_type"]')?.value || desktopDiscountTypeInput?.value || 'percent';
                 mobileConfirmDiscountAmount.value = form.querySelector('input[name="discount_amount"]')?.value || desktopDiscountInput?.value || 0;
+                applyDiscountInputMode(mobileConfirmDiscountType.value, mobileConfirmDiscountAmount);
                 mobileConfirmCreditDays.value = form.querySelector('[name="credit_days"]')?.value || '';
                 mobileConfirmCashierName.value = form.querySelector('input[name="cashier_service_name"]')?.value || '';
                 mobileConfirmCustomerName.value = form.querySelector('input[name="customer_name"]')?.value || '';
@@ -1178,14 +1294,12 @@
             confirmCustomer.textContent = customerName !== '' ? customerName : '-';
             confirmPoNumber.textContent = poNumber !== '' ? poNumber : '-';
             confirmSiteName.textContent = siteName !== '' ? siteName : '-';
-            const activeDiscountPercent = isMobileCheckout
-                ? Math.max(0, Math.min(100, Number(mobileConfirmDiscountAmount?.value || 0)))
-                : Math.max(0, Math.min(100, Number(desktopDiscountInput?.value || 0)));
-            liveDiscount = Math.min(liveSubtotal, (liveSubtotal * activeDiscountPercent) / 100);
+            const { discountAmount, discountPercent } = getDiscountMetrics(liveSubtotal);
+            liveDiscount = discountAmount;
             liveTotal = Math.max(0, liveSubtotal - liveDiscount);
             confirmSubtotal.textContent = `Rp ${toRupiah(liveSubtotal)}`;
             if (confirmDiscountLabel) {
-                confirmDiscountLabel.textContent = `Diskon (${formatPercentLabel(activeDiscountPercent)})`;
+                confirmDiscountLabel.textContent = `Diskon (${formatPercentLabel(discountPercent)})`;
             }
             confirmDiscount.textContent = `Rp ${toRupiah(liveDiscount)}`;
             confirmTotal.textContent = `Rp ${toRupiah(liveTotal)}`;
@@ -1208,7 +1322,10 @@
                 ? Math.min(liveTotal, Math.max(0, Number(sanitizeRupiahValue(mobileConfirmPaidAmount?.value || 0))))
                 : liveTotal;
             activeCheckoutForm.querySelector('input[name="paid_amount"]').value = String(mobileDownPayment);
-            activeCheckoutForm.querySelector('input[name="discount_amount"]').value = String(Math.max(0, Math.min(100, Number(mobileConfirmDiscountAmount?.value || 0))));
+            activeCheckoutForm.querySelector('input[name="discount_type"]').value = mobileConfirmDiscountType?.value === 'nominal' ? 'nominal' : 'percent';
+            activeCheckoutForm.querySelector('input[name="discount_amount"]').value = mobileConfirmDiscountType?.value === 'nominal'
+                ? String(Math.max(0, Number(sanitizeRupiahValue(mobileConfirmDiscountAmount?.value || 0))))
+                : String(Math.max(0, Math.min(100, Number(sanitizeDecimalValue(mobileConfirmDiscountAmount?.value || 0) || 0))));
             activeCheckoutForm.querySelector('input[name="credit_days"]').value = (mobileConfirmPaymentMethod?.value === 'credit' ? (mobileConfirmCreditDays?.value || '') : '');
             activeCheckoutForm.querySelector('input[name="credit_due_date"]').value = (mobileConfirmPaymentMethod?.value === 'credit' ? computeDueDateFromDays(getCreditDaysValue(mobileConfirmCreditDays)) : '');
             activeCheckoutForm.querySelector('input[name="cashier_service_name"]').value = mobileConfirmCashierName?.value || '';
@@ -1223,9 +1340,12 @@
                 const amount = Math.min(liveTotal, Math.max(0, Number(sanitizeRupiahValue(paidInput.value || 0))));
                 paidInput.value = String(method === 'credit' ? amount : (amount > 0 ? amount : Math.round(liveTotal)));
             }
+            const discountTypeInput = activeCheckoutForm.querySelector('select[name="discount_type"]');
             const discountInput = activeCheckoutForm.querySelector('input[name="discount_amount"]');
             if (discountInput) {
-                discountInput.value = String(Math.max(0, Math.min(100, Number(discountInput.value || 0))));
+                discountInput.value = discountTypeInput?.value === 'nominal'
+                    ? String(Math.max(0, Number(sanitizeRupiahValue(discountInput.value || 0))))
+                    : String(Math.max(0, Math.min(100, Number(sanitizeDecimalValue(discountInput.value || 0) || 0))));
             }
             const method = activeCheckoutForm.querySelector('select[name="payment_method"]')?.value || 'cash';
             const dueInput = activeCheckoutForm.querySelector('input[name="credit_due_date"]');

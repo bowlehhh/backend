@@ -28,8 +28,10 @@ class WebLoginController extends Controller
             'password' => ['required', 'string'],
         ]);
 
+        $email = mb_strtolower(trim((string) $payload['email']));
+
         $user = User::query()
-            ->where('email', $payload['email'])
+            ->whereRaw('LOWER(TRIM(email)) = ?', [$email])
             ->first();
 
         if (! $user) {

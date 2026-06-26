@@ -336,7 +336,7 @@
                             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                 <span class="material-symbols-outlined text-on-surface-variant/60 transition-colors group-focus-within:text-primary">mail</span>
                             </div>
-                            <input id="email" name="email" type="email" value="" required autocomplete="off" autocapitalize="off" spellcheck="false" data-form-type="other" class="login-input h-10 w-full rounded-2xl border border-[#c8d6ce] bg-white py-2 pl-10 pr-4 text-[13px] text-on-surface outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/15" />
+                            <input id="email" name="email" type="email" value="{{ old('email', '') }}" required autocomplete="email" autocapitalize="off" spellcheck="false" class="login-input h-10 w-full rounded-2xl border border-[#c8d6ce] bg-white py-2 pl-10 pr-4 text-[13px] text-on-surface outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/15" />
                         </div>
                     </div>
 
@@ -348,7 +348,7 @@
                             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                 <span class="material-symbols-outlined text-on-surface-variant/60 transition-colors group-focus-within:text-primary">lock</span>
                             </div>
-                            <input id="password" name="password" type="password" required placeholder="••••••••••••" autocomplete="new-password" data-form-type="other" class="login-input h-11 w-full rounded-2xl border border-[#c8d6ce] bg-white py-2.5 pl-10 pr-12 text-[14px] text-on-surface outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/15" />
+                            <input id="password" name="password" type="password" required placeholder="••••••••••••" autocomplete="current-password" class="login-input h-11 w-full rounded-2xl border border-[#c8d6ce] bg-white py-2.5 pl-10 pr-12 text-[14px] text-on-surface outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/15" />
                             <button id="toggle-password" class="absolute inset-y-0 right-0 flex items-center pr-3 text-on-surface-variant transition-colors hover:text-primary" type="button" aria-label="Toggle password visibility">
                                 <span class="material-symbols-outlined">visibility</span>
                             </button>

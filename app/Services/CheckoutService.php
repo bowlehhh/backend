@@ -347,8 +347,18 @@ class CheckoutService
                     }
                 }
 
-                $discountPercent = isset($payload['discount_amount']) ? max(0, min(100, (float) $payload['discount_amount'])) : 0.0;
-                $discountAmount = $total > 0 ? round(($total * $discountPercent) / 100, 2) : 0.0;
+                $discountType = strtolower((string) ($payload['discount_type'] ?? 'percent'));
+                if (! in_array($discountType, ['percent', 'nominal'], true)) {
+                    $discountType = 'percent';
+                }
+
+                $rawDiscountValue = isset($payload['discount_amount']) ? (float) $payload['discount_amount'] : 0.0;
+                $discountPercent = $discountType === 'percent'
+                    ? max(0, min(100, $rawDiscountValue))
+                    : 0.0;
+                $discountAmount = $discountType === 'nominal'
+                    ? max(0, $rawDiscountValue)
+                    : ($total > 0 ? round(($total * $discountPercent) / 100, 2) : 0.0);
                 $discountAmount = min($total, $discountAmount);
                 $totalAfterDiscount = max(0, $total - $discountAmount);
 

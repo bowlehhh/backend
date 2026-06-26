@@ -559,6 +559,22 @@ class CashierTransactionController extends Controller
         return (float) $normalized;
     }
 
+    protected function parseDecimalInput(mixed $value): ?float
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $normalized = preg_replace('/[^0-9,.\-]/', '', (string) $value);
+        if ($normalized === null || $normalized === '') {
+            return null;
+        }
+
+        $normalized = str_replace(',', '.', $normalized);
+
+        return is_numeric($normalized) ? (float) $normalized : null;
+    }
+
     protected function syncCartFromSnapshot(array $cart, Request $request): array
     {
         $snapshotRaw = $request->input('cart_snapshot');
@@ -814,7 +830,10 @@ class CashierTransactionController extends Controller
 
         $paymentMethod = (string) $request->input('payment_method', 'cash');
         $paidAmount = (float) ($this->parseCurrencyInput($request->input('paid_amount')) ?? 0);
-        $discountPercent = max(0, min(100, (float) $request->input('discount_amount', 0)));
+        $discountType = strtolower(trim((string) $request->input('discount_type', 'percent')));
+        $discountValue = $discountType === 'nominal'
+            ? (float) ($this->parseCurrencyInput($request->input('discount_amount')) ?? 0)
+            : max(0, min(100, (float) ($this->parseDecimalInput($request->input('discount_amount')) ?? 0)));
         $creditDays = (int) $request->input('credit_days', 0);
         $creditDueDate = trim((string) $request->input('credit_due_date', ''));
         $customerName = trim((string) $request->input('customer_name', ''));
@@ -829,7 +848,8 @@ class CashierTransactionController extends Controller
             $sale = $this->checkoutService->checkout($request->user(), [
                 'payment_method' => $paymentMethod,
                 'paid_amount' => $paidAmount,
-                'discount_amount' => $discountPercent,
+                'discount_type' => in_array($discountType, ['percent', 'nominal'], true) ? $discountType : 'percent',
+                'discount_amount' => $discountValue,
                 'credit_days' => $creditDays > 0 ? $creditDays : null,
                 'credit_due_date' => $creditDueDate !== '' ? $creditDueDate : null,
                 'customer_name' => $customerName !== '' ? mb_substr($customerName, 0, 100) : null,

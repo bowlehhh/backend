@@ -8,7 +8,7 @@
 
 <x-filament-panels::page>
     <link rel="stylesheet" href="{{ asset('css/app-production.css') }}">
-    @if (app()->environment('local'))
+    @if (app()->environment('local') && (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot'))))
         @vite('resources/css/app.css')
     @endif
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
@@ -33,6 +33,18 @@
         margin: 0 !important;
       }
       .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; display: inline-block; vertical-align: middle; }
+      .sf-mobile-sidebar-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.42);
+        z-index: 24;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .22s ease;
+      }
+      .sf-sidebar {
+        transition: transform .24s ease, opacity .24s ease, box-shadow .24s ease;
+      }
       html.sf-dashboard-page,
       .sf-dashboard-page,
       .sf-dashboard-page body,
@@ -109,25 +121,95 @@
       .sf-wrap .text-5xl { font-size: 30px !important; line-height: 36px !important; }
       .sf-wrap table th,
       .sf-wrap table td { padding-top: .65rem !important; padding-bottom: .65rem !important; }
+      .sf-supplier-mobile-card {
+        display: none;
+      }
       @media (max-width: 1279px) {
         .sf-layout { display: block; }
         .sf-sidebar { display: none; }
         .sf-content { width: 100%; margin-left: 0; height: auto; overflow: visible; padding: 12px !important; }
         .sf-wrap header { height: 56px !important; padding-left: 14px !important; padding-right: 14px !important; }
+        .sf-mobile-menu-open .sf-mobile-sidebar-backdrop {
+          opacity: 1;
+          pointer-events: auto;
+        }
+        .sf-mobile-menu-open .sf-sidebar {
+          display: flex !important;
+          position: fixed;
+          left: 0;
+          top: var(--sf-topbar-h);
+          width: min(84vw, 300px);
+          height: calc(100vh - var(--sf-topbar-h));
+          transform: translateX(0);
+          opacity: 1;
+          pointer-events: auto;
+          z-index: 30;
+          flex-direction: column;
+          box-shadow: 18px 0 40px rgba(0, 0, 0, .14);
+        }
         .sf-content h1 { font-size: 28px !important; line-height: 34px !important; }
         .sf-content .text-5xl { font-size: 30px !important; line-height: 36px !important; }
         .sf-content table th, .sf-content table td { white-space: nowrap; font-size: 13px !important; }
+      }
+      @media (max-width: 767px) {
+        .sf-content { padding: 10px !important; }
+        .sf-content::after { content: ''; display: block; height: 36px; width: 100%; }
+        .sf-wrap header {
+          height: 56px !important;
+          padding-left: 12px !important;
+          padding-right: 12px !important;
+          gap: .5rem;
+        }
+        .sf-wrap .sf-page-shell {
+          gap: .75rem;
+        }
+        .sf-wrap .sf-title {
+          font-size: 24px !important;
+          line-height: 30px !important;
+        }
+        .sf-wrap .sf-supplier-table {
+          display: none !important;
+        }
+        .sf-wrap .sf-supplier-mobile-card {
+          display: block;
+        }
+        .sf-wrap .sf-summary-grid {
+          grid-template-columns: 1fr;
+          gap: .75rem;
+          margin-bottom: .9rem;
+        }
+        .sf-wrap .sf-summary-card {
+          padding: .9rem !important;
+        }
+        .sf-wrap .sf-summary-value {
+          font-size: 30px !important;
+          line-height: 36px !important;
+        }
       }
     </style>
 
     <div class="sf-wrap bg-background text-on-surface min-h-screen overflow-x-hidden">
       <header class="bg-surface-container-lowest text-primary border-b border-outline-variant flex justify-between items-center px-5 h-16 w-full sticky top-0 z-50">
-        <div class="flex items-center gap-4">
-          <x-brand.logo class="h-9 w-auto max-w-[240px]" />
+        <div class="flex min-w-0 items-center gap-2">
+          <button
+            type="button"
+            class="lg:hidden inline-flex h-9 w-9 items-center justify-center rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container"
+            aria-label="Kembali"
+            onclick='if (window.history.length > 1) { window.history.back(); } else { window.location.href = @json($isAdminBesarAccess ? route("admin.admin-besar.index") : url("/admin/products")); }'
+          >
+            <span class="material-symbols-outlined">arrow_back</span>
+          </button>
+          <button id="mobileSidebarBtn" type="button" class="lg:hidden inline-flex h-9 w-9 items-center justify-center rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container" aria-label="Buka navigasi">
+            <span class="material-symbols-outlined">menu</span>
+          </button>
+          <div class="flex items-center gap-4">
+          <x-brand.logo class="h-8 w-auto max-w-[160px] sm:h-9 sm:max-w-[240px]" />
+          </div>
         </div>
       </header>
+      <div id="mobileSidebarBackdrop" class="sf-mobile-sidebar-backdrop lg:hidden"></div>
 
-      <div class="sf-shell">
+      <div class="sf-shell sf-page-shell">
       <div class="sf-layout">
         <aside class="sf-sidebar lg:flex flex-col w-full p-4 bg-white hidden">
           <div class="admin-panel-card mb-3 rounded-lg border border-[#d4dbd7] bg-[#f2f4f6] p-3">
@@ -194,22 +276,70 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5 mb-6">
-            <div class="bg-[#ffffff] border border-[#b8c5be] rounded-xl p-5 md:p-6 custom-shadow">
+          <div class="sf-summary-grid grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5 mb-6">
+            <div class="sf-summary-card bg-[#ffffff] border border-[#b8c5be] rounded-xl p-5 md:p-6 custom-shadow">
               <p class="text-base text-[#415149] font-medium">Total Supplier</p>
-              <p class="text-[34px] md:text-[40px] leading-tight font-extrabold text-[#006948] mt-2">{{ number_format($stats['total'] ?? 0, 0, ',', '.') }}</p>
+              <p class="sf-summary-value text-[34px] md:text-[40px] leading-tight font-extrabold text-[#006948] mt-2">{{ number_format($stats['total'] ?? 0, 0, ',', '.') }}</p>
             </div>
-            <div class="bg-[#ffffff] border border-[#b8c5be] rounded-xl p-5 md:p-6 custom-shadow">
+            <div class="sf-summary-card bg-[#ffffff] border border-[#b8c5be] rounded-xl p-5 md:p-6 custom-shadow">
               <p class="text-base text-[#415149] font-medium">Supplier Aktif</p>
-              <p class="text-[34px] md:text-[40px] leading-tight font-extrabold text-[#825100] mt-2">{{ number_format($stats['active'] ?? 0, 0, ',', '.') }}</p>
+              <p class="sf-summary-value text-[34px] md:text-[40px] leading-tight font-extrabold text-[#825100] mt-2">{{ number_format($stats['active'] ?? 0, 0, ',', '.') }}</p>
             </div>
-            <div class="bg-[#ffffff] border border-[#b8c5be] rounded-xl p-5 md:p-6 custom-shadow">
+            <div class="sf-summary-card bg-[#ffffff] border border-[#b8c5be] rounded-xl p-5 md:p-6 custom-shadow">
               <p class="text-base text-[#415149] font-medium">Total Stok Supplier</p>
-              <p class="text-[34px] md:text-[40px] leading-tight font-extrabold text-[#4648d4] mt-2">{{ number_format($stats['total_stock'] ?? 0, 0, ',', '.') }}</p>
+              <p class="sf-summary-value text-[34px] md:text-[40px] leading-tight font-extrabold text-[#4648d4] mt-2">{{ number_format($stats['total_stock'] ?? 0, 0, ',', '.') }}</p>
             </div>
           </div>
 
-          <div class="bg-white border border-[#d4dbd7] rounded-xl overflow-hidden">
+          <div class="space-y-3 md:hidden mb-4">
+            @forelse($suppliers as $supplier)
+              @php
+                $supplierName = trim((string) ($supplier['name'] ?? '')) ?: '-';
+                $supplierType = trim((string) ($supplier['type'] ?? '')) ?: '-';
+                $supplierAddress = trim((string) ($supplier['address'] ?? '')) ?: '-';
+                $supplierPhone = trim((string) ($supplier['phone'] ?? '')) ?: '-';
+                $supplierProductCount = (int) ($supplier['product_count'] ?? 0);
+                $supplierStockTotal = (int) ($supplier['stock_total'] ?? 0);
+                $supplierDetailUrl = url('/admin/suppliers/' . ($supplier['id'] ?? 0));
+              @endphp
+              <article class="sf-supplier-mobile-card rounded-2xl border border-[#d4dbd7] bg-white p-4 custom-shadow">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="min-w-0">
+                    <h2 class="text-[16px] font-semibold leading-5 text-[#191c1e] break-words">{{ $supplierName }}</h2>
+                    <div class="mt-2 flex flex-wrap gap-2">
+                      <span class="inline-flex items-center rounded-full bg-[#e8f3ee] px-2.5 py-1 text-[11px] font-semibold text-[#006948]">{{ $supplierType }}</span>
+                      <span class="inline-flex items-center rounded-full bg-[#eef2f1] px-2.5 py-1 text-[11px] font-semibold text-[#52615a]">{{ $supplierPhone }}</span>
+                    </div>
+                  </div>
+                  <a href="{{ $supplierDetailUrl }}" class="inline-flex flex-shrink-0 items-center justify-center rounded-xl border border-[#bccac0] bg-white px-3 py-2 text-[12px] font-semibold text-[#006948] hover:bg-[#f2f4f6]">
+                    Detail
+                  </a>
+                </div>
+
+                <div class="mt-3 rounded-xl border border-[#d4dbd7] bg-[#f8faf9] p-3">
+                  <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-[#52615a]">Alamat</p>
+                  <p class="mt-1 text-[12px] leading-5 text-[#191c1e] break-words">{{ $supplierAddress }}</p>
+                </div>
+
+                <div class="mt-3 grid grid-cols-2 gap-2">
+                  <div class="rounded-xl border border-[#d4dbd7] bg-[#f8faf9] p-3">
+                    <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-[#52615a]">Jumlah Produk</p>
+                    <p class="mt-1 text-[20px] font-extrabold leading-tight text-[#006948]">{{ number_format($supplierProductCount, 0, ',', '.') }}</p>
+                  </div>
+                  <div class="rounded-xl border border-[#d4dbd7] bg-[#f8faf9] p-3">
+                    <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-[#52615a]">Total Stok</p>
+                    <p class="mt-1 text-[20px] font-extrabold leading-tight text-[#4648d4]">{{ number_format($supplierStockTotal, 0, ',', '.') }}</p>
+                  </div>
+                </div>
+              </article>
+            @empty
+              <div class="rounded-2xl border border-[#d4dbd7] bg-white px-4 py-5 text-center text-[#52615a] custom-shadow">
+                Belum ada supplier.
+              </div>
+            @endforelse
+          </div>
+
+          <div class="sf-supplier-table bg-white border border-[#d4dbd7] rounded-xl overflow-hidden">
             <table class="w-full text-left">
               <thead class="bg-[#eceef0] text-[#3d4a42] text-sm uppercase">
                 <tr>
@@ -217,7 +347,7 @@
                   <th class="px-5 py-4">Tipe Supplier</th>
                   <th class="px-5 py-4">Alamat Supplier</th>
                   <th class="px-5 py-4">Telepon</th>
-                  <th class="px-5 py-4">Total Stok</th>
+                  <th class="px-5 py-4">Jumlah Produk</th>
                   <th class="px-5 py-4">Total Stok</th>
                   <th class="px-5 py-4 text-right">Aksi</th>
                 </tr>
@@ -250,6 +380,24 @@
       document.documentElement.classList.remove('dark');
       document.documentElement.classList.add('light', 'sf-dashboard-page');
       document.body.classList.add('sf-dashboard-page');
+      const mobileSidebarBtn = document.getElementById('mobileSidebarBtn');
+      const mobileSidebarBackdrop = document.getElementById('mobileSidebarBackdrop');
+
+      function closeMobileSidebar() {
+        document.body.classList.remove('sf-mobile-menu-open');
+      }
+
+      function toggleMobileSidebar() {
+        document.body.classList.toggle('sf-mobile-menu-open');
+      }
+
+      mobileSidebarBtn?.addEventListener('click', toggleMobileSidebar);
+      mobileSidebarBackdrop?.addEventListener('click', closeMobileSidebar);
+      document.querySelectorAll('.sf-sidebar a').forEach((link) => {
+        link.addEventListener('click', () => {
+          if (window.innerWidth < 1280) closeMobileSidebar();
+        });
+      });
     </script>
 
     @include('filament.partials.logout-modal')

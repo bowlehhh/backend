@@ -83,6 +83,7 @@
     $cartHoldRoute = $isAdminBesarGudangAccess ? 'admin.transactions.cart.hold' : 'cashier.cart.hold';
     $checkoutRoute = $isAdminBesarGudangAccess ? 'admin.transactions.checkout' : 'cashier.checkout';
     $backToAdminBesarRoute = route('admin.admin-besar.index');
+    $mobileBackRoute = $isAdminBesarGudangAccess ? $backToAdminBesarRoute : route('home');
     $productGridClasses = $showAllProducts
         ? 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-3'
         : 'grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4';
@@ -263,11 +264,9 @@
                         <p class="mt-1 text-[10px] text-slate-500">{{ $isAdminBesarGudangAccess ? 'Akses Dashboard Admin Gudang' : 'Admin Penjualan - Station 01' }}</p>
                     </div>
                     <div class="flex items-center gap-2 text-slate-600">
-                        @if($isAdminBesarGudangAccess)
-                            <a href="{{ $backToAdminBesarRoute }}" class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-indigo-50 text-indigo-700">
-                                <span class="material-symbols-outlined text-[18px]">arrow_back</span>
-                            </a>
-                        @endif
+                        <a href="{{ $mobileBackRoute }}" class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-700" aria-label="Kembali ke dashboard awal">
+                            <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                        </a>
                         <a href="{{ route($historyRoute) }}" class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">
                             <span class="material-symbols-outlined text-[18px]">history</span>
                         </a>

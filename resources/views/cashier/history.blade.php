@@ -8,7 +8,17 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-    <style>body { background-color: #f7f9fb; font-family: "Hanken Grotesk", sans-serif; }</style>
+    <style>
+        body { background-color: #f7f9fb; font-family: "Hanken Grotesk", sans-serif; }
+        .history-mobile-card { display: none; }
+        .history-desktop-table { display: block; }
+        @media (max-width: 767px) {
+            .history-mobile-card { display: block; }
+            .history-desktop-table { display: none; }
+            .history-shell { padding: 12px; }
+            .history-title { font-size: 22px; line-height: 28px; }
+        }
+    </style>
 </head>
 <body class="text-slate-900">
 @php
@@ -70,10 +80,19 @@
         </div>
     </aside>
 
-    <main class="lg:ml-[260px] h-full overflow-y-auto p-4 lg:p-6">
-        <div class="mb-4 flex items-center justify-between">
+    <main class="lg:ml-[260px] h-full overflow-y-auto p-4 lg:p-6 history-shell">
+        <div class="mb-4 flex items-center justify-between lg:hidden">
             <div>
-                <h2 class="text-2xl font-extrabold">History Penjualan</h2>
+                <x-brand.logo class="h-8 w-auto" />
+                <p class="mt-1 text-[10px] text-slate-500">{{ $isAdminBesarContext ? 'Admin Besar' : 'Admin Penjualan - Station 01' }}</p>
+            </div>
+            <a href="{{ $homeUrl }}" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700" aria-label="Kembali ke dashboard awal">
+                <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+            </a>
+        </div>
+        <div class="mb-4 hidden items-center justify-between gap-4 lg:flex">
+            <div>
+                <h2 class="history-title text-2xl font-extrabold">History Penjualan</h2>
                 <p class="text-sm text-slate-500">{{ $user?->name }} - {{ $isAdminBesarContext ? 'Admin Besar' : 'Admin' }}</p>
             </div>
             <a href="{{ $homeUrl }}" class="rounded-xl border border-emerald-700 px-4 py-2 text-sm font-semibold text-emerald-700">{{ $homeLabel }}</a>
@@ -86,7 +105,77 @@
             <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ $errors->first() }}</div>
         @endif
 
-        <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <div class="space-y-3 history-mobile-card">
+            @forelse($sales as $sale)
+                @php
+                    $soldQty = (int) ($sale->sold_qty ?? 0);
+                    $returnedQty = (int) ($sale->returned_qty ?? 0);
+                    $itemsCount = (int) ($sale->items_count ?? 0);
+                    $totalReturnRefund = (float) ($sale->total_return_refund ?? 0);
+                    $creditAmount = (float) ($sale->credit_amount ?? 0);
+                    $downPayment = (float) ($sale->paid_amount ?? 0);
+                    $installmentPaid = (float) ($installmentPaidMap[$sale->id] ?? 0);
+                    $remainingCredit = max(0, $creditAmount);
+                    $isCredit = strtolower((string) $sale->payment_method) === 'credit';
+                    $canInstallment = $isCredit && $remainingCredit > 0;
+                    $paymentStatus = $isCredit
+                        ? ($remainingCredit > 0 ? 'BELUM LUNAS' : 'LUNAS')
+                        : 'LUNAS';
+                    $paymentStatusClass = $isCredit
+                        ? ($remainingCredit > 0
+                            ? 'bg-amber-100 text-amber-700'
+                            : 'bg-emerald-100 text-emerald-700')
+                        : 'bg-emerald-100 text-emerald-700';
+                @endphp
+                <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Invoice</p>
+                            <p class="mt-1 break-words text-lg font-extrabold text-slate-900">{{ $sale->invoice_number }}</p>
+                            <p class="mt-1 text-sm text-slate-500">{{ $sale->customer_name ?: '-' }}</p>
+                        </div>
+                        <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $paymentStatusClass }}">{{ $paymentStatus }}</span>
+                    </div>
+                    <div class="mt-3 grid grid-cols-2 gap-2">
+                        <div class="rounded-xl bg-slate-50 px-3 py-2">
+                            <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Waktu</p>
+                            <p class="mt-1 text-sm font-semibold text-slate-900">{{ $sale->created_at?->format('d M Y H:i') }}</p>
+                        </div>
+                        <div class="rounded-xl bg-slate-50 px-3 py-2">
+                            <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Metode</p>
+                            <p class="mt-1 text-sm font-semibold uppercase text-slate-900">{{ $sale->payment_method }}</p>
+                        </div>
+                        <div class="rounded-xl bg-slate-50 px-3 py-2">
+                            <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Item</p>
+                            <p class="mt-1 text-sm font-semibold text-slate-900">{{ $itemsCount }}</p>
+                        </div>
+                        <div class="rounded-xl bg-slate-50 px-3 py-2">
+                            <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Qty</p>
+                            <p class="mt-1 text-sm font-semibold text-slate-900">{{ $soldQty }}</p>
+                        </div>
+                        <div class="rounded-xl bg-slate-50 px-3 py-2">
+                            <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Total</p>
+                            <p class="mt-1 text-sm font-semibold text-slate-900">Rp {{ number_format((float) $sale->total, 0, ',', '.') }}</p>
+                        </div>
+                        <div class="rounded-xl bg-slate-50 px-3 py-2">
+                            <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Sisa Kredit</p>
+                            <p class="mt-1 text-sm font-semibold text-slate-900">{{ $isCredit ? 'Rp ' . number_format($remainingCredit, 0, ',', '.') : '-' }}</p>
+                        </div>
+                    </div>
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        <a href="{{ route('cashier.receipt', $sale) }}" class="inline-flex flex-1 items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Detail</a>
+                        <a href="{{ route('cashier.receipt', $sale) }}?pdf=1" target="_blank" rel="noopener" class="inline-flex flex-1 items-center justify-center rounded-xl border border-emerald-700 px-3 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50">Print</a>
+                        @if($canInstallment)
+                            <a href="{{ route('cashier.history.installment.form', $sale) }}" class="inline-flex flex-1 items-center justify-center rounded-xl border border-amber-600 px-3 py-2 text-sm font-semibold text-amber-700 hover:bg-amber-50">Cicil</a>
+                        @endif
+                    </div>
+                </article>
+            @empty
+                <div class="rounded-2xl border border-slate-200 bg-white px-4 py-8 text-center text-slate-500">Belum ada transaksi.</div>
+            @endforelse
+        </div>
+
+        <div class="history-desktop-table overflow-hidden rounded-2xl border border-slate-200 bg-white">
             <div class="overflow-x-auto w-full max-w-full">
             <table class="min-w-[1280px] w-max text-sm">
                 <thead class="bg-slate-50">

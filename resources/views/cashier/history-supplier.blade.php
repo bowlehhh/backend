@@ -8,7 +8,17 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-    <style>body { background-color: #f7f9fb; font-family: "Hanken Grotesk", sans-serif; }</style>
+    <style>
+        body { background-color: #f7f9fb; font-family: "Hanken Grotesk", sans-serif; }
+        .history-mobile-card { display: none; }
+        .history-desktop-table { display: block; }
+        @media (max-width: 767px) {
+            .history-mobile-card { display: block; }
+            .history-desktop-table { display: none; }
+            .history-shell { padding: 12px; }
+            .history-title { font-size: 22px; line-height: 28px; }
+        }
+    </style>
 </head>
 <body class="text-slate-900">
 @php
@@ -64,13 +74,60 @@
         </div>
     </aside>
 
-    <main class="lg:ml-[260px] h-full overflow-y-auto p-4 lg:p-6">
-        <div class="mb-4 flex items-center justify-between">
+    <main class="lg:ml-[260px] h-full overflow-y-auto p-4 lg:p-6 history-shell">
+        <div class="mb-4 flex items-center justify-between lg:hidden">
             <div>
-                <h2 class="text-2xl font-extrabold">Kelompok Transaksi Pembeli</h2>
+                <x-brand.logo class="h-8 w-auto" />
+                <p class="mt-1 text-[10px] text-slate-500">{{ $isAdminBesarContext ? 'Admin Besar' : 'Admin Penjualan - Station 01' }}</p>
+            </div>
+            <a href="{{ $homeUrl }}" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700" aria-label="Kembali ke dashboard awal">
+                <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+            </a>
+        </div>
+        <div class="mb-4 hidden items-center justify-between gap-4 lg:flex">
+            <div>
+                <h2 class="history-title text-2xl font-extrabold">Kelompok Transaksi Pembeli</h2>
                 <p class="text-sm text-slate-500">{{ $user?->name }} - {{ $isAdminBesarContext ? 'Admin Besar' : 'Admin' }}</p>
             </div>
             <a href="{{ $homeUrl }}" class="rounded-xl border border-emerald-700 px-4 py-2 text-sm font-semibold text-emerald-700">{{ $backLabel }}</a>
+        </div>
+
+        <div class="space-y-3 history-mobile-card">
+            @forelse($groups as $group)
+                <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <h3 class="text-lg font-extrabold text-slate-900 break-words">{{ $group['pt_name'] }}</h3>
+                            <p class="mt-1 text-sm text-slate-500">Riwayat transaksi ini dikumpulkan otomatis berdasarkan nama pembeli yang sama.</p>
+                        </div>
+                        <a href="{{ route('cashier.history.supplier.detail', ['pt' => $group['pt_name']]) }}" class="inline-flex shrink-0 items-center justify-center rounded-xl border border-emerald-700 px-3 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50">
+                            Detail
+                        </a>
+                    </div>
+                    <div class="mt-3 grid grid-cols-2 gap-2">
+                        <div class="rounded-xl bg-slate-50 px-3 py-2">
+                            <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Transaksi</p>
+                            <p class="mt-1 text-sm font-bold text-slate-900">{{ number_format((int) $group['summary']['total_transaksi']) }} kali</p>
+                        </div>
+                        <div class="rounded-xl bg-slate-50 px-3 py-2">
+                            <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Qty</p>
+                            <p class="mt-1 text-sm font-bold text-slate-900">{{ number_format((int) $group['summary']['total_qty']) }}</p>
+                        </div>
+                        <div class="rounded-xl bg-slate-50 px-3 py-2">
+                            <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Total Nilai</p>
+                            <p class="mt-1 text-sm font-bold text-slate-900">{{ $group['summary']['total_nilai'] }}</p>
+                        </div>
+                        <div class="rounded-xl bg-slate-50 px-3 py-2">
+                            <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Kredit / Lunas</p>
+                            <p class="mt-1 text-sm font-bold text-slate-900">{{ number_format((int) $group['summary']['kredit']) }} / {{ number_format((int) $group['summary']['lunas']) }}</p>
+                        </div>
+                    </div>
+                </article>
+            @empty
+                <div class="rounded-2xl border border-slate-200 bg-white px-4 py-8 text-center text-slate-500">
+                    Belum ada transaksi pembeli yang bisa dikelompokkan.
+                </div>
+            @endforelse
         </div>
 
         @forelse($groups as $group)
@@ -109,7 +166,7 @@
                 </div>
             </div>
         @empty
-            <div class="rounded-2xl border border-slate-200 bg-white px-4 py-8 text-center text-slate-500">
+            <div class="history-desktop-table rounded-2xl border border-slate-200 bg-white px-4 py-8 text-center text-slate-500">
                 Belum ada transaksi pembeli yang bisa dikelompokkan.
             </div>
         @endforelse

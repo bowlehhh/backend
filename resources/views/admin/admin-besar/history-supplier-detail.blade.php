@@ -8,7 +8,16 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-    <style>body { background-color: #f7f9fb; font-family: "Hanken Grotesk", sans-serif; }</style>
+    <style>
+        body { background-color: #f7f9fb; font-family: "Hanken Grotesk", sans-serif; }
+        .history-mobile-card { display: none; }
+        @media (max-width: 767px) {
+            .history-mobile-card { display: block; }
+            .history-desktop-table { display: none; }
+            .history-shell { padding: 12px; }
+            .history-title { font-size: 22px; line-height: 28px; }
+        }
+    </style>
 </head>
 <body class="text-slate-900">
 <div class="h-screen overflow-hidden bg-[#f7f9fb]">
@@ -36,16 +45,51 @@
         </nav>
     </aside>
 
-    <main class="lg:ml-[260px] h-full overflow-y-auto p-4 lg:p-6">
-        <div class="mb-4 flex items-center justify-between gap-4">
+    <main class="lg:ml-[260px] h-full overflow-y-auto p-4 lg:p-6 history-shell">
+        <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-                <h2 class="text-2xl font-extrabold">Detail Transaksi Pembeli</h2>
+                <h2 class="history-title text-2xl font-extrabold">Detail Transaksi Pembeli</h2>
                 <p class="text-sm text-slate-500">{{ $user?->name }} - Admin Besar</p>
             </div>
             <a href="{{ route('admin.admin-besar.index') }}" class="rounded-xl border border-emerald-700 px-4 py-2 text-sm font-semibold text-emerald-700">Kembali ke Admin Besar</a>
         </div>
 
-        <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <div class="space-y-3 history-mobile-card">
+            @forelse($group['rows'] as $row)
+                @php
+                    $statusClass = $row['status'] === 'LUNAS'
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : ($row['status'] === 'JATUH TEMPO' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700');
+                @endphp
+                <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Invoice</p>
+                            <p class="mt-1 break-words text-lg font-extrabold text-slate-900">{{ $row['invoice'] }}</p>
+                            <p class="mt-1 text-sm text-slate-500">{{ $row['waktu'] }}</p>
+                        </div>
+                        <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $statusClass }}">{{ $row['status'] }}</span>
+                    </div>
+                    <div class="mt-3 grid grid-cols-2 gap-2">
+                        <div class="rounded-xl bg-slate-50 px-3 py-2">
+                            <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Subtotal</p>
+                            <p class="mt-1 text-sm font-semibold text-slate-900">{{ $row['subtotal'] }}</p>
+                        </div>
+                        <div class="rounded-xl bg-slate-50 px-3 py-2">
+                            <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Metode</p>
+                            <p class="mt-1 text-sm font-semibold uppercase text-slate-900">{{ $row['metode'] }}</p>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a href="{{ route('admin.admin-besar.receipt', $row['sale_id']) }}" class="inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Lihat Detail</a>
+                    </div>
+                </article>
+            @empty
+                <div class="rounded-2xl border border-slate-200 bg-white px-4 py-8 text-center text-slate-500">Belum ada transaksi untuk nama pembeli ini.</div>
+            @endforelse
+        </div>
+
+        <section class="history-desktop-table overflow-hidden rounded-2xl border border-slate-200 bg-white">
             <div class="border-b border-slate-200 px-4 py-4 md:px-5">
                 <h3 class="text-2xl font-extrabold text-slate-900">{{ $group['pt_name'] }}</h3>
                 <p class="mt-1 text-sm text-slate-500">Invoice per nama pembeli tampil di sini dengan subtotal masing-masing.</p>

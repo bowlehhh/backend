@@ -38,11 +38,14 @@
     $salesListLabel = ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? 'Dashboard Admin Besar' : 'Daftar Stok Jual';
     $draftsLabel = ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? 'Ringkasan Admin Besar' : 'Draft Tertunda';
     $historyLabel = ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? 'History Admin Besar' : 'History & Nota';
+    $mobileBackUrl = ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess)
+        ? route('admin.admin-besar.index')
+        : route('admin.transaksi.dashboard');
 @endphp
 
 <x-filament-panels::page>
     <link rel="stylesheet" href="{{ asset('css/app-production.css') }}">
-    @if (app()->environment('local'))
+    @if (app()->environment('local') && (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot'))))
         @vite('resources/css/app.css')
     @endif
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -317,7 +320,15 @@
 
       <div class="sf-wrap bg-background text-on-surface antialiased min-h-screen overflow-x-hidden">
       <header class="bg-surface-container-lowest text-primary border-b border-outline-variant shadow-sm flex justify-between items-center px-5 h-16 w-full sticky top-0 z-50">
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            class="lg:hidden inline-flex h-9 w-9 items-center justify-center rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container"
+            aria-label="Kembali"
+            onclick='if (window.history.length > 1) { window.history.back(); } else { window.location.href = @json($mobileBackUrl); }'
+          >
+            <span class="material-symbols-outlined">arrow_back</span>
+          </button>
           <button id="mobileSidebarBtn" type="button" class="lg:hidden inline-flex h-9 w-9 items-center justify-center rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container" aria-label="Buka navigasi">
             <span class="material-symbols-outlined">menu</span>
           </button>

@@ -8,7 +8,17 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-    <style>body { background-color: #f7f9fb; font-family: "Hanken Grotesk", sans-serif; }</style>
+    <style>
+        body { background-color: #f7f9fb; font-family: "Hanken Grotesk", sans-serif; }
+        .history-mobile-card { display: none; }
+        .history-desktop-table { display: block; }
+        @media (max-width: 767px) {
+            .history-mobile-card { display: block; }
+            .history-desktop-table { display: none; }
+            .history-shell { padding: 12px; }
+            .history-title { font-size: 22px; line-height: 28px; }
+        }
+    </style>
 </head>
 <body class="text-slate-900">
 @php
@@ -64,16 +74,95 @@
         </div>
     </aside>
 
-    <main class="lg:ml-[260px] h-full overflow-y-auto p-4 lg:p-6">
-        <div class="mb-4 flex items-center justify-between gap-4">
+    <main class="lg:ml-[260px] h-full overflow-y-auto p-4 lg:p-6 history-shell">
+        <div class="mb-4 flex items-center justify-between lg:hidden">
             <div>
-                <h2 class="text-2xl font-extrabold">Detail Transaksi Pembeli</h2>
+                <x-brand.logo class="h-8 w-auto" />
+                <p class="mt-1 text-[10px] text-slate-500">{{ $isAdminBesarContext ? 'Admin Besar' : 'Admin Penjualan - Station 01' }}</p>
+            </div>
+            <a href="{{ $supplierUrl }}" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700" aria-label="Kembali ke halaman sebelumnya">
+                <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+            </a>
+        </div>
+        <div class="mb-4 hidden items-center justify-between gap-4 lg:flex">
+            <div>
+                <h2 class="history-title text-2xl font-extrabold">Detail Transaksi Pembeli</h2>
                 <p class="text-sm text-slate-500">{{ $user?->name }} - {{ $isAdminBesarContext ? 'Admin Besar' : 'Admin' }}</p>
             </div>
             <a href="{{ $supplierUrl }}" class="rounded-xl border border-emerald-700 px-4 py-2 text-sm font-semibold text-emerald-700">{{ $backLabel }}</a>
         </div>
 
-        <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <div class="space-y-3 history-mobile-card">
+            <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <h3 class="text-lg font-extrabold text-slate-900 break-words">{{ $group['pt_name'] }}</h3>
+                <p class="mt-1 text-sm text-slate-500">Semua transaksi dengan nama pembeli yang sama akan masuk ke halaman ini.</p>
+                <div class="mt-3 grid grid-cols-2 gap-2">
+                    <div class="rounded-xl bg-slate-50 px-3 py-2">
+                        <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Transaksi</p>
+                        <p class="mt-1 text-sm font-bold text-slate-900">{{ number_format((int) $group['summary']['total_transaksi']) }} kali</p>
+                    </div>
+                    <div class="rounded-xl bg-slate-50 px-3 py-2">
+                        <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Qty</p>
+                        <p class="mt-1 text-sm font-bold text-slate-900">{{ number_format((int) $group['summary']['total_qty']) }}</p>
+                    </div>
+                    <div class="rounded-xl bg-slate-50 px-3 py-2">
+                        <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Total Nilai</p>
+                        <p class="mt-1 text-sm font-bold text-slate-900">{{ $group['summary']['total_nilai'] }}</p>
+                    </div>
+                    <div class="rounded-xl bg-slate-50 px-3 py-2">
+                        <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Kredit / Lunas</p>
+                        <p class="mt-1 text-sm font-bold text-slate-900">{{ number_format((int) $group['summary']['kredit']) }} / {{ number_format((int) $group['summary']['lunas']) }}</p>
+                    </div>
+                </div>
+            </div>
+
+            @forelse($group['transactions'] as $trx)
+                @php
+                    $statusClass = $trx['status'] === 'LUNAS'
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : ($trx['status'] === 'JATUH TEMPO' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700');
+                @endphp
+                <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Invoice</p>
+                            <p class="mt-1 break-words text-lg font-extrabold text-slate-900">{{ $trx['invoice_number'] }}</p>
+                            <p class="mt-1 text-sm text-slate-500">{{ $trx['waktu'] }}</p>
+                        </div>
+                        <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $statusClass }}">{{ $trx['status'] }}</span>
+                    </div>
+                    <div class="mt-3 grid grid-cols-2 gap-2">
+                        <div class="rounded-xl bg-slate-50 px-3 py-2">
+                            <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Metode</p>
+                            <p class="mt-1 text-sm font-semibold text-slate-900">{{ $trx['metode'] }}</p>
+                        </div>
+                        <div class="rounded-xl bg-slate-50 px-3 py-2">
+                            <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Qty</p>
+                            <p class="mt-1 text-sm font-semibold text-slate-900">{{ number_format((int) $trx['qty']) }}</p>
+                        </div>
+                        <div class="rounded-xl bg-slate-50 px-3 py-2">
+                            <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Subtotal</p>
+                            <p class="mt-1 text-sm font-semibold text-slate-900">{{ $trx['subtotal'] }}</p>
+                        </div>
+                        <div class="rounded-xl bg-slate-50 px-3 py-2">
+                            <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Kredit</p>
+                            <p class="mt-1 text-sm font-semibold text-slate-900">{{ $trx['credit_amount'] }}</p>
+                        </div>
+                        <div class="rounded-xl bg-slate-50 px-3 py-2 col-span-2">
+                            <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Jatuh Tempo</p>
+                            <p class="mt-1 text-sm font-semibold text-slate-900">{{ $trx['credit_due_date'] }}</p>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a href="{{ route('cashier.receipt', ['sale' => $trx['sale_id']]) }}" class="inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Detail</a>
+                    </div>
+                </article>
+            @empty
+                <div class="rounded-2xl border border-slate-200 bg-white px-4 py-8 text-center text-slate-500">Belum ada transaksi untuk PT/CV ini.</div>
+            @endforelse
+        </div>
+
+        <section class="history-desktop-table overflow-hidden rounded-2xl border border-slate-200 bg-white">
             <div class="border-b border-slate-200 px-4 py-4 md:px-5">
                 <h3 class="text-2xl font-extrabold text-slate-900">{{ $group['pt_name'] }}</h3>
                 <p class="mt-1 text-sm text-slate-500">Semua transaksi dengan nama pembeli yang sama akan masuk ke halaman ini.</p>

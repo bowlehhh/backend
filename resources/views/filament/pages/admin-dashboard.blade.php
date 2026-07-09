@@ -33,11 +33,12 @@
     ];
     $currentUser = auth()->user();
     $isAdminBesarAccess = $currentUser?->isAdminBesar() ?? false;
+    $mobileBackUrl = $isAdminBesarAccess ? route('admin.admin-besar.index') : url('/admin/products');
 @endphp
 
 <x-filament-panels::page>
     <link rel="stylesheet" href="{{ asset('css/app-production.css') }}">
-    @if (app()->environment('local'))
+    @if (app()->environment('local') && (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot'))))
         @vite('resources/css/app.css')
     @endif
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
@@ -219,7 +220,28 @@
         font-weight: 500;
         color: #3d4a42;
       }
+      .sf-mobile-card {
+        display: none;
+      }
+      .sf-mobile-card-action {
+        min-height: 40px;
+      }
       @media (max-width: 767px) {
+        .sf-wrap .sf-content::after {
+          height: 32px;
+        }
+        .sf-wrap .sf-mobile-card {
+          display: block;
+        }
+        .sf-wrap .sf-desktop-table {
+          display: none !important;
+        }
+        .sf-wrap .sf-mobile-card-action {
+          min-height: 40px;
+        }
+        .sf-wrap .sf-content {
+          padding: 10px !important;
+        }
         .sf-wrap #productTable td p.sf-part-number {
           font-size: 16px !important;
           line-height: 22px !important;
@@ -230,6 +252,28 @@
           line-height: 16px !important;
           font-weight: 500 !important;
         }
+        .sf-wrap .sf-toolbar {
+          gap: .75rem;
+          padding: .9rem !important;
+          border: 1px solid #d4dbd7 !important;
+          border-radius: 1.1rem !important;
+        }
+        .sf-wrap .sf-hero-actions {
+          display: grid !important;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: .65rem;
+          margin-top: .9rem;
+        }
+        .sf-wrap .sf-hero-actions button {
+          min-height: 44px;
+          padding-left: .85rem;
+          padding-right: .85rem;
+          font-size: 12px;
+          white-space: nowrap;
+        }
+        .sf-wrap .sf-hero-actions .material-symbols-outlined {
+          font-size: 18px;
+        }
       }
       @media (max-width: 1279px) {
         .sf-layout { display: block; }
@@ -238,7 +282,7 @@
       }
       @media (max-width: 767px) {
         .sf-wrap header { height: 56px !important; padding-left: 14px !important; padding-right: 14px !important; }
-        .sf-wrap .sf-content { padding: 12px !important; }
+        .sf-wrap .sf-content { padding: 10px !important; }
         .sf-wrap .sf-title { font-size: 22px !important; line-height: 28px !important; }
         .sf-wrap .sf-value { font-size: 24px !important; line-height: 30px !important; }
         .sf-wrap .custom-shadow { box-shadow: 0 1px 2px rgba(0,0,0,.03); }
@@ -246,7 +290,10 @@
         .sf-wrap .sf-header-actions > div { width: 30px !important; height: 30px !important; font-size: 10px !important; }
         .sf-wrap .sf-top-search { display: none !important; }
         .sf-wrap .sf-header-actions { gap: 8px; }
-        .sf-wrap .sf-toolbar { flex-direction: column; align-items: stretch; }
+        .sf-wrap .sf-toolbar {
+          display: grid;
+          grid-template-columns: 1fr;
+        }
         .sf-wrap .sf-toolbar .sf-export { width: 100%; }
         .sf-wrap .sf-toolbar .sf-export label { text-align: left !important; margin-right: 0 !important; }
         .sf-wrap .sf-toolbar .sf-export > div { justify-content: flex-start; }
@@ -282,11 +329,7 @@
           min-height: 100vh;
         }
         .sf-sidebar {
-          width: min(84vw, 300px);
-          transform: translateX(-102%);
-          opacity: 0;
-          pointer-events: none;
-          z-index: 30;
+          display: none;
         }
         .sf-content {
           width: 100%;
@@ -296,7 +339,7 @@
           padding-bottom: 96px;
         }
         .sf-content::after {
-          height: 120px;
+          height: 56px;
         }
         .sf-wrap header {
           padding-left: 1rem !important;
@@ -332,16 +375,38 @@
         .sf-wrap .sf-header-actions .material-symbols-outlined {
           font-size: 20px;
         }
+        .sf-mobile-menu-open .sf-sidebar {
+          display: flex;
+          position: fixed;
+          left: 0;
+          top: var(--sf-topbar-h);
+          width: min(84vw, 300px);
+          height: calc(100vh - var(--sf-topbar-h));
+          transform: translateX(0);
+          opacity: 1;
+          pointer-events: auto;
+          z-index: 30;
+          flex-direction: column;
+          box-shadow: 18px 0 40px rgba(0, 0, 0, .14);
+        }
       }
       </style>
 
     <div class="sf-wrap bg-background text-on-surface antialiased min-h-screen overflow-x-hidden">
       <header class="bg-surface-container-lowest text-primary border-b border-outline-variant shadow-sm flex justify-between items-center px-5 h-16 w-full sticky top-0 z-50">
-        <div class="flex items-center gap-3 md:gap-4">
+        <div class="flex items-center gap-2 md:gap-4">
+          <button
+            type="button"
+            class="lg:hidden inline-flex h-9 w-9 items-center justify-center rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container"
+            aria-label="Kembali"
+            onclick='if (window.history.length > 1) { window.history.back(); } else { window.location.href = @json($mobileBackUrl); }'
+          >
+            <span class="material-symbols-outlined">arrow_back</span>
+          </button>
           <button id="mobileSidebarBtn" type="button" class="lg:hidden inline-flex h-9 w-9 items-center justify-center rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container" aria-label="Buka navigasi">
             <span class="material-symbols-outlined">menu</span>
           </button>
-          <x-brand.logo class="h-9 w-auto max-w-[240px]" />
+          <x-brand.logo class="h-8 w-auto max-w-[160px] sm:h-9 sm:max-w-[240px]" />
         </div>
         <div></div>
       </header>
@@ -402,31 +467,37 @@
           </aside>
 
           <main class="sf-content min-h-screen p-4 md:p-6">
-            <div class="flex flex-col md:flex-row md:items-end justify-between gap-3 md:gap-4 mb-4 md:mb-5">
-              <div>
-                <h1 class="sf-title font-display text-headline-lg text-on-surface mb-1">Daftar Stok</h1>
-                <p class="text-on-surface-variant text-[13px] leading-5">Kelola seluruh stok inventaris Anda di satu tempat.</p>
-                @if($isAdminBesarAccess)
-                  <a href="{{ route('admin.admin-besar.index') }}" class="mt-2 inline-flex items-center gap-2 rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[12px] font-semibold text-primary hover:bg-surface-container-high">
-                    <span class="material-symbols-outlined text-[18px]">arrow_back</span>
-                    Kembali ke Dashboard Admin Besar
-                  </a>
-                @endif
-              </div>
-              <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                <button type="button" wire:click="createOfflineBackup" wire:loading.attr="disabled" class="w-full md:w-auto bg-surface text-primary border border-outline-variant px-4 md:px-5 py-2.5 rounded-xl text-[13px] font-medium flex items-center justify-center gap-2 hover:bg-surface-container-high transition-all active:scale-95">
-                  <span wire:loading.remove wire:target="createOfflineBackup" class="material-symbols-outlined">folder_zip</span>
-                  <span wire:loading wire:target="createOfflineBackup" class="material-symbols-outlined animate-spin">sync</span>
-                  <span wire:loading.remove wire:target="createOfflineBackup">Backup Excel</span>
-                  <span wire:loading wire:target="createOfflineBackup">Membuat Backup...</span>
-                </button>
-                <button type="button" onclick="openCreateModal()" class="w-full md:w-auto bg-primary text-on-primary px-4 md:px-6 py-2.5 rounded-xl text-[13px] font-medium flex items-center justify-center gap-2 hover:brightness-90 transition-all active:scale-95">
-                  <span class="material-symbols-outlined">add</span>Tambah Stok
-                </button>
+            <div class="mb-4 rounded-2xl border border-outline-variant bg-surface-container-lowest p-4 md:p-5 custom-shadow">
+              <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                <div class="min-w-0">
+                  <p class="mb-2 inline-flex items-center gap-2 rounded-full border border-outline-variant bg-surface px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
+                    <span class="material-symbols-outlined text-[14px]">inventory_2</span>
+                    Real-time inventory
+                  </p>
+                  <h1 class="sf-title font-display text-headline-lg text-on-surface mb-1">Daftar Stok</h1>
+                  <p class="text-on-surface-variant text-[13px] leading-5 max-w-2xl">Kelola seluruh stok inventaris Anda di satu tempat, dengan tampilan yang tetap nyaman dipakai di layar kecil.</p>
+                  @if($isAdminBesarAccess)
+                    <a href="{{ route('admin.admin-besar.index') }}" class="mt-3 inline-flex items-center gap-2 rounded-xl border border-outline-variant bg-surface px-3 py-2 text-[12px] font-semibold text-primary hover:bg-surface-container-high">
+                      <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                      Kembali ke Dashboard Admin Besar
+                    </a>
+                  @endif
+                </div>
+                <div class="sf-hero-actions grid w-full gap-3 sm:grid-cols-2 md:w-auto md:max-w-[320px]">
+                  <button type="button" wire:click="createOfflineBackup" wire:loading.attr="disabled" class="w-full bg-surface text-primary border border-outline-variant px-4 py-3 rounded-xl text-[13px] font-medium flex items-center justify-center gap-2 hover:bg-surface-container-high transition-all active:scale-95">
+                    <span wire:loading.remove wire:target="createOfflineBackup" class="material-symbols-outlined">folder_zip</span>
+                    <span wire:loading wire:target="createOfflineBackup" class="material-symbols-outlined animate-spin">sync</span>
+                    <span wire:loading.remove wire:target="createOfflineBackup">Backup Excel</span>
+                    <span wire:loading wire:target="createOfflineBackup">Membuat Backup...</span>
+                  </button>
+                  <button type="button" onclick="openCreateModal()" class="w-full bg-primary text-on-primary px-4 py-3 rounded-xl text-[13px] font-medium flex items-center justify-center gap-2 hover:brightness-90 transition-all active:scale-95">
+                    <span class="material-symbols-outlined">add</span>Tambah Stok
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 md:gap-5 mb-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5 mb-5">
               @foreach ($stats as $index => $stat)
                 @php
                   $variant = $stat['variant'] ?? 'secondary';
@@ -467,7 +538,120 @@
               </div>
             </div>
 
-            <div class="bg-surface-container-lowest border border-outline-variant rounded-b-xl overflow-hidden custom-shadow">
+            <div class="md:hidden mb-4">
+              <div class="flex items-center justify-between gap-3 px-1 pb-2">
+                <p class="text-[12px] font-semibold uppercase tracking-[0.18em] text-on-surface-variant">Daftar barang</p>
+                <p class="text-[12px] text-on-surface-variant">{{ $pagination['total'] ?? count($products) }} data</p>
+              </div>
+              <div class="space-y-3">
+                @forelse ($products as $product)
+                  @php
+                    $stock = (int) ($product['stock'] ?? 0);
+                    $low = $stock <= 5;
+                    $partNumber = trim((string) ($product['part_number'] ?? $product['barcode'] ?? $product['sku'] ?? '')) ?: '-';
+                    $partName = trim((string) ($product['part_name'] ?? $product['name'] ?? '')) ?: '-';
+                    $unit = trim((string) ($product['unit'] ?? '')) ?: '-';
+                    $stockUnit = $unit !== '-' ? $unit : 'Unit';
+                    $weight = $product['weight'] ?? null;
+                    $weightUnit = trim((string) ($product['weight_unit'] ?? 'kg')) ?: 'kg';
+                    $weightDisplay = ($weight !== null && $weight !== '')
+                        ? rtrim(rtrim(number_format((float) $weight, 2, ',', '.'), '0'), ',') . ' ' . $weightUnit
+                        : '-';
+                    $condition = trim((string) ($product['condition'] ?? ''));
+                    $expeditionCost = $product['expedition_cost_value'] ?? $product['expedition_cost'] ?? $product['shipping_cost'] ?? null;
+                    $expeditionCostDisplay = ($expeditionCost !== null && $expeditionCost !== '')
+                        ? 'Rp ' . number_format((float) $expeditionCost, 0, ',', '.')
+                        : 'Rp 0';
+                  @endphp
+                  <article class="sf-mobile-card rounded-2xl border border-outline-variant bg-surface-container-lowest p-4 custom-shadow">
+                    <div class="flex items-start justify-between gap-3">
+                      <div class="flex min-w-0 items-start gap-3">
+                        <div class="h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl border border-outline-variant bg-surface flex items-center justify-center">
+                          @if (!empty($product['image_url']))
+                            <button type="button" class="h-full w-full" onclick='openImagePreview(@json($product["image_url"]), @json($product["name"] ?? "Foto barang"))'>
+                              <img src="{{ $product['image_url'] }}" alt="{{ $product['name'] ?? 'Foto barang' }}" class="h-full w-full object-cover">
+                            </button>
+                          @else
+                            <span class="material-symbols-outlined text-primary">inventory_2</span>
+                          @endif
+                        </div>
+                        <div class="min-w-0">
+                          <a href="{{ route('admin.product-groups.show', ['product' => (int) ($product['id'] ?? 0)]) }}" class="block">
+                            <p class="text-[15px] font-bold leading-5 text-on-surface break-words">{{ $partNumber }}</p>
+                            <p class="mt-1 text-[12px] leading-5 text-on-surface-variant break-words">{{ $partName }}</p>
+                          </a>
+                          <p class="mt-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-on-surface-variant">{{ $condition !== '' ? $condition : 'Kondisi tidak tercatat' }}</p>
+                        </div>
+                      </div>
+                      <span class="inline-flex flex-shrink-0 items-center rounded-full {{ $low ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700' }} px-3 py-1 text-[11px] font-semibold">
+                        {{ $stock }} {{ $stockUnit }}
+                      </span>
+                    </div>
+
+                    <div class="mt-3 grid grid-cols-2 gap-2">
+                      <div class="rounded-xl border border-outline-variant bg-surface p-2.5">
+                        <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-on-surface-variant">Kategori</p>
+                        <p class="mt-1 text-[12px] font-semibold text-on-surface break-words">{{ $product['category'] ?? '-' }}</p>
+                      </div>
+                      <div class="rounded-xl border border-outline-variant bg-surface p-2.5">
+                        <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-on-surface-variant">Merek</p>
+                        <p class="mt-1 text-[12px] font-semibold text-on-surface break-words">{{ $product['brand'] ?? '-' }}</p>
+                      </div>
+                      <div class="rounded-xl border border-outline-variant bg-surface p-2.5">
+                        <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-on-surface-variant">Supplier</p>
+                        <p class="mt-1 text-[12px] font-semibold text-on-surface break-words">{{ $product['supplier_name'] ?? '-' }}</p>
+                      </div>
+                      <div class="rounded-xl border border-outline-variant bg-surface p-2.5">
+                        <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-on-surface-variant">Input</p>
+                        <p class="mt-1 text-[12px] font-semibold text-on-surface break-words">{{ $product['created_at'] ?? '-' }}</p>
+                      </div>
+                      <div class="rounded-xl border border-outline-variant bg-surface p-2.5">
+                        <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-on-surface-variant">Berat</p>
+                        <p class="mt-1 text-[12px] font-semibold text-on-surface break-words">{{ $weightDisplay }}</p>
+                      </div>
+                      <div class="rounded-xl border border-outline-variant bg-surface p-2.5">
+                        <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-on-surface-variant">Jual</p>
+                        <p class="mt-1 text-[12px] font-semibold text-on-surface break-words">{{ $product['selling_price'] ?? 'Rp 0' }}</p>
+                      </div>
+                    </div>
+
+                    <div class="mt-3 rounded-xl border border-outline-variant bg-surface p-3">
+                      <div class="flex items-center justify-between gap-3">
+                        <div>
+                          <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-on-surface-variant">Harga beli</p>
+                          <p class="mt-1 text-[12px] font-semibold text-on-surface">{{ $product['purchase_price'] ?? 'Rp 0' }}</p>
+                        </div>
+                        <div class="text-right">
+                          <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-on-surface-variant">Ekspedisi</p>
+                          <p class="mt-1 text-[12px] font-semibold text-on-surface">{{ $expeditionCostDisplay }}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="mt-3 grid grid-cols-3 gap-2">
+                      <a href="{{ route('admin.product-groups.show', ['product' => (int) ($product['id'] ?? 0)]) }}" class="sf-mobile-card-action inline-flex items-center justify-center gap-1 rounded-xl border border-outline-variant bg-surface px-3 text-[12px] font-semibold text-primary hover:bg-surface-container-high">
+                        <span class="material-symbols-outlined text-[18px]">open_in_new</span>
+                        Detail
+                      </a>
+                      <button type="button" class="sf-mobile-card-action inline-flex items-center justify-center gap-1 rounded-xl border border-outline-variant bg-surface px-3 text-[12px] font-semibold text-primary hover:bg-surface-container-high" onclick='openEditModal(@json($product))'>
+                        <span class="material-symbols-outlined text-[18px]">edit</span>
+                        Edit
+                      </button>
+                      <button type="button" class="sf-mobile-card-action inline-flex items-center justify-center gap-1 rounded-xl border border-error/20 bg-error-container px-3 text-[12px] font-semibold text-error hover:brightness-95" onclick='deleteProduct({{ (int) ($product['id'] ?? 0) }}, @json($product['name'] ?? "-"))'>
+                        <span class="material-symbols-outlined text-[18px]">delete</span>
+                        Hapus
+                      </button>
+                    </div>
+                  </article>
+                @empty
+                  <div class="rounded-2xl border border-outline-variant bg-surface-container-lowest p-5 text-center text-on-surface-variant custom-shadow">
+                    Belum ada barang.
+                  </div>
+                @endforelse
+              </div>
+            </div>
+
+            <div class="sf-desktop-table bg-surface-container-lowest border border-outline-variant rounded-b-xl overflow-hidden custom-shadow">
               <div class="border-b border-outline-variant px-5 py-2">
                 <div class="sf-top-scroll" id="productTableTopScroll" aria-label="Scroll tabel horizontal bagian atas">
                   <div class="sf-top-scroll-inner" id="productTableTopScrollInner"></div>
@@ -569,7 +753,7 @@
                 </table>
               </div>
 
-              <div class="px-5 py-3.5 border-t border-outline-variant flex items-center justify-between bg-surface-container-lowest">
+              <div class="px-5 py-3.5 border-t border-outline-variant flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-surface-container-lowest">
                 <p class="text-label-sm text-on-surface-variant" id="productCountText">Menampilkan {{ $pagination['from'] ?? 0 }}-{{ $pagination['to'] ?? 0 }} dari {{ $pagination['total'] ?? count($products) }} barang</p>
                 <div class="flex items-center gap-1">
                   <button type="button" class="p-1 rounded hover:bg-surface-container transition-colors disabled:opacity-30" {{ empty($pagination['has_prev']) ? 'disabled' : '' }} onclick="goToPage({{ (int) ($pagination['prev_page'] ?? 1) }})"><span class="material-symbols-outlined">chevron_left</span></button>

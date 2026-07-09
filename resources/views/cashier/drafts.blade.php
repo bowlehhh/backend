@@ -8,9 +8,22 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-    <style>body { background-color: #f7f9fb; font-family: "Hanken Grotesk", sans-serif; }</style>
+    <style>
+        body { background-color: #f7f9fb; font-family: "Hanken Grotesk", sans-serif; }
+        .draft-mobile-card { display: none; }
+        .draft-desktop-table { display: block; }
+        @media (max-width: 767px) {
+            .draft-mobile-card { display: block; }
+            .draft-desktop-table { display: none; }
+            .draft-shell { padding: 12px; }
+            .draft-title { font-size: 22px; line-height: 28px; }
+        }
+    </style>
 </head>
 <body class="text-slate-900">
+@php
+    $homeUrl = route('cashier.dashboard');
+@endphp
 <div class="h-screen overflow-hidden bg-[#f7f9fb]">
     <aside class="hidden lg:flex fixed inset-y-0 left-0 z-30 w-[260px] flex-col border-r border-slate-300 bg-white">
         <div class="px-5 py-5 border-b border-slate-200">
@@ -63,13 +76,22 @@
         </div>
     </aside>
 
-    <main class="lg:ml-[260px] h-full overflow-y-auto p-4 lg:p-6">
-        <div class="mb-4 flex items-center justify-between">
+    <main class="lg:ml-[260px] h-full overflow-y-auto p-4 lg:p-6 draft-shell">
+        <div class="mb-4 flex items-center justify-between lg:hidden">
             <div>
-                <h2 class="text-2xl font-extrabold">Draft Penjualan</h2>
+                <x-brand.logo class="h-8 w-auto" />
+                <p class="mt-1 text-[10px] text-slate-500">Admin Penjualan - Station 01</p>
+            </div>
+            <a href="{{ $homeUrl }}" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700" aria-label="Kembali ke dashboard awal">
+                <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+            </a>
+        </div>
+        <div class="mb-4 hidden items-center justify-between gap-4 lg:flex">
+            <div>
+                <h2 class="draft-title text-2xl font-extrabold">Draft Penjualan</h2>
                 <p class="text-sm text-slate-500">{{ $user?->name }} - Admin</p>
             </div>
-            <a href="{{ route('cashier.dashboard') }}" class="rounded-xl border border-emerald-700 px-4 py-2 text-sm font-semibold text-emerald-700">Kembali ke Penjualan</a>
+            <a href="{{ $homeUrl }}" class="rounded-xl border border-emerald-700 px-4 py-2 text-sm font-semibold text-emerald-700">Kembali ke Penjualan</a>
         </div>
 
         @if(session('success'))
@@ -79,7 +101,41 @@
             <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ $errors->first() }}</div>
         @endif
 
-        <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <div class="space-y-3 draft-mobile-card">
+            @forelse($drafts as $draft)
+                <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Judul</p>
+                            <p class="mt-1 break-words text-lg font-extrabold text-slate-900">{{ $draft->title ?: 'Draft Penjualan' }}</p>
+                            <p class="mt-1 text-sm text-slate-500">{{ $draft->created_at?->format('d M Y H:i') }}</p>
+                        </div>
+                        <div class="rounded-xl bg-slate-50 px-3 py-2 text-right">
+                            <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Item</p>
+                            <p class="mt-1 text-sm font-bold text-slate-900">{{ number_format((int) $draft->items_count) }}</p>
+                        </div>
+                    </div>
+                    <div class="mt-3 rounded-xl bg-slate-50 px-3 py-2">
+                        <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Total</p>
+                        <p class="mt-1 text-base font-extrabold text-slate-900">Rp {{ number_format((float) $draft->total, 0, ',', '.') }}</p>
+                    </div>
+                    <div class="mt-3 grid grid-cols-2 gap-2">
+                        <form method="POST" action="{{ route('cashier.drafts.resume', $draft) }}">
+                            @csrf
+                            <button type="submit" class="w-full rounded-xl border border-emerald-700 px-3 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50">Pakai</button>
+                        </form>
+                        <form method="POST" action="{{ route('cashier.drafts.delete', $draft) }}" onsubmit="return confirm('Hapus draft ini?')">
+                            @csrf
+                            <button type="submit" class="w-full rounded-xl border border-red-300 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50">Hapus</button>
+                        </form>
+                    </div>
+                </article>
+            @empty
+                <div class="rounded-2xl border border-slate-200 bg-white px-4 py-8 text-center text-slate-500">Belum ada draft transaksi.</div>
+            @endforelse
+        </div>
+
+        <div class="draft-desktop-table overflow-hidden rounded-2xl border border-slate-200 bg-white">
             <table class="min-w-full text-sm">
                 <thead class="bg-slate-50">
                 <tr>

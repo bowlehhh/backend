@@ -113,13 +113,18 @@
         ? 'inline-flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg'
         : 'inline-flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-xl';
 @endphp
-<div class="h-screen overflow-hidden bg-[#f7f9fb]">
-    <aside class="hidden lg:flex fixed inset-y-0 left-0 z-30 w-[340px] flex-col border-r border-slate-300 bg-white">
-        <div class="px-5 py-5 border-b border-slate-200">
-            <x-brand.logo class="h-10 w-auto" />
-            <p class="text-xs text-slate-500">{{ $isAdminBesarGudangAccess ? 'Akses Dashboard Admin Gudang' : 'Admin Penjualan - Station 01' }}</p>
+<div class="min-h-screen overflow-x-hidden bg-[#f7f9fb] lg:h-screen lg:overflow-hidden">
+    <aside id="cart-panel" class="w-full border-b border-slate-200 bg-white lg:fixed lg:inset-y-0 lg:left-0 lg:z-30 lg:flex lg:w-[340px] lg:flex-col lg:border-b-0 lg:border-r lg:border-slate-300">
+        <div class="flex items-start justify-between gap-3 border-b border-slate-200 px-4 py-4 lg:px-5 lg:py-5">
+            <div class="min-w-0">
+                <x-brand.logo class="h-9 w-auto lg:h-10" />
+                <p class="mt-1 text-[11px] text-slate-500 lg:text-xs">{{ $isAdminBesarGudangAccess ? 'Akses Dashboard Admin Gudang' : 'Admin Penjualan - Station 01' }}</p>
+            </div>
+            <div class="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-bold text-slate-600">
+                {{ count($cartItems) }} item
+            </div>
         </div>
-        <div class="min-h-0 flex-1 overflow-y-auto custom-scrollbar px-4 py-4 space-y-4">
+        <div class="space-y-4 px-4 py-4 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:custom-scrollbar">
             <nav class="space-y-2">
                 @if($isAdminBesarGudangAccess)
                     <a href="{{ $backToAdminBesarRoute }}" class="flex items-center gap-3 rounded-xl text-slate-600 hover:bg-slate-100 px-3 py-2">
@@ -177,74 +182,94 @@
                         <button type="submit" class="text-xs text-red-500">Kosongkan</button>
                     </form>
                 </div>
-                <div class="max-h-[calc(100vh-360px)] space-y-3 overflow-y-auto custom-scrollbar px-4 py-3">
+                <div class="space-y-3 lg:max-h-[calc(100vh-360px)] lg:overflow-y-auto lg:custom-scrollbar px-4 py-3">
                     @forelse($cartItems as $item)
-                        <div class="rounded-xl border border-slate-200 p-3">
-                            <p class="text-sm font-semibold">{{ $item['product_name'] }}</p>
-                            <p class="mt-1 text-xs text-slate-500">Part No: {{ $item['part_number'] }}</p>
-                            <p class="mt-1 text-xs text-slate-500">
-                                Stok INV:
-                                <span
-                                    data-cart-batch-stock
-                                    data-batch-base-stock="{{ (int) ($item['batch_stock'] ?? 0) }}"
-                                    data-product-batch-id="{{ (int) $item['product_batch_id'] }}"
-                                >{{ number_format((int) ($item['batch_stock'] ?? 0), 0, ',', '.') }}</span>
-                                @if((int) ($item['available_stock'] ?? 0) > (int) ($item['batch_stock'] ?? 0))
-                                    | total gabungan:
-                                    <span
-                                        data-cart-available-stock
-                                        data-available-base-stock="{{ (int) ($item['available_stock'] ?? 0) }}"
-                                        data-part-number="{{ $item['part_number'] }}"
-                                    >{{ number_format((int) ($item['available_stock'] ?? 0), 0, ',', '.') }}</span>
-                                @endif
-                            </p>
-                            <div class="mt-2 flex justify-between text-sm">
-                                <form method="POST" action="{{ route($cartUpdateRoute, $item['product_batch_id']) }}" class="flex flex-col gap-2" data-cart-item-form data-merge-stock="{{ !empty($item['merge_stock']) ? '1' : '0' }}" data-product-id="{{ (int) $item['product_id'] }}" data-product-batch-id="{{ (int) $item['product_batch_id'] }}" data-product-name="{{ $item['product_name'] }}" data-part-number="{{ $item['part_number'] }}">
-                                    @csrf
-                                    <input type="hidden" name="cart_snapshot" value="" data-cart-snapshot />
-                                    <div class="flex items-center gap-2">
-                                        <label class="text-xs text-slate-500">Qty</label>
-                                        <input type="number" min="0" max="{{ (int) ($item['max_qty'] ?? 0) }}" name="qty" value="{{ $item['qty'] }}" class="w-20 rounded-lg border border-slate-300 px-2 py-1" data-cart-qty data-max-stock="{{ (int) ($item['max_qty'] ?? 0) }}" />
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 shadow-sm">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="min-w-0">
+                                    <p class="text-sm font-semibold leading-snug text-slate-900">{{ $item['product_name'] }}</p>
+                                    <p class="mt-1 text-xs text-slate-500">Part No: {{ $item['part_number'] }}</p>
+                                </div>
+                                <span class="shrink-0 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-600">
+                                    Qty {{ (int) $item['qty'] }}
+                                </span>
+                            </div>
+                            <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
+                                <div class="rounded-lg border border-slate-200 bg-white px-3 py-2">
+                                    <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Stok INV</p>
+                                    <p class="mt-1 font-bold text-slate-900">
+                                        <span
+                                            data-cart-batch-stock
+                                            data-batch-base-stock="{{ (int) ($item['batch_stock'] ?? 0) }}"
+                                            data-product-batch-id="{{ (int) $item['product_batch_id'] }}"
+                                        >{{ number_format((int) ($item['batch_stock'] ?? 0), 0, ',', '.') }}</span>
+                                    </p>
+                                </div>
+                                <div class="rounded-lg border border-slate-200 bg-white px-3 py-2">
+                                    <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Gabungan</p>
+                                    <p class="mt-1 font-bold text-slate-900">
+                                        @if((int) ($item['available_stock'] ?? 0) > (int) ($item['batch_stock'] ?? 0))
+                                            <span
+                                                data-cart-available-stock
+                                                data-available-base-stock="{{ (int) ($item['available_stock'] ?? 0) }}"
+                                                data-part-number="{{ $item['part_number'] }}"
+                                            >{{ number_format((int) ($item['available_stock'] ?? 0), 0, ',', '.') }}</span>
+                                        @else
+                                            -
+                                        @endif
+                                    </p>
+                                </div>
+                            </div>
+                            <form method="POST" action="{{ route($cartUpdateRoute, $item['product_batch_id']) }}" class="mt-3 space-y-3" data-cart-item-form data-merge-stock="{{ !empty($item['merge_stock']) ? '1' : '0' }}" data-product-id="{{ (int) $item['product_id'] }}" data-product-batch-id="{{ (int) $item['product_batch_id'] }}" data-product-name="{{ $item['product_name'] }}" data-part-number="{{ $item['part_number'] }}">
+                                @csrf
+                                <input type="hidden" name="cart_snapshot" value="" data-cart-snapshot />
+                                <div class="grid grid-cols-1 gap-2 sm:grid-cols-[92px_minmax(0,1fr)]">
+                                    <div class="space-y-1">
+                                        <label class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Qty</label>
+                                        <input type="number" min="0" max="{{ (int) ($item['max_qty'] ?? 0) }}" name="qty" value="{{ $item['qty'] }}" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm" data-cart-qty data-max-stock="{{ (int) ($item['max_qty'] ?? 0) }}" />
                                     </div>
-                                    <p class="hidden text-[11px] font-medium text-red-500" data-cart-qty-warning></p>
-                                    <div class="flex items-center gap-2">
-                                        <label class="text-xs text-slate-500">{{ !empty($item['merge_stock']) ? 'Total Harga' : 'Harga' }}</label>
+                                    <div class="space-y-1">
+                                        <label class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ !empty($item['merge_stock']) ? 'Total Harga' : 'Harga' }}</label>
                                         <input
                                             type="text"
                                             inputmode="numeric"
                                             name="price"
                                             value="{{ number_format((float) ($item['merge_stock'] ? ($item['line_total'] ?? ((float) $item['price'] * (int) $item['qty'])) : $item['price']), 0, ',', '.') }}"
-                                            class="w-28 rounded-lg border border-slate-300 px-2 py-1"
+                                            class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
                                             data-rupiah-input
                                             data-cart-price
                                         />
                                     </div>
-                                    <div class="flex flex-wrap gap-2">
-                                        <button type="submit" class="w-fit rounded-lg border border-slate-300 px-2 py-1 text-xs">Update</button>
-                                        @if((int) ($item['can_merge_stock'] ?? 0) === 1)
-                                            @if(empty($item['merge_stock']))
-                                                <button
-                                                    type="submit"
-                                                    formaction="{{ route($cartMergeRoute, $item['product_batch_id']) }}"
-                                                    class="w-fit rounded-lg border border-amber-300 bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100"
-                                                >
-                                                    Gabung Stok
-                                                </button>
-                                            @else
-                                                <span class="inline-flex w-fit items-center rounded-lg border border-emerald-300 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">
-                                                    Stok digabung
-                                                </span>
-                                            @endif
-                                        @endif
-                                    </div>
-                                </form>
-                                <div class="text-right">
-                                    <span class="block font-bold" data-cart-line-total>Rp {{ number_format((float) ($item['line_total'] ?? ((float) $item['price'] * (int) $item['qty'])), 0, ',', '.') }}</span>
-                                    <form method="POST" action="{{ route($cartRemoveRoute, $item['product_batch_id']) }}">
-                                        @csrf
-                                        <button type="submit" class="text-xs text-red-500">Hapus</button>
-                                    </form>
                                 </div>
+                                <p class="hidden text-[11px] font-medium text-red-500" data-cart-qty-warning></p>
+                                <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                    <button type="submit" class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700">Update</button>
+                                    @if((int) ($item['can_merge_stock'] ?? 0) === 1)
+                                        @if(empty($item['merge_stock']))
+                                            <button
+                                                type="submit"
+                                                formaction="{{ route($cartMergeRoute, $item['product_batch_id']) }}"
+                                                class="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-700 hover:bg-amber-100"
+                                            >
+                                                Gabung Stok
+                                            </button>
+                                        @else
+                                            <span class="inline-flex items-center justify-center rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700">
+                                                Stok digabung
+                                            </span>
+                                        @endif
+                                    @endif
+                                </div>
+                            </form>
+                            <div class="mt-3 flex items-center justify-between gap-3">
+                                <div>
+                                    <p class="text-[11px] font-medium text-slate-500">Total item</p>
+                                    <span class="block font-bold text-slate-900" data-cart-line-total>Rp {{ number_format((float) ($item['line_total'] ?? ((float) $item['price'] * (int) $item['qty'])), 0, ',', '.') }}</span>
+                                </div>
+                                <form method="POST" action="{{ route($cartRemoveRoute, $item['product_batch_id']) }}">
+                                    @csrf
+                                    <button type="submit" class="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-600">Hapus Item</button>
+                                </form>
                             </div>
                         </div>
                     @empty
@@ -308,7 +333,7 @@
         </header>
 
         <div class="flex-1 min-h-0 flex">
-            <section class="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-4 lg:p-6 pb-40 xl:pb-6">
+            <section class="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-4 lg:p-6 pb-56 xl:pb-6">
                 @if(session('success'))
                     <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{{ session('success') }}</div>
                 @endif
@@ -543,29 +568,29 @@
     </form>
 </div>
 
-<div id="sale-confirm-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 px-4">
-    <div class="w-full max-w-xl rounded-2xl bg-white p-5 shadow-2xl">
-        <h3 class="text-xl font-extrabold text-slate-900">Konfirmasi Penjualan</h3>
-        <p class="mt-1 text-sm text-slate-500">Pastikan item dan total sudah benar sebelum melanjutkan.</p>
+<div id="sale-confirm-modal" class="fixed inset-0 z-50 hidden items-start justify-center bg-slate-900/60 px-2 py-2 sm:items-center sm:px-4 sm:py-4">
+    <div class="w-full max-w-[420px] max-h-[calc(100vh-1rem)] overflow-y-auto rounded-2xl bg-white p-3 shadow-2xl sm:max-w-xl sm:p-5">
+        <h3 class="text-lg font-extrabold text-slate-900 sm:text-xl">Konfirmasi Penjualan</h3>
+        <p class="mt-1 text-xs text-slate-500 sm:text-sm">Pastikan item dan total sudah benar sebelum melanjutkan.</p>
 
-        <div id="sale-confirm-items" class="mt-4 max-h-64 space-y-2 overflow-y-auto rounded-xl border border-slate-200 p-3 text-sm"></div>
-        <div class="mt-3 rounded-xl border border-slate-200 p-3">
-            <p class="text-xs font-semibold text-slate-500">NAMA PEMBELI</p>
+        <div id="sale-confirm-items" class="mt-3 max-h-40 space-y-2 overflow-y-auto rounded-xl border border-slate-200 p-2 text-xs sm:max-h-64 sm:p-3 sm:text-sm"></div>
+        <div class="mt-2 rounded-xl border border-slate-200 p-2.5 sm:mt-3 sm:p-3">
+            <p class="text-[11px] font-semibold text-slate-500 sm:text-xs">NAMA PEMBELI</p>
             <p id="confirm-customer" class="mt-1 font-semibold text-slate-900">-</p>
         </div>
-        <div class="mt-3 grid gap-3 rounded-xl border border-slate-200 p-3 md:grid-cols-2">
+        <div class="mt-2 grid gap-2 rounded-xl border border-slate-200 p-2.5 text-xs sm:mt-3 sm:gap-3 sm:p-3 sm:text-sm md:grid-cols-2">
             <div>
-                <p class="text-xs font-semibold text-slate-500">P.O. NO</p>
+                <p class="text-[11px] font-semibold text-slate-500 sm:text-xs">P.O. NO</p>
                 <p id="confirm-po-number" class="mt-1 font-semibold text-slate-900">-</p>
             </div>
             <div>
-                <p class="text-xs font-semibold text-slate-500">SITE</p>
+                <p class="text-[11px] font-semibold text-slate-500 sm:text-xs">SITE</p>
                 <p id="confirm-site-name" class="mt-1 font-semibold text-slate-900">-</p>
             </div>
         </div>
-        <div id="mobile-confirm-fields" class="mt-3 hidden space-y-2 rounded-xl border border-slate-200 p-3">
+        <div id="mobile-confirm-fields" class="mt-2 hidden space-y-2 rounded-xl border border-slate-200 p-2.5 sm:mt-3 sm:p-3">
             <div class="grid grid-cols-[88px_minmax(0,1fr)] gap-2">
-                <select id="mobile-confirm-payment-method" class="w-full min-w-0 rounded-xl border border-slate-300 px-3 py-2 text-sm">
+                <select id="mobile-confirm-payment-method" class="w-full min-w-0 rounded-xl border border-slate-300 px-2.5 py-2 text-[13px] sm:px-3 sm:text-sm">
                     <option value="cash" @selected(old('payment_method', 'cash') === 'cash')>Cash</option>
                     <option value="transfer" @selected(old('payment_method') === 'transfer')>Transfer</option>
                     <option value="qris" @selected(old('payment_method') === 'qris')>QRIS</option>
@@ -573,58 +598,58 @@
                     <option value="credit" @selected(old('payment_method') === 'credit')>Credit</option>
                 </select>
                 <div class="min-w-0 space-y-1">
-                    <label id="mobile-confirm-paid-label" class="block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Jumlah Bayar</label>
+                    <label id="mobile-confirm-paid-label" class="block text-[10px] font-semibold uppercase tracking-wide text-slate-500 sm:text-[11px]">Jumlah Bayar</label>
                     <input
                         id="mobile-confirm-paid-amount"
                         type="text"
                         inputmode="numeric"
                         value="{{ old('payment_method') === 'credit' ? old('paid_amount', '0') : old('paid_amount', number_format((float) ceil($cartTotal), 0, ',', '.')) }}"
-                        class="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                        class="w-full rounded-xl border border-slate-300 px-2.5 py-2 text-[13px] sm:px-3 sm:text-sm"
                         placeholder="Jumlah bayar"
                         data-rupiah-input
                         data-select-all-on-focus
                     />
-                    <p id="mobile-confirm-payment-summary" class="text-[11px] font-medium text-slate-500">DP: Rp 0 | Sisa kredit: Rp 0</p>
+                    <p id="mobile-confirm-payment-summary" class="text-[10px] font-medium text-slate-500 sm:text-[11px]">DP: Rp 0 | Sisa kredit: Rp 0</p>
                 </div>
             </div>
             <div id="mobile-credit-days-wrap" class="{{ old('payment_method') === 'credit' ? '' : 'hidden' }} space-y-2">
-                <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
+                <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <div class="space-y-1">
-                        <label class="block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Tempo Kredit</label>
-                        <input id="mobile-confirm-credit-days" type="text" inputmode="numeric" pattern="[0-9]*" value="" autocomplete="off" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Isi hari" />
+                        <label class="block text-[10px] font-semibold uppercase tracking-wide text-slate-500 sm:text-[11px]">Tempo Kredit</label>
+                        <input id="mobile-confirm-credit-days" type="text" inputmode="numeric" pattern="[0-9]*" value="" autocomplete="off" class="w-full rounded-xl border border-slate-300 px-2.5 py-2 text-[13px] sm:px-3 sm:text-sm" placeholder="Isi hari" />
                     </div>
                     <div class="space-y-1">
-                        <label class="block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Tanggal Jatuh Tempo</label>
-                        <input id="mobile-confirm-credit-due-display" type="text" readonly value="" placeholder="Otomatis muncul di sini" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-700" />
+                        <label class="block text-[10px] font-semibold uppercase tracking-wide text-slate-500 sm:text-[11px]">Tanggal Jatuh Tempo</label>
+                        <input id="mobile-confirm-credit-due-display" type="text" readonly value="" placeholder="Otomatis muncul di sini" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 text-[13px] text-slate-700 sm:px-3 sm:text-sm" />
                     </div>
                 </div>
-                <p id="mobile-confirm-credit-preview" class="text-[11px] font-medium text-slate-500">Jatuh tempo otomatis akan dihitung dari hari ini.</p>
+                <p id="mobile-confirm-credit-preview" class="text-[10px] font-medium text-slate-500 sm:text-[11px]">Jatuh tempo otomatis akan dihitung dari hari ini.</p>
             </div>
-            <input id="mobile-confirm-cashier-name" type="text" maxlength="100" value="{{ old('cashier_service_name', '') }}" autocomplete="off" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Nama petugas / admin" />
-            <input id="mobile-confirm-customer-name" type="text" maxlength="100" value="{{ old('customer_name', '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Nama pembeli (opsional)" />
-            <div class="grid grid-cols-[118px_minmax(0,1fr)] gap-2">
-                <select id="mobile-confirm-discount-type" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm">
+            <input id="mobile-confirm-cashier-name" type="text" maxlength="100" value="{{ old('cashier_service_name', '') }}" autocomplete="off" class="w-full rounded-xl border border-slate-300 px-2.5 py-2 text-[13px] sm:px-3 sm:text-sm" placeholder="Nama petugas / admin" />
+            <input id="mobile-confirm-customer-name" type="text" maxlength="100" value="{{ old('customer_name', '') }}" class="w-full rounded-xl border border-slate-300 px-2.5 py-2 text-[13px] sm:px-3 sm:text-sm" placeholder="Nama pembeli (opsional)" />
+            <div class="grid grid-cols-[92px_minmax(0,1fr)] gap-2 sm:grid-cols-[118px_minmax(0,1fr)]">
+                <select id="mobile-confirm-discount-type" class="w-full rounded-xl border border-slate-300 px-2.5 py-2 text-[13px] sm:px-3 sm:text-sm">
                     <option value="percent" @selected($initialDiscountType === 'percent')>Persen</option>
                     <option value="nominal" @selected($initialDiscountType === 'nominal')>Nominal</option>
                 </select>
-                <input id="mobile-confirm-discount-amount" type="text" inputmode="decimal" value="{{ $initialDiscountType === 'nominal' ? number_format($initialDiscountInputValue, 0, ',', '.') : rtrim(rtrim(number_format($initialDiscountInputValue, 2, '.', ''), '0'), '.') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="{{ $initialDiscountType === 'nominal' ? 'Nominal diskon' : 'Diskon (%)' }}" data-select-all-on-focus />
+                <input id="mobile-confirm-discount-amount" type="text" inputmode="decimal" value="{{ $initialDiscountType === 'nominal' ? number_format($initialDiscountInputValue, 0, ',', '.') : rtrim(rtrim(number_format($initialDiscountInputValue, 2, '.', ''), '0'), '.') }}" class="w-full rounded-xl border border-slate-300 px-2.5 py-2 text-[13px] sm:px-3 sm:text-sm" placeholder="{{ $initialDiscountType === 'nominal' ? 'Nominal diskon' : 'Diskon (%)' }}" data-select-all-on-focus />
             </div>
-            <p class="text-[11px] font-medium text-slate-500" data-discount-helper>
+            <p class="text-[10px] font-medium text-slate-500 sm:text-[11px]" data-discount-helper>
                 Potongan: Rp {{ number_format($initialDiscountAmount, 0, ',', '.') }} | Persen efektif: {{ rtrim(rtrim(number_format($initialDiscountPercent, 2, '.', ''), '0'), '.') }}%
             </p>
-            <input id="mobile-confirm-po-number" type="text" maxlength="100" value="{{ old('po_number', '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="P.O. No (opsional)" />
-            <input id="mobile-confirm-site-name" type="text" maxlength="100" value="{{ old('site_name', '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Site (opsional)" />
+            <input id="mobile-confirm-po-number" type="text" maxlength="100" value="{{ old('po_number', '') }}" class="w-full rounded-xl border border-slate-300 px-2.5 py-2 text-[13px] sm:px-3 sm:text-sm" placeholder="P.O. No (opsional)" />
+            <input id="mobile-confirm-site-name" type="text" maxlength="100" value="{{ old('site_name', '') }}" class="w-full rounded-xl border border-slate-300 px-2.5 py-2 text-[13px] sm:px-3 sm:text-sm" placeholder="Site (opsional)" />
         </div>
 
-        <div class="mt-4 space-y-1 rounded-xl bg-slate-50 p-3 text-sm">
+        <div class="mt-3 space-y-1 rounded-xl bg-slate-50 p-2.5 text-xs sm:p-3 sm:text-sm">
             <div class="flex justify-between"><span>Subtotal</span><span id="confirm-subtotal">Rp 0</span></div>
             <div class="flex justify-between"><span id="confirm-discount-label">Diskon (0%)</span><span id="confirm-discount">Rp 0</span></div>
-            <div class="mt-1 flex justify-between text-base font-bold"><span>Total</span><span id="confirm-total">Rp 0</span></div>
+            <div class="mt-1 flex justify-between text-sm font-bold sm:text-base"><span>Total</span><span id="confirm-total">Rp 0</span></div>
         </div>
 
-        <div class="mt-5 flex gap-3">
-            <button id="cancel-confirm-btn" type="button" class="flex-1 rounded-xl border border-slate-300 px-4 py-3 font-semibold text-slate-700">Batal</button>
-            <button id="submit-confirm-btn" type="button" class="flex-1 rounded-xl bg-emerald-700 px-4 py-3 font-bold text-white">Ya, Konfirmasi</button>
+        <div class="mt-3 flex gap-2 sm:mt-5 sm:gap-3">
+            <button id="cancel-confirm-btn" type="button" class="flex-1 rounded-xl border border-slate-300 px-3 py-2.5 text-sm font-semibold text-slate-700">Batal</button>
+            <button id="submit-confirm-btn" type="button" class="flex-1 rounded-xl bg-emerald-700 px-3 py-2.5 text-sm font-bold text-white">Ya, Konfirmasi</button>
         </div>
     </div>
 </div>

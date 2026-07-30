@@ -409,7 +409,13 @@
           </button>
           <x-brand.logo class="h-8 w-auto max-w-[160px] sm:h-9 sm:max-w-[240px]" />
         </div>
-        <div></div>
+        <form method="POST" action="{{ route('logout') }}" class="lg:hidden">
+          @csrf
+          <button type="submit" class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-error/20 bg-error-container/20 px-2.5 text-[12px] font-semibold text-error" aria-label="Logout dari akun">
+            <span class="material-symbols-outlined text-[18px]">logout</span>
+            <span>Logout</span>
+          </button>
+        </form>
       </header>
 
       <div class="sf-shell">

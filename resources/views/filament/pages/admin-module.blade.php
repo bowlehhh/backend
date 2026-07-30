@@ -346,10 +346,19 @@
           </button>
           <div class="flex items-center gap-4"><x-brand.logo class="h-9 w-auto max-w-[240px]" /></div>
         </div>
-        <button id="toggleSidebarBtn" type="button" class="hidden lg:inline-flex items-center gap-1 rounded-lg border border-outline-variant px-3 py-2 text-sm text-on-surface hover:bg-surface-container">
-          <span class="material-symbols-outlined text-base">left_panel_close</span>
-          <span>Sidebar</span>
-        </button>
+        <div class="flex items-center gap-2">
+          <form method="POST" action="{{ route('logout') }}" class="lg:hidden">
+            @csrf
+            <button type="submit" class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#f1c4bf] bg-[#fff0ee] px-2.5 text-[12px] font-semibold text-[#ba1a1a]" aria-label="Logout dari akun">
+              <span class="material-symbols-outlined text-[18px]">logout</span>
+              <span>Logout</span>
+            </button>
+          </form>
+          <button id="toggleSidebarBtn" type="button" class="hidden lg:inline-flex items-center gap-1 rounded-lg border border-outline-variant px-3 py-2 text-sm text-on-surface hover:bg-surface-container">
+            <span class="material-symbols-outlined text-base">left_panel_close</span>
+            <span>Sidebar</span>
+          </button>
+        </div>
       </header>
 
       <div class="sf-shell">

@@ -258,6 +258,10 @@
                                                 Stok digabung
                                             </span>
                                         @endif
+                                    @elseif(empty($item['merge_stock']))
+                                        <span class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-center text-xs font-medium text-slate-500">
+                                            Tidak ada stok lain untuk digabung
+                                        </span>
                                     @endif
                                 </div>
                             </form>

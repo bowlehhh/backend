@@ -30,6 +30,7 @@ Sesuaikan juga bagian ini dengan server:
 
 - `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`
 - `SESSION_DRIVER`
+- `SESSION_EXPIRE_ON_CLOSE=true` agar pengguna wajib login lagi setelah aplikasi/browser ditutup
 - `CACHE_STORE`
 - `QUEUE_CONNECTION`
 - `FILESYSTEM_DISK`

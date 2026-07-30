@@ -27,4 +27,13 @@ class AdminRoleAccessTest extends TestCase
 
         $response->assertForbidden();
     }
+
+    public function test_admin_toko_cannot_open_admin_besar_gudang_mode(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $response = $this->actingAs($admin)->get(route('admin.transaksi.dashboard'));
+
+        $response->assertForbidden();
+    }
 }

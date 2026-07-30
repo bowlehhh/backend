@@ -10,6 +10,7 @@
     $focusBatchId = (int) ($viewData['focusBatchId'] ?? 0);
     $currentUser = auth()->user();
     $isAdminBesarAccess = $currentUser?->isAdminBesar() ?? false;
+    $salesDashboardUrl = $isAdminBesarAccess ? route('admin.transaksi.dashboard') : route('cashier.dashboard');
     $mobileBackUrl = url('/admin/suppliers');
 @endphp
 
@@ -18,7 +19,6 @@
     @if (app()->environment('local') && (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot'))))
         @vite('resources/css/app.css')
     @endif
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
@@ -180,7 +180,7 @@
             <a class="sf-nav-item flex items-center gap-3 bg-[#006948] text-white rounded-lg px-2.5 py-2 font-medium" href="{{ url('/admin/suppliers') }}">
               <span class="material-symbols-outlined">local_shipping</span><span>Supplier</span>
             </a>
-            <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-2.5 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium" href="{{ route('admin.transaksi.dashboard') }}">
+            <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-2.5 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium" href="{{ $salesDashboardUrl }}">
               <span class="material-symbols-outlined">point_of_sale</span><span>Transaksi</span>
             </a>
             <a class="sf-nav-item flex items-center gap-3 text-[#47534d] px-2.5 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium" href="{{ url('/admin/admin-module?type=credits') }}">

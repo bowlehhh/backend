@@ -33,6 +33,7 @@
     ];
     $currentUser = auth()->user();
     $isAdminBesarAccess = $currentUser?->isAdminBesar() ?? false;
+    $salesDashboardUrl = $isAdminBesarAccess ? route('admin.transaksi.dashboard') : route('cashier.dashboard');
     $mobileBackUrl = $isAdminBesarAccess ? route('admin.admin-besar.index') : url('/admin/products');
 @endphp
 
@@ -443,7 +444,7 @@
               <div class="space-y-1 pt-1">
                 <a class="sf-nav-item w-full flex items-center gap-2.5 text-on-surface-variant px-3 py-2 hover:bg-surface-container-high transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=product-groups') }}"><span class="material-symbols-outlined">inventory_2</span><span>Kelompok Stok</span></a>
                 <div class="ml-3 border-l border-outline-variant pl-3 py-1 space-y-1">
-                  <a class="sf-nav-item w-full flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-medium {{ request()->routeIs('admin.transaksi.dashboard') ? 'bg-primary-container text-on-primary' : 'text-on-surface-variant hover:bg-surface-container-high' }}" href="{{ route('admin.transaksi.dashboard') }}">
+                  <a class="sf-nav-item w-full flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-medium {{ request()->routeIs('admin.transaksi.dashboard', 'cashier.dashboard') ? 'bg-primary-container text-on-primary' : 'text-on-surface-variant hover:bg-surface-container-high' }}" href="{{ $salesDashboardUrl }}">
                     <span class="material-symbols-outlined text-[18px]">point_of_sale</span>
                     <span>Daftar Stok Jual</span>
                   </a>

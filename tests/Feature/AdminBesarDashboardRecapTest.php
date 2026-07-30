@@ -138,5 +138,7 @@ class AdminBesarDashboardRecapTest extends TestCase
         $response->assertSeeText('BELUM LUNAS');
         $response->assertSeeText('LUNAS');
         $response->assertSeeText('Rp 6.000.000');
+        $response->assertSeeText('Buka Dashboard Admin Gudang');
+        $response->assertSee(route('admin.transaksi.dashboard'), false);
     }
 }

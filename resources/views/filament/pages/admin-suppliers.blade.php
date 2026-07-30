@@ -4,6 +4,7 @@
     $suppliers = $viewData['suppliers'] ?? [];
     $currentUser = auth()->user();
     $isAdminBesarAccess = $currentUser?->isAdminBesar() ?? false;
+    $salesDashboardUrl = $isAdminBesarAccess ? route('admin.transaksi.dashboard') : route('cashier.dashboard');
 @endphp
 
 <x-filament-panels::page>
@@ -11,7 +12,6 @@
     @if (app()->environment('local') && (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot'))))
         @vite('resources/css/app.css')
     @endif
-    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 
@@ -238,7 +238,7 @@
               <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">local_shipping</span>
               <span>Supplier</span>
             </a>
-            <a class="sf-nav-item w-full flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium text-left" href="{{ route('admin.transaksi.dashboard') }}">
+            <a class="sf-nav-item w-full flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium text-left" href="{{ $salesDashboardUrl }}">
               <span class="material-symbols-outlined">point_of_sale</span><span>Transaksi</span>
             </a>
             <a class="sf-nav-item w-full flex items-center gap-3 text-[#47534d] px-3 py-2 hover:bg-[#eceef0] transition-all rounded-lg font-medium text-left" href="{{ url('/admin/admin-module?type=credits') }}">

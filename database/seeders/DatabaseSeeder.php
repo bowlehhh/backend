@@ -2,10 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 
 class DatabaseSeeder extends Seeder
@@ -49,22 +47,6 @@ class DatabaseSeeder extends Seeder
 
         Schema::enableForeignKeyConstraints();
 
-        User::query()->create([
-            'email' => 'suryadutamultindo@gmail.com',
-            'name' => 'Admin Toko/Gudang',
-            'password' => Hash::make('suryadutamultindo123'),
-            'role' => User::ROLE_ADMIN,
-            'is_active' => true,
-            'email_verified_at' => now(),
-        ]);
-
-        User::query()->create([
-            'email' => 'suryadi.paulus06@gmail.com',
-            'name' => 'Admin Besar',
-            'password' => Hash::make('suryadutamultindo123'),
-            'role' => User::ROLE_ADMIN_BESAR,
-            'is_active' => true,
-            'email_verified_at' => now(),
-        ]);
+        $this->call(DefaultUserSeeder::class);
     }
 }

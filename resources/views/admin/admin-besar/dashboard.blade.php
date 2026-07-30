@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Dashboard Admin Besar - {{ config('app.name', 'Surya Duta Multindo') }}</title>
     <x-brand.meta />
-    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link rel="stylesheet" href="{{ asset('css/app-production.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     <style>
@@ -80,6 +80,10 @@
                         </button>
                     </form>
                 </div>
+                <a href="{{ route('admin.transaksi.dashboard') }}" class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800">
+                    <span class="material-symbols-outlined text-[18px]">point_of_sale</span>
+                    Buka Dashboard Admin Gudang
+                </a>
             </section>
 
             <section class="hidden rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-sm lg:block">

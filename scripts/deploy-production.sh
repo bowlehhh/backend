@@ -46,6 +46,7 @@ php artisan storage:link --force
 
 echo "[6/8] Running database migrations"
 php artisan migrate --force
+php artisan db:seed --class=DefaultUserSeeder --force
 
 echo "[7/8] Caching configuration"
 php artisan config:cache

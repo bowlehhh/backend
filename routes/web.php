@@ -66,11 +66,11 @@ Route::middleware(['auth', 'role:admin,admin_besar'])->prefix('admin')->group(fu
     Route::get('/suppliers/{supplier}/invoice-recap', [AdminSupplierInvoiceRecapController::class, 'show'])->name('admin.suppliers.invoice-recap');
 });
 
-Route::middleware(['auth', 'role:admin,admin_besar'])
+Route::middleware(['auth', 'role:admin_besar'])
     ->get('/admin/transaksi', CashierDashboardController::class)
     ->name('admin.transaksi.dashboard');
 
-Route::middleware(['auth', 'role:admin,admin_besar'])
+Route::middleware(['auth', 'role:admin_besar'])
     ->prefix('admin/transaksi')
     ->group(function (): void {
         Route::get('/history', [CashierTransactionController::class, 'history'])->name('admin.transactions.history');

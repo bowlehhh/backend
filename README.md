@@ -35,6 +35,7 @@ npm ci
 npm run build
 php artisan key:generate
 php artisan migrate --force
+php artisan db:seed --class=DefaultUserSeeder --force
 php artisan storage:link --force
 php artisan optimize:clear
 php artisan config:cache
@@ -70,6 +71,7 @@ Script ini akan:
 - refresh cache Laravel
 - buat ulang `storage` symlink
 - jalankan migrasi
+- memastikan akun awal tersedia bila belum ada
 - cache config, route, dan view
 - keluar dari maintenance mode otomatis
 
@@ -85,6 +87,7 @@ npm run build
 php artisan optimize:clear
 php artisan storage:link --force
 php artisan migrate --force
+php artisan db:seed --class=DefaultUserSeeder --force
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache

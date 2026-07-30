@@ -48,6 +48,7 @@ Urutan aman yang direkomendasikan:
 composer install --no-dev --optimize-autoloader
 php artisan down
 php artisan migrate --force
+php artisan db:seed --class=DefaultUserSeeder --force
 php artisan storage:link
 php artisan optimize:clear
 php artisan config:cache

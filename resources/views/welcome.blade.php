@@ -9,7 +9,7 @@
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @else
-        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet" href="{{ asset('css/app-production.css') }}">
     @endif
 </head>
 <body class="min-h-screen bg-[#f6f8f6] font-['Hanken_Grotesk',sans-serif] text-slate-900">

@@ -29,18 +29,31 @@
     $creditsUrl = $moduleBaseUrl . '?type=credits';
     $supplierTransactionsUrl = $moduleBaseUrl . '?type=supplier-transactions';
     $productGroupsUrl = $moduleBaseUrl . '?type=product-groups';
-    $salesListUrl = ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? route('admin.admin-besar.index') : route('admin.transaksi.dashboard');
-    $draftsUrl = ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? route('admin.admin-besar.index') : route('admin.transactions.drafts');
-    $historyUrl = ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? route('admin.admin-besar.history') : route('admin.transactions.history');
-    $salesListActive = ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? request()->routeIs('admin.admin-besar.index') : request()->routeIs('admin.transaksi.dashboard');
-    $draftsActive = ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? request()->routeIs('admin.admin-besar.index') : request()->routeIs('admin.transactions.drafts');
-    $historyActive = ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? request()->routeIs('admin.admin-besar.history*') : request()->routeIs('admin.transactions.history*');
+    $isAdminBesarExecutiveAccess = $isAdminBesarContext && ! $isAdminBesarGudangModuleAccess;
+    $salesListUrl = $isAdminBesarExecutiveAccess
+        ? route('admin.admin-besar.index')
+        : ($isAdminBesarContext ? route('admin.transaksi.dashboard') : route('cashier.dashboard'));
+    $draftsUrl = $isAdminBesarExecutiveAccess
+        ? route('admin.admin-besar.index')
+        : ($isAdminBesarContext ? route('admin.transactions.drafts') : route('cashier.drafts'));
+    $historyUrl = $isAdminBesarExecutiveAccess
+        ? route('admin.admin-besar.history')
+        : ($isAdminBesarContext ? route('admin.transactions.history') : route('cashier.history'));
+    $salesListActive = $isAdminBesarExecutiveAccess
+        ? request()->routeIs('admin.admin-besar.index')
+        : request()->routeIs('admin.transaksi.dashboard', 'cashier.dashboard');
+    $draftsActive = $isAdminBesarExecutiveAccess
+        ? request()->routeIs('admin.admin-besar.index')
+        : request()->routeIs('admin.transactions.drafts', 'cashier.drafts');
+    $historyActive = $isAdminBesarExecutiveAccess
+        ? request()->routeIs('admin.admin-besar.history*')
+        : request()->routeIs('admin.transactions.history*', 'cashier.history*');
     $salesListLabel = ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? 'Dashboard Admin Besar' : 'Daftar Stok Jual';
     $draftsLabel = ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? 'Ringkasan Admin Besar' : 'Draft Tertunda';
     $historyLabel = ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess) ? 'History Admin Besar' : 'History & Nota';
-    $mobileBackUrl = ($isAdminBesarContext && ! $isAdminBesarGudangModuleAccess)
+    $mobileBackUrl = $isAdminBesarExecutiveAccess
         ? route('admin.admin-besar.index')
-        : route('admin.transaksi.dashboard');
+        : ($isAdminBesarContext ? route('admin.transaksi.dashboard') : route('cashier.dashboard'));
 @endphp
 
 <x-filament-panels::page>
@@ -48,7 +61,6 @@
     @if (app()->environment('local') && (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot'))))
         @vite('resources/css/app.css')
     @endif
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
@@ -1022,9 +1034,45 @@
             </div>
             <div class="bg-white border border-[#d4dbd7] rounded-xl overflow-hidden custom-shadow">
               <div class="px-6 pt-5">
-                <p class="text-sm text-[#52615a]">Tabel ini menampilkan semua kredit dari seluruh supplier yang sudah dicatat. Detail, cicilan, dan nota bisa kamu buka lewat rekap per bulan di bawah.</p>
+                <p class="text-sm text-[#52615a]">Semua kredit supplier yang sudah dicatat. Di ponsel, gunakan kartu di bawah untuk bayar/cicil atau membuka nota kredit.</p>
               </div>
-              <div class="overflow-x-auto">
+              <div class="space-y-3 p-4 md:hidden">
+                @forelse ($rows as $row)
+                  @php
+                    $creditStatus = $row['status'] ?? 'BELUM LUNAS';
+                    $creditStatusClass = $creditStatus === 'JATUH TEMPO'
+                        ? 'bg-red-100 text-red-700'
+                        : ($creditStatus === 'LUNAS' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700');
+                    $creditDetailUrl = route('admin.credits.detail', ['batch' => $row['batch_id']]) . '#input-cicilan';
+                    $creditReceiptUrl = route('admin.credits.receipt', ['batch' => $row['batch_id']]);
+                  @endphp
+                  <article class="rounded-xl border border-[#d4dbd7] bg-[#fdfefe] p-4">
+                    <div class="flex items-start justify-between gap-3">
+                      <div class="min-w-0">
+                        <p class="text-sm font-semibold text-[#191c1e] break-words">{{ $row['part_name'] }}</p>
+                        <p class="mt-1 text-xs text-[#52615a]">{{ $row['supplier'] }} · {{ $row['part_number'] }}</p>
+                      </div>
+                      <span class="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $creditStatusClass }}">{{ $creditStatus }}</span>
+                    </div>
+                    <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
+                      <div class="rounded-lg bg-[#f4f7f6] p-2"><p class="text-[#52615a]">Sisa kredit</p><p class="mt-1 font-semibold text-[#191c1e]">{{ $row['sisa_kredit'] }}</p></div>
+                      <div class="rounded-lg bg-[#f4f7f6] p-2"><p class="text-[#52615a]">Jatuh tempo</p><p class="mt-1 font-semibold text-[#191c1e]">{{ $row['jatuh_tempo'] }}</p></div>
+                    </div>
+                    <div class="mt-3 grid grid-cols-2 gap-2">
+                      <a href="{{ $creditDetailUrl }}" class="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#006948] px-3 py-2 text-xs font-semibold text-white hover:brightness-95">
+                        {{ $creditStatus === 'LUNAS' ? 'Lihat Detail' : 'Bayar / Cicil' }}
+                      </a>
+                      <a href="{{ $creditReceiptUrl }}" target="_blank" rel="noopener" class="inline-flex min-h-10 items-center justify-center gap-1 rounded-lg border border-[#bccac0] bg-white px-3 py-2 text-xs font-semibold text-[#006948] hover:bg-[#f1f4f2]">
+                        <span class="material-symbols-outlined text-[16px]">print</span>
+                        Nota Kredit
+                      </a>
+                    </div>
+                  </article>
+                @empty
+                  <p class="rounded-xl border border-dashed border-[#d4dbd7] px-4 py-8 text-center text-sm text-[#52615a]">Belum ada data kredit.</p>
+                @endforelse
+              </div>
+              <div class="hidden overflow-x-auto md:block">
                 <table class="min-w-[1180px] w-full text-left border-collapse text-xs md:text-sm">
                   <thead>
                     <tr class="bg-[#eceef0] text-[#3d4a42] border-b border-[#d4dbd7]">
@@ -1074,7 +1122,7 @@
                   </tbody>
                 </table>
               </div>
-              <p class="mt-3 text-sm text-[#52615a]">Untuk lihat detail, cicilan, dan nota, scroll ke bawah ke rekap per bulan.</p>
+              <p class="hidden mt-3 text-sm text-[#52615a] md:block">Untuk lihat detail, cicilan, dan nota, scroll ke bawah ke rekap per bulan.</p>
             </div>
             <div class="mt-6 rounded-xl border border-[#d4dbd7] bg-white p-6 custom-shadow">
               @php
@@ -1133,7 +1181,7 @@
                       </div>
                     </div>
 
-                    <div class="overflow-x-auto">
+                    <div class="hidden overflow-x-auto md:block">
                       <table class="min-w-[1180px] w-full text-left border-collapse">
                         <thead>
                           <tr class="bg-[#eceef0] text-[#3d4a42] border-b border-[#d4dbd7]">
@@ -1235,7 +1283,29 @@
                   </div>
                 </div>
 
-                <div class="overflow-x-auto">
+                <div class="space-y-3 p-4 md:hidden">
+                  @forelse ($creditSettlementHistory as $history)
+                    <article class="rounded-xl border border-[#d4dbd7] bg-[#fdfefe] p-4">
+                      <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                          <p class="text-sm font-semibold text-[#191c1e] break-words">{{ $history['barang'] }}</p>
+                          <p class="mt-1 text-xs text-[#52615a]">{{ $history['supplier'] }} · {{ $history['tanggal'] }}</p>
+                        </div>
+                        <span class="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $history['jenis_class'] }}">{{ $history['jenis'] }}</span>
+                      </div>
+                      <div class="mt-3 flex items-center justify-between gap-3 rounded-lg bg-[#f4f7f6] p-2.5">
+                        <span class="text-xs text-[#52615a]">{{ $history['nominal_text'] }}</span>
+                        <a href="{{ $history['receipt_url'] }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-xs font-semibold text-[#006948]">
+                          <span class="material-symbols-outlined text-[16px]">print</span>
+                          Cetak Nota
+                        </a>
+                      </div>
+                    </article>
+                  @empty
+                    <p class="px-4 py-8 text-center text-sm text-[#52615a]">Belum ada riwayat pelunasan.</p>
+                  @endforelse
+                </div>
+                <div class="hidden overflow-x-auto md:block">
                   <table class="min-w-[1080px] w-full text-left border-collapse">
                     <thead>
                       <tr class="bg-[#eceef0] text-[#3d4a42] border-b border-[#d4dbd7]">

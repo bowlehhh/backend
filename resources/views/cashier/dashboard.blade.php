@@ -1802,7 +1802,7 @@
 
     stockMergeForm?.addEventListener('submit', (event) => {
         event.preventDefault();
-        const selectedBatchIds = Array.from(stockMergeForm.querySelectorAll('[data-merge-choice]:checked'))
+        const selectedBatchIds = Array.from(stockMergeOptions?.querySelectorAll('[data-merge-choice]:checked') || [])
             .map((input) => Number(input.value || 0))
             .filter((batchId) => batchId > 0);
 
@@ -1822,6 +1822,15 @@
         if (stockMergeSnapshot) stockMergeSnapshot.value = JSON.stringify(collectLiveCartItems());
         showPageLoading('Menggabungkan stok...', 'Pilihan stok sedang diproses. Mohon tunggu.');
         stockMergeForm.submit();
+    });
+
+    stockMergeOptions?.addEventListener('change', () => {
+        const selectedCount = stockMergeOptions.querySelectorAll('[data-merge-choice]:checked').length;
+
+        if (selectedCount >= 2 && stockMergeError) {
+            stockMergeError.textContent = '';
+            stockMergeError.classList.add('hidden');
+        }
     });
 
     document.addEventListener('submit', (event) => {

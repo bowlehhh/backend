@@ -20,6 +20,38 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
         @media (min-width: 1024px) {
+            /* Tetapkan struktur sidebar secara eksplisit. CSS produksi tidak
+               selalu memuat utility Tailwind yang baru, sehingga tanpa aturan
+               ini panel dapat berubah menjadi susunan horizontal. */
+            #cart-panel {
+                display: flex;
+                flex-direction: column;
+                width: var(--cashier-sidebar-w);
+                height: 100vh;
+                overflow: hidden;
+            }
+            #cart-panel-content {
+                display: flex;
+                flex: 1 1 0;
+                flex-direction: column;
+                min-height: 0;
+                overflow: hidden;
+            }
+            #cart-panel-content > nav,
+            #cart-panel-content > .cashier-sidebar-static {
+                flex: 0 0 auto;
+            }
+            #cart-shopping-card {
+                display: flex;
+                flex: 1 1 0;
+                flex-direction: column;
+                min-height: 0;
+            }
+            #cart-items-list {
+                flex: 1 1 0;
+                min-height: 0;
+                overflow-y: auto;
+            }
             .cashier-compact {
                 font-size: 14px;
             }
@@ -124,7 +156,7 @@
                 {{ count($cartItems) }} item
             </div>
         </div>
-        <div class="space-y-4 px-4 py-4 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden">
+        <div id="cart-panel-content" class="space-y-4 px-4 py-4 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden">
             <nav class="space-y-2 lg:shrink-0">
                 @if($isAdminBesarGudangAccess)
                     <a href="{{ $backToAdminBesarRoute }}" class="flex items-center gap-3 rounded-xl text-slate-600 hover:bg-slate-100 px-3 py-2">
@@ -153,11 +185,11 @@
                 </a>
             </nav>
             @if($isAdminBesarGudangAccess)
-                <div class="rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-700 lg:shrink-0">
+                <div class="cashier-sidebar-static rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-700 lg:shrink-0">
                     Anda sedang masuk ke dashboard admin gudang sebagai <span class="font-bold">Admin Besar</span>. Semua proses di halaman ini tetap memakai akses admin gudang, dan Anda bisa kembali kapan saja.
                 </div>
             @endif
-            <div class="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 lg:shrink-0">
+            <div class="cashier-sidebar-static rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 lg:shrink-0">
                 <p class="px-1 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Master Data</p>
                 <div class="mt-2 space-y-1">
                     <a href="{{ url('/admin/products') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-white">
@@ -174,7 +206,7 @@
                     </a>
                 </div>
             </div>
-            <div class="rounded-2xl border border-slate-200 bg-white shadow-sm lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+            <div id="cart-shopping-card" class="rounded-2xl border border-slate-200 bg-white shadow-sm lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
                 <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3 lg:shrink-0">
                     <h2 class="text-base font-bold text-slate-900">Keranjang Belanja</h2>
                     <form method="POST" action="{{ route($cartClearRoute) }}">
@@ -182,7 +214,7 @@
                         <button type="submit" class="text-xs text-red-500">Kosongkan</button>
                     </form>
                 </div>
-                <div class="space-y-3 px-4 py-3 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:custom-scrollbar">
+                <div id="cart-items-list" class="space-y-3 px-4 py-3 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:custom-scrollbar">
                     @forelse($cartItems as $item)
                         <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 shadow-sm">
                             <div class="flex items-start justify-between gap-3">

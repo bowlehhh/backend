@@ -378,9 +378,10 @@
                 <div class="{{ $productGridClasses }}">
                     @forelse($products as $product)
                         @php
-                            $batch = $product->batches->first();
+                            $batch = $product->batches->firstWhere('id', (int) ($product->display_batch_id ?? 0))
+                                ?? $product->batches->first();
                             $stock = (int) ($product->display_stock ?? ($batch?->stock ?? 0));
-                            $price = (float) ($batch?->selling_price ?? 0);
+                            $price = (float) ($product->display_selling_price ?? $batch?->selling_price ?? 0);
                             $image = $product->image_path ? asset('storage/' . ltrim($product->image_path, '/')) : null;
                             $partNumber = trim((string) ($product->barcode ?? '')) ?: '-';
                             $batchId = (int) ($batch?->id ?? 0);

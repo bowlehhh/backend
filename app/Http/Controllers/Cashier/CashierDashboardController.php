@@ -86,7 +86,20 @@ class CashierDashboardController extends Controller
 
         $rawCart = collect((array) $request->session()->get('cashier_cart', []))->values();
         $reservedQtyByBatch = [];
+        $reservedQtyByMergedPartNumber = [];
         foreach ($rawCart as $item) {
+            if ((bool) ($item['merge_stock'] ?? false)) {
+                $partNumber = strtoupper(trim((string) ($item['part_number'] ?? '')));
+                if ($partNumber === '') {
+                    $productId = (int) ($item['product_id'] ?? 0);
+                    $partNumber = $productId > 0 ? 'PRODUCT-' . $productId : '';
+                }
+                if ($partNumber !== '') {
+                    $reservedQtyByMergedPartNumber[$partNumber] = ($reservedQtyByMergedPartNumber[$partNumber] ?? 0)
+                        + max(0, (int) ($item['qty'] ?? 0));
+                }
+            }
+
             $allocations = $item['stock_allocations'] ?? null;
 
             if (is_array($allocations) && $allocations !== []) {
@@ -108,7 +121,7 @@ class CashierDashboardController extends Controller
             }
         }
 
-        $products = $products->map(function (Product $product) use ($request, $reservedQtyByBatch): Product {
+        $products = $products->map(function (Product $product) use ($request, $reservedQtyByBatch, $reservedQtyByMergedPartNumber): Product {
             $batch = $product->batches->first();
             $batchId = (int) ($batch?->id ?? 0);
             $reservedQty = 0;
@@ -117,14 +130,27 @@ class CashierDashboardController extends Controller
                 $reservedQty = (int) ($reservedQtyByBatch[$batchId] ?? 0);
             }
 
-            $displayStock = max(0, (int) ($batch?->stock ?? 0) - $reservedQty);
+            $partNumber = strtoupper(trim((string) ($product->barcode ?? '')));
+            if ($partNumber === '') {
+                $partNumber = 'PRODUCT-' . $product->id;
+            }
+            $availableStock = (int) ProductBatch::query()
+                ->where('is_active', true)
+                ->where('product_id', $product->id)
+                ->sum('stock');
+            $isMergedInCart = array_key_exists($partNumber, $reservedQtyByMergedPartNumber);
+            $displayStock = $isMergedInCart
+                ? max(0, $availableStock - (int) $reservedQtyByMergedPartNumber[$partNumber])
+                : max(0, (int) ($batch?->stock ?? 0) - $reservedQty);
+            $nextSellableBatch = $isMergedInCart
+                ? $product->batches->first(fn (ProductBatch $candidate): bool => (int) $candidate->stock > (int) ($reservedQtyByBatch[(int) $candidate->id] ?? 0))
+                : $batch;
 
             $product->setAttribute('display_stock', $displayStock);
             $product->setAttribute('batch_stock', (int) ($batch?->stock ?? 0));
-            $product->setAttribute('available_stock', (int) ProductBatch::query()
-                ->where('is_active', true)
-                ->where('product_id', $product->id)
-                ->sum('stock'));
+            $product->setAttribute('available_stock', $availableStock);
+            $product->setAttribute('display_batch_id', (int) ($nextSellableBatch?->id ?? $batch?->id ?? 0));
+            $product->setAttribute('display_selling_price', (float) ($nextSellableBatch?->selling_price ?? $batch?->selling_price ?? 0));
 
             return $product;
         });

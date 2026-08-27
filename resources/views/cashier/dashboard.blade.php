@@ -19,6 +19,37 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+        #page-loading-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 23, 42, .42);
+            padding: 1rem;
+        }
+        #page-loading-overlay.is-visible { display: flex; }
+        .page-loading-card {
+            display: flex;
+            min-width: min(100%, 290px);
+            align-items: center;
+            gap: .9rem;
+            border-radius: 1rem;
+            background: #fff;
+            padding: 1rem 1.15rem;
+            box-shadow: 0 20px 45px rgba(15, 23, 42, .22);
+        }
+        .page-loading-spinner {
+            width: 2rem;
+            height: 2rem;
+            flex: 0 0 auto;
+            border: 3px solid #dbe5df;
+            border-top-color: #00865a;
+            border-radius: 999px;
+            animation: page-loading-spin .75s linear infinite;
+        }
+        @keyframes page-loading-spin { to { transform: rotate(360deg); } }
         @media (min-width: 1024px) {
             /* Tetapkan struktur sidebar secara eksplisit. CSS produksi tidak
                selalu memuat utility Tailwind yang baru, sehingga tanpa aturan
@@ -719,6 +750,16 @@
     </div>
 </div>
 
+<div id="page-loading-overlay" role="status" aria-live="assertive" aria-label="Sedang memproses">
+    <div class="page-loading-card">
+        <span class="page-loading-spinner" aria-hidden="true"></span>
+        <div>
+            <p class="font-bold text-slate-900" data-page-loading-title>Sedang memproses...</p>
+            <p class="mt-0.5 text-xs text-slate-500" data-page-loading-message>Mohon tunggu, jangan tutup halaman.</p>
+        </div>
+    </div>
+</div>
+
 <script>
     const checkoutForms = Array.from(document.querySelectorAll('[data-checkout-form]'));
     const desktopCheckoutForm = document.getElementById('checkout-form-desktop');
@@ -752,6 +793,24 @@
     const mobileConfirmDiscountAmount = document.getElementById('mobile-confirm-discount-amount');
     const mobileConfirmPoNumber = document.getElementById('mobile-confirm-po-number');
     const mobileConfirmSiteName = document.getElementById('mobile-confirm-site-name');
+    const pageLoadingOverlay = document.getElementById('page-loading-overlay');
+    const pageLoadingTitle = document.querySelector('[data-page-loading-title]');
+    const pageLoadingMessage = document.querySelector('[data-page-loading-message]');
+    let pageLoadingTimer = null;
+    const showPageLoading = (title = 'Sedang memproses...', message = 'Mohon tunggu, jangan tutup halaman.') => {
+        if (!pageLoadingOverlay) return;
+        if (pageLoadingTitle) pageLoadingTitle.textContent = title;
+        if (pageLoadingMessage) pageLoadingMessage.textContent = message;
+        pageLoadingOverlay.classList.add('is-visible');
+    };
+    const hidePageLoading = () => {
+        clearTimeout(pageLoadingTimer);
+        pageLoadingOverlay?.classList.remove('is-visible');
+    };
+    const queuePageLoading = (title, message) => {
+        clearTimeout(pageLoadingTimer);
+        pageLoadingTimer = setTimeout(() => showPageLoading(title, message), 0);
+    };
     const cancelBtn = document.getElementById('cancel-confirm-btn');
     const submitBtn = document.getElementById('submit-confirm-btn');
     const desktopPaymentMethod = desktopCheckoutForm?.querySelector('[data-payment-method]');
@@ -1461,6 +1520,7 @@
                 if (dueInput) dueInput.value = dueDate;
             }
         }
+            showPageLoading('Menyimpan transaksi...', 'Transaksi sedang diproses. Mohon jangan tutup halaman.');
             activeCheckoutForm?.submit();
         });
 
@@ -1548,7 +1608,7 @@
         const value = target.getAttribute('data-value') || '';
         searchInput.value = value;
         searchPopup.classList.add('hidden');
-        searchForm?.submit();
+        searchForm?.requestSubmit();
     });
 
     document.addEventListener('click', (event) => {
@@ -1556,6 +1616,38 @@
             searchPopup?.classList.add('hidden');
         }
     });
+
+    document.addEventListener('submit', (event) => {
+        const form = event.target;
+        if (!(form instanceof HTMLFormElement) || form.dataset.skipLoading === '1') {
+            return;
+        }
+
+        // Tunggu sampai listener validasi lain selesai. Bila submit dibatalkan,
+        // loader tidak akan ditampilkan.
+        queuePageLoading('Sedang memproses...', 'Mohon tunggu, jangan tutup halaman.');
+        setTimeout(() => {
+            if (event.defaultPrevented) {
+                hidePageLoading();
+            }
+        }, 0);
+    });
+
+    document.addEventListener('click', (event) => {
+        const link = event.target.closest('a[href]');
+        if (!link || event.defaultPrevented || link.target === '_blank' || link.hasAttribute('download')) {
+            return;
+        }
+
+        const href = link.getAttribute('href') || '';
+        if (href === '' || href.startsWith('#') || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+            return;
+        }
+
+        queuePageLoading('Membuka halaman...', 'Mohon tunggu, halaman sedang dimuat.');
+    });
+
+    window.addEventListener('pageshow', hidePageLoading);
 
     const salesResetTimer = document.getElementById('sales-reset-timer');
     const nextResetDate = nextResetAtIso ? new Date(nextResetAtIso) : null;

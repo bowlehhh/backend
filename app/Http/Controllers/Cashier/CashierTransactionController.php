@@ -268,6 +268,22 @@ class CashierTransactionController extends Controller
         return $normalized;
     }
 
+    private function calculateMergedSubtotal(Product $product, array $allocations): float
+    {
+        if ($allocations === []) {
+            return 0;
+        }
+
+        $pricesByBatch = ProductBatch::query()
+            ->where('product_id', $product->id)
+            ->whereIn('id', array_keys($allocations))
+            ->pluck('selling_price', 'id');
+
+        return (float) collect($allocations)->sum(
+            fn ($qty, $batchId): float => max(0, (int) $qty) * (float) ($pricesByBatch[(int) $batchId] ?? 0),
+        );
+    }
+
     private function findCartItemKeyByPartNumber(array $cart, string $partNumber): ?string
     {
         $normalized = strtoupper(trim($partNumber));
@@ -393,6 +409,9 @@ class CashierTransactionController extends Controller
             : (int) ($cart[$key]['qty'] ?? 0);
         $currentVisiblePrice = $this->parseCurrencyInput($request->input('current_visible_price'));
         $isVisibleMergedLine = (bool) $request->boolean('current_visible_merge_stock');
+        $currentPriceIsManual = $request->has('current_visible_price_is_manual')
+            ? (bool) $request->boolean('current_visible_price_is_manual')
+            : (bool) ($cart[$key]['price_is_manual'] ?? false);
         $currentSubtotal = $isVisibleMergedLine && $currentVisiblePrice !== null
             ? $currentVisiblePrice
             : (float) ($cart[$key]['merged_subtotal'] ?? ((float) ($cart[$key]['price'] ?? $batch->selling_price) * $currentLineQty));
@@ -410,7 +429,7 @@ class CashierTransactionController extends Controller
             ? $this->getProductAvailableStock($product)
             : $this->getBatchStock($batch);
         $nextSubtotal = $mergedKey !== null
-            ? $currentSubtotal + $additionalUnitPrice
+            ? ($currentPriceIsManual ? $currentSubtotal : $currentSubtotal + $additionalUnitPrice)
             : $additionalUnitPrice * $nextQty;
         $baseUnitPrice = ! $mergedKey && $currentVisiblePrice !== null
             ? $currentVisiblePrice
@@ -436,6 +455,7 @@ class CashierTransactionController extends Controller
             'qty' => $nextQty,
             'merged_subtotal' => $mergedKey !== null ? $nextSubtotal : null,
             'merge_stock' => (bool) ($cart[$key]['merge_stock'] ?? false),
+            'price_is_manual' => $mergedKey !== null ? $currentPriceIsManual : false,
             'stock_allocations' => $currentAllocations,
         ];
 
@@ -500,7 +520,12 @@ class CashierTransactionController extends Controller
         }
 
         $parsedPrice = $this->parseCurrencyInput($priceInput);
-        $price = $priceInput !== null ? (float) ($parsedPrice ?? 0) : (float) ($cart[$key]['price'] ?? $batch->selling_price);
+        $priceIsManual = $request->has('price_is_manual')
+            ? (bool) $request->boolean('price_is_manual')
+            : (bool) ($cart[$key]['price_is_manual'] ?? false);
+        $price = $priceIsManual
+            ? (float) ($parsedPrice ?? 0)
+            : (float) ($cart[$key]['price'] ?? $batch->selling_price);
         if ($price < 0) {
             return back()->withErrors(['cart' => 'Harga jual tidak boleh kurang dari 0.']);
         }
@@ -508,11 +533,17 @@ class CashierTransactionController extends Controller
         $allocations = $this->normalizeStockAllocations($cart[$key]);
         $cart[$key]['qty'] = $qty;
         if ((bool) ($cart[$key]['merge_stock'] ?? false)) {
+            $allocations = $this->allocateMergedStock($product, $allocations, $qty, (int) $batch->id);
+            $price = $priceIsManual
+                ? $price
+                : $this->calculateMergedSubtotal($product, $allocations);
             $cart[$key]['merged_subtotal'] = $price;
             $cart[$key]['price'] = $qty > 0 ? ($price / $qty) : $price;
-            $cart[$key]['stock_allocations'] = $this->allocateMergedStock($product, $allocations, $qty, (int) $batch->id);
+            $cart[$key]['price_is_manual'] = $priceIsManual;
+            $cart[$key]['stock_allocations'] = $allocations;
         } else {
             $cart[$key]['price'] = $price;
+            $cart[$key]['price_is_manual'] = true;
             unset($cart[$key]['merged_subtotal']);
             $cart[$key]['stock_allocations'] = [(int) $batch->id => $qty];
         }
@@ -547,6 +578,7 @@ class CashierTransactionController extends Controller
         $totalQty = 0;
         $totalSubtotal = 0.0;
         $mergedAllocations = [];
+        $hasManualPrice = false;
 
         foreach ($cart as $cartKey => $item) {
             if (strtoupper(trim((string) ($item['part_number'] ?? ''))) !== strtoupper(trim($partNumber))) {
@@ -558,6 +590,7 @@ class CashierTransactionController extends Controller
             $itemPrice = (float) ($item['price'] ?? 0);
             $itemQty = (int) ($item['qty'] ?? 0);
             $totalSubtotal += (float) ($item['merged_subtotal'] ?? ($itemPrice * $itemQty));
+            $hasManualPrice = $hasManualPrice || (bool) ($item['price_is_manual'] ?? false);
 
             $allocations = $this->normalizeStockAllocations($item);
             foreach ($allocations as $allocationBatchId => $allocationQty) {
@@ -575,6 +608,7 @@ class CashierTransactionController extends Controller
         $cart[$key]['merged_subtotal'] = $totalSubtotal;
         $cart[$key]['price'] = $totalQty > 0 ? ($totalSubtotal / $totalQty) : (float) ($cart[$key]['price'] ?? 0);
         $cart[$key]['stock_allocations'] = $mergedAllocations;
+        $cart[$key]['price_is_manual'] = $hasManualPrice;
 
         foreach ($sameKeys as $cartKey) {
             if ($cartKey !== $key) {
@@ -701,6 +735,7 @@ class CashierTransactionController extends Controller
                 'qty' => $qty,
                 'merged_subtotal' => $mergeStock ? $lineTotal : null,
                 'merge_stock' => $mergeStock,
+                'price_is_manual' => (bool) ($item['price_is_manual'] ?? false),
                 'stock_allocations' => $mergeStock
                     ? $normalizedAllocations
                     : [$batchId => $qty],

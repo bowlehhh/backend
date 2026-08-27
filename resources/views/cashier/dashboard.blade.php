@@ -275,9 +275,10 @@
                                     </p>
                                 </div>
                             </div>
-                            <form method="POST" action="{{ route($cartUpdateRoute, $item['product_batch_id']) }}" class="mt-3 space-y-3" data-cart-item-form data-merge-stock="{{ !empty($item['merge_stock']) ? '1' : '0' }}" data-product-id="{{ (int) $item['product_id'] }}" data-product-batch-id="{{ (int) $item['product_batch_id'] }}" data-product-name="{{ $item['product_name'] }}" data-part-number="{{ $item['part_number'] }}">
+                            <form method="POST" action="{{ route($cartUpdateRoute, $item['product_batch_id']) }}" class="mt-3 space-y-3" data-cart-item-form data-merge-stock="{{ !empty($item['merge_stock']) ? '1' : '0' }}" data-price-is-manual="{{ !empty($item['price_is_manual']) ? '1' : '0' }}" data-product-id="{{ (int) $item['product_id'] }}" data-product-batch-id="{{ (int) $item['product_batch_id'] }}" data-product-name="{{ $item['product_name'] }}" data-part-number="{{ $item['part_number'] }}">
                                 @csrf
                                 <input type="hidden" name="cart_snapshot" value="" data-cart-snapshot />
+                                <input type="hidden" name="price_is_manual" value="{{ !empty($item['price_is_manual']) ? '1' : '0' }}" data-price-manual-input />
                                 <div class="grid grid-cols-1 gap-2 sm:grid-cols-[92px_minmax(0,1fr)]">
                                     <div class="space-y-1">
                                         <label class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Qty</label>
@@ -296,6 +297,9 @@
                                         />
                                     </div>
                                 </div>
+                                @if(!empty($item['merge_stock']))
+                                    <p class="text-[10px] text-slate-500">Harga otomatis mengikuti qty dan harga jual stok. Ubah total harga untuk menetapkan harga manual.</p>
+                                @endif
                                 <p class="hidden text-[11px] font-medium text-red-500" data-cart-qty-warning></p>
                                 <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
                                     <button type="submit" class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700">Update</button>
@@ -478,6 +482,7 @@
                                         <input type="hidden" name="current_visible_qty" value="" data-current-visible-qty />
                                         <input type="hidden" name="current_visible_price" value="" data-current-visible-price />
                                         <input type="hidden" name="current_visible_merge_stock" value="0" data-current-visible-merge-stock />
+                                        <input type="hidden" name="current_visible_price_is_manual" value="0" data-current-visible-price-is-manual />
                                         <button
                                             type="submit"
                                             class="{{ $productAddButtonClasses }} {{ $canAddToCart ? 'bg-emerald-700 text-white hover:bg-emerald-600' : 'cursor-not-allowed bg-slate-200 text-slate-400' }}"
@@ -807,6 +812,7 @@
             product_name: form.dataset.productName || '',
             part_number: form.dataset.partNumber || '',
             merge_stock: mergeStock,
+            price_is_manual: form.dataset.priceIsManual === '1',
             qty,
             price: unitPrice,
             line_total: lineTotal,
@@ -1110,9 +1116,16 @@
 
     document.querySelectorAll('[data-cart-price]').forEach((input) => {
         input.addEventListener('input', () => {
+            const form = input.closest('[data-cart-item-form]');
+            if (form) {
+                form.dataset.priceIsManual = '1';
+                const manualInput = form.querySelector('[data-price-manual-input]');
+                if (manualInput) {
+                    manualInput.value = '1';
+                }
+            }
             recalculateCartSummary();
 
-            const form = input.closest('[data-cart-item-form]');
             if (!form) {
                 return;
             }
@@ -1157,6 +1170,7 @@
             const qtyField = form.querySelector('[data-current-visible-qty]');
             const priceField = form.querySelector('[data-current-visible-price]');
             const mergeField = form.querySelector('[data-current-visible-merge-stock]');
+            const manualPriceField = form.querySelector('[data-current-visible-price-is-manual]');
             const snapshotField = form.querySelector('[data-cart-snapshot]');
 
             if (snapshotField) {
@@ -1167,6 +1181,7 @@
                 if (qtyField) qtyField.value = '';
                 if (priceField) priceField.value = '';
                 if (mergeField) mergeField.value = '0';
+                if (manualPriceField) manualPriceField.value = '0';
                 return;
             }
 
@@ -1190,6 +1205,10 @@
 
             if (mergeField) {
                 mergeField.value = matchingCartForm.dataset.mergeStock === '1' ? '1' : '0';
+            }
+
+            if (manualPriceField) {
+                manualPriceField.value = matchingCartForm.dataset.priceIsManual === '1' ? '1' : '0';
             }
         });
     });

@@ -259,7 +259,7 @@ class CheckoutService
                                 }
 
                                 $batch = $batchesById->get((int) $batchId);
-                                if (! $batch || (int) $batch->product_id !== (int) $product->id) {
+                                if (! $batch || ! $batches->contains('id', $batch->id)) {
                                     $batch = $batches->first(fn (ProductBatch $candidate): bool => max(0, (int) ($remainingStockByBatch[(int) $candidate->id] ?? 0)) > 0);
                                 }
                                 if (! $batch) {
@@ -280,9 +280,9 @@ class CheckoutService
                                 $batchSubtotal = $batchPrice * $takeQty;
 
                                 $saleItems[] = [
-                                    'product_id' => $product->id,
+                                    'product_id' => $batch->product_id,
                                     'product_batch_id' => $batch->id,
-                                    'product_name' => $product->name,
+                                    'product_name' => $batch->product?->name ?? $product->name,
                                     'part_number' => $partNumber,
                                     'merge_stock' => true,
                                     'price' => $batchPrice,
@@ -308,9 +308,9 @@ class CheckoutService
                                 $batchSubtotal = $batchPrice * $takeQty;
 
                                 $saleItems[] = [
-                                    'product_id' => $product->id,
+                                    'product_id' => $batch->product_id,
                                     'product_batch_id' => $batch->id,
-                                    'product_name' => $product->name,
+                                    'product_name' => $batch->product?->name ?? $product->name,
                                     'part_number' => $partNumber,
                                     'merge_stock' => true,
                                     'price' => $batchPrice,
@@ -334,9 +334,9 @@ class CheckoutService
                             $overflowSubtotal = $overflowPrice * $remainingQty;
 
                             $saleItems[] = [
-                                'product_id' => $product->id,
+                                'product_id' => $overflowBatch->product_id,
                                 'product_batch_id' => $overflowBatch->id,
-                                'product_name' => $product->name,
+                                'product_name' => $overflowBatch->product?->name ?? $product->name,
                                 'part_number' => $partNumber,
                                 'merge_stock' => true,
                                 'price' => $overflowPrice,

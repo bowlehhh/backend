@@ -211,11 +211,21 @@ class CashierTransactionController extends Controller
      * Batch yang dipilih dari daftar jual dicoba lebih dulu agar harga defaultnya
      * tetap konsisten; jika habis, lanjutkan ke batch stok lain dengan part number sama.
      */
-    private function findAvailableBatchForMergedCart(Product $product, array $allocations, int $preferredBatchId): ?ProductBatch
+    private function activeBatchesForPartNumber(string $partNumber)
     {
-        return ProductBatch::query()
-            ->where('product_id', $product->id)
-            ->where('is_active', true)
+        $normalized = strtoupper(trim($partNumber));
+        $query = ProductBatch::query()->where('is_active', true);
+
+        if (str_starts_with($normalized, 'PRODUCT-')) {
+            return $query->where('product_id', (int) substr($normalized, 8));
+        }
+
+        return $query->whereHas('product', fn ($productQuery) => $productQuery->whereRaw('UPPER(TRIM(barcode)) = ?', [$normalized]));
+    }
+
+    private function findAvailableBatchForMergedCart(string $partNumber, array $allocations, int $preferredBatchId): ?ProductBatch
+    {
+        return $this->activeBatchesForPartNumber($partNumber)
             ->orderByRaw('CASE WHEN id = ? THEN 0 ELSE 1 END', [$preferredBatchId])
             ->orderBy('id')
             ->get()
@@ -226,11 +236,9 @@ class CashierTransactionController extends Controller
      * Sebarkan qty item gabungan ke batch aktif produk yang benar. Dengan begitu
      * qty 10 tetap bisa memakai total stok 12, walaupun batch pertama sudah 0.
      */
-    private function allocateMergedStock(Product $product, array $allocations, int $qty, int $preferredBatchId): array
+    private function allocateMergedStock(string $partNumber, array $allocations, int $qty, int $preferredBatchId): array
     {
-        $batches = ProductBatch::query()
-            ->where('product_id', $product->id)
-            ->where('is_active', true)
+        $batches = $this->activeBatchesForPartNumber($partNumber)
             ->orderByRaw('CASE WHEN id = ? THEN 0 ELSE 1 END', [$preferredBatchId])
             ->orderBy('id')
             ->get(['id', 'stock']);
@@ -268,14 +276,13 @@ class CashierTransactionController extends Controller
         return $normalized;
     }
 
-    private function calculateMergedSubtotal(Product $product, array $allocations): float
+    private function calculateMergedSubtotal(string $partNumber, array $allocations): float
     {
         if ($allocations === []) {
             return 0;
         }
 
-        $pricesByBatch = ProductBatch::query()
-            ->where('product_id', $product->id)
+        $pricesByBatch = $this->activeBatchesForPartNumber($partNumber)
             ->whereIn('id', array_keys($allocations))
             ->pluck('selling_price', 'id');
 
@@ -417,7 +424,7 @@ class CashierTransactionController extends Controller
             : (float) ($cart[$key]['merged_subtotal'] ?? ((float) ($cart[$key]['price'] ?? $batch->selling_price) * $currentLineQty));
         $currentAllocations = $this->normalizeStockAllocations($cart[$key] ?? []);
         $sourceBatch = $mergedKey !== null
-            ? $this->findAvailableBatchForMergedCart($product, $currentAllocations, (int) $batch->id)
+            ? $this->findAvailableBatchForMergedCart($partNumber, $currentAllocations, (int) $batch->id)
             : $batch;
         if (! $sourceBatch) {
             return back()->withErrors(['cart' => "Stok {$product->name} tidak cukup."]);
@@ -426,7 +433,7 @@ class CashierTransactionController extends Controller
         $additionalUnitPrice = (float) $sourceBatch->selling_price;
         $nextQty = $currentLineQty + 1;
         $availableStock = $mergedKey !== null
-            ? $this->getProductAvailableStock($product)
+            ? $this->getAvailableStockByPartNumber($partNumber)
             : $this->getBatchStock($batch);
         $nextSubtotal = $mergedKey !== null
             ? ($currentPriceIsManual ? $currentSubtotal : $currentSubtotal + $additionalUnitPrice)
@@ -443,7 +450,7 @@ class CashierTransactionController extends Controller
         }
 
         $currentAllocations = $mergedKey !== null
-            ? $this->allocateMergedStock($product, $currentAllocations, $nextQty, (int) $sourceBatch->id)
+            ? $this->allocateMergedStock($partNumber, $currentAllocations, $nextQty, (int) $sourceBatch->id)
             : [(int) $batch->id => $nextQty];
 
         $cart[$key] = [
@@ -512,7 +519,7 @@ class CashierTransactionController extends Controller
 
         $mergeStock = (bool) ($cart[$key]['merge_stock'] ?? false);
         $availableStock = $mergeStock
-            ? $this->getProductAvailableStock($product)
+            ? $this->getAvailableStockByPartNumber($partNumber)
             : $this->getBatchStock($batch);
 
         if ($qty > $availableStock) {
@@ -533,10 +540,10 @@ class CashierTransactionController extends Controller
         $allocations = $this->normalizeStockAllocations($cart[$key]);
         $cart[$key]['qty'] = $qty;
         if ((bool) ($cart[$key]['merge_stock'] ?? false)) {
-            $allocations = $this->allocateMergedStock($product, $allocations, $qty, (int) $batch->id);
+            $allocations = $this->allocateMergedStock($partNumber, $allocations, $qty, (int) $batch->id);
             $price = $priceIsManual
                 ? $price
-                : $this->calculateMergedSubtotal($product, $allocations);
+                : $this->calculateMergedSubtotal($partNumber, $allocations);
             $cart[$key]['merged_subtotal'] = $price;
             $cart[$key]['price'] = $qty > 0 ? ($price / $qty) : $price;
             $cart[$key]['price_is_manual'] = $priceIsManual;
@@ -574,6 +581,17 @@ class CashierTransactionController extends Controller
         }
 
         $partNumber = $this->getBatchPartNumber($batch);
+        $selectedBatchIds = collect((array) $request->input('merge_batch_ids', []))
+            ->map(fn ($batchId): int => (int) $batchId)
+            ->filter(fn (int $batchId): bool => $batchId > 0)
+            ->unique()
+            ->values()
+            ->all();
+
+        if (count($selectedBatchIds) < 2 || ! in_array((int) $batch->id, $selectedBatchIds, true)) {
+            return back()->withErrors(['cart' => 'Pilih minimal dua stok dengan part number yang sama untuk digabung.']);
+        }
+
         $sameKeys = [];
         $totalQty = 0;
         $totalSubtotal = 0.0;
@@ -582,6 +600,10 @@ class CashierTransactionController extends Controller
 
         foreach ($cart as $cartKey => $item) {
             if (strtoupper(trim((string) ($item['part_number'] ?? ''))) !== strtoupper(trim($partNumber))) {
+                continue;
+            }
+
+            if (! in_array((int) ($item['product_batch_id'] ?? 0), $selectedBatchIds, true)) {
                 continue;
             }
 
@@ -598,7 +620,11 @@ class CashierTransactionController extends Controller
             }
         }
 
-        $availableStock = $this->getProductAvailableStock($batch->product);
+        if (count($sameKeys) < 2) {
+            return back()->withErrors(['cart' => 'Pilih minimal dua item keranjang yang memiliki part number sama.']);
+        }
+
+        $availableStock = $this->getAvailableStockByPartNumber($partNumber);
         if ($totalQty > $availableStock) {
             return back()->withErrors(['cart' => 'Stok gabungan tidak mencukupi.']);
         }
@@ -694,7 +720,7 @@ class CashierTransactionController extends Controller
 
             $mergeStock = (bool) ($item['merge_stock'] ?? false);
             $availableStock = $mergeStock
-                ? $this->getProductAvailableStock($product)
+                ? $this->getAvailableStockByPartNumber($partNumber)
                 : $this->getBatchStock($batch);
 
             if ($qty > $availableStock) {

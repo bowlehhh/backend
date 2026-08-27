@@ -50,6 +50,31 @@
             animation: page-loading-spin .75s linear infinite;
         }
         @keyframes page-loading-spin { to { transform: rotate(360deg); } }
+        #stock-merge-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 60;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 23, 42, .55);
+            padding: 1rem;
+        }
+        #stock-merge-modal.is-visible { display: flex; }
+        .stock-merge-dialog {
+            width: min(100%, 520px);
+            max-height: calc(100vh - 2rem);
+            overflow: auto;
+            border-radius: 1rem;
+            background: #fff;
+            padding: 1.25rem;
+            box-shadow: 0 24px 50px rgba(15, 23, 42, .28);
+        }
+        .stock-merge-choice { cursor: pointer; }
+        .stock-merge-choice:has(input:checked) {
+            border-color: #059669;
+            background: #ecfdf5;
+        }
         @media (min-width: 1024px) {
             /* Tetapkan struktur sidebar secara eksplisit. CSS produksi tidak
                selalu memuat utility Tailwind yang baru, sehingga tanpa aturan
@@ -337,11 +362,14 @@
                                     @if((int) ($item['can_merge_stock'] ?? 0) === 1)
                                         @if(empty($item['merge_stock']))
                                             <button
-                                                type="submit"
-                                                formaction="{{ route($cartMergeRoute, $item['product_batch_id']) }}"
+                                                type="button"
+                                                data-open-merge-modal
+                                                data-merge-route="{{ route($cartMergeRoute, $item['product_batch_id']) }}"
+                                                data-merge-batch-id="{{ (int) $item['product_batch_id'] }}"
+                                                data-merge-part-number="{{ $item['part_number'] }}"
                                                 class="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-700 hover:bg-amber-100"
                                             >
-                                                Gabung Stok
+                                                Pilih & Gabung Stok
                                             </button>
                                         @else
                                             <span class="inline-flex items-center justify-center rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700">
@@ -747,6 +775,30 @@
             <button id="cancel-confirm-btn" type="button" class="flex-1 rounded-xl border border-slate-300 px-3 py-2.5 text-sm font-semibold text-slate-700">Batal</button>
             <button id="submit-confirm-btn" type="button" class="flex-1 rounded-xl bg-emerald-700 px-3 py-2.5 text-sm font-bold text-white">Ya, Konfirmasi</button>
         </div>
+    </div>
+</div>
+
+<div id="stock-merge-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="stock-merge-title">
+    <div class="stock-merge-dialog">
+        <div class="flex items-start justify-between gap-4">
+            <div>
+                <h3 id="stock-merge-title" class="text-lg font-extrabold text-slate-900">Pilih stok yang akan digabung</h3>
+                <p class="mt-1 text-sm text-slate-500">Pilih minimal dua item dengan part number yang sama. Item yang tidak dipilih tetap terpisah.</p>
+            </div>
+            <button type="button" data-close-merge-modal class="rounded-lg p-1 text-slate-500 hover:bg-slate-100" aria-label="Tutup pilihan gabung stok">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <p class="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700">Part No: <span data-merge-part-label>-</span></p>
+        <div id="stock-merge-options" class="mt-3 space-y-2"></div>
+        <p id="stock-merge-error" class="mt-3 hidden text-sm font-medium text-red-600"></p>
+        <form id="stock-merge-form" method="POST" action="" class="mt-4 flex gap-3">
+            @csrf
+            <input type="hidden" name="cart_snapshot" value="" data-merge-cart-snapshot />
+            <div data-merge-selected-inputs></div>
+            <button type="button" data-close-merge-modal class="flex-1 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700">Batal</button>
+            <button type="submit" class="flex-1 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-600">Gabungkan Pilihan</button>
+        </form>
     </div>
 </div>
 
@@ -1675,6 +1727,101 @@
         if (!searchForm?.contains(event.target)) {
             searchPopup?.classList.add('hidden');
         }
+    });
+
+    const stockMergeModal = document.getElementById('stock-merge-modal');
+    const stockMergeForm = document.getElementById('stock-merge-form');
+    const stockMergeOptions = document.getElementById('stock-merge-options');
+    const stockMergePartLabel = document.querySelector('[data-merge-part-label]');
+    const stockMergeError = document.getElementById('stock-merge-error');
+    const stockMergeSnapshot = stockMergeForm?.querySelector('[data-merge-cart-snapshot]');
+    const stockMergeSelectedInputs = stockMergeForm?.querySelector('[data-merge-selected-inputs]');
+
+    const closeStockMergeModal = () => {
+        stockMergeModal?.classList.remove('is-visible');
+        stockMergeModal?.setAttribute('aria-hidden', 'true');
+    };
+
+    const getMergeCandidates = (partNumber) => {
+        const normalizedPartNumber = String(partNumber || '').trim().toUpperCase();
+
+        return Array.from(document.querySelectorAll('[data-cart-item-form]'))
+            .filter((form) => form.dataset.mergeStock !== '1')
+            .filter((form) => String(form.dataset.partNumber || '').trim().toUpperCase() === normalizedPartNumber)
+            .map((form) => ({
+                batchId: Number(form.dataset.productBatchId || 0),
+                name: form.dataset.productName || 'Barang tanpa nama',
+                qty: Math.max(0, Number(form.querySelector('[data-cart-qty]')?.value || 0)),
+                total: Math.max(0, Number(sanitizeRupiahValue(form.querySelector('[data-cart-price]')?.value || 0)) * Number(form.querySelector('[data-cart-qty]')?.value || 0)),
+            }))
+            .filter((item) => item.batchId > 0 && item.qty > 0);
+    };
+
+    document.querySelectorAll('[data-open-merge-modal]').forEach((button) => {
+        button.addEventListener('click', () => {
+            const partNumber = button.dataset.mergePartNumber || '';
+            const sourceBatchId = Number(button.dataset.mergeBatchId || 0);
+            const candidates = getMergeCandidates(partNumber);
+            const canMerge = candidates.length >= 2;
+
+            if (stockMergePartLabel) stockMergePartLabel.textContent = partNumber || '-';
+            if (stockMergeForm) stockMergeForm.action = button.dataset.mergeRoute || '';
+            if (stockMergeSnapshot) stockMergeSnapshot.value = JSON.stringify(collectLiveCartItems());
+            if (stockMergeError) {
+                stockMergeError.classList.toggle('hidden', canMerge);
+                stockMergeError.textContent = canMerge
+                    ? ''
+                    : 'Tambahkan minimal satu stok lain dengan part number yang sama ke keranjang terlebih dahulu.';
+            }
+            if (stockMergeOptions) {
+                stockMergeOptions.innerHTML = canMerge
+                    ? candidates.map((item) => `
+                        <label class="stock-merge-choice flex items-center gap-3 rounded-xl border border-slate-200 p-3">
+                            <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-emerald-700" value="${item.batchId}" ${item.batchId === sourceBatchId ? 'checked' : ''} data-merge-choice />
+                            <span class="min-w-0 flex-1">
+                                <span class="block font-semibold text-slate-900">${escapeHtml(item.name)}</span>
+                                <span class="mt-0.5 block text-xs text-slate-500">Qty ${toRupiah(item.qty)} · Total Rp ${toRupiah(item.total)} · Batch #${item.batchId}</span>
+                            </span>
+                        </label>
+                    `).join('')
+                    : '';
+            }
+            stockMergeForm?.querySelector('button[type="submit"]')?.toggleAttribute('disabled', !canMerge);
+            stockMergeModal?.classList.add('is-visible');
+            stockMergeModal?.setAttribute('aria-hidden', 'false');
+        });
+    });
+
+    document.querySelectorAll('[data-close-merge-modal]').forEach((button) => {
+        button.addEventListener('click', closeStockMergeModal);
+    });
+
+    stockMergeModal?.addEventListener('click', (event) => {
+        if (event.target === stockMergeModal) closeStockMergeModal();
+    });
+
+    stockMergeForm?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const selectedBatchIds = Array.from(stockMergeForm.querySelectorAll('[data-merge-choice]:checked'))
+            .map((input) => Number(input.value || 0))
+            .filter((batchId) => batchId > 0);
+
+        if (selectedBatchIds.length < 2) {
+            if (stockMergeError) {
+                stockMergeError.textContent = 'Pilih minimal dua item sebelum stok digabung.';
+                stockMergeError.classList.remove('hidden');
+            }
+            return;
+        }
+
+        if (stockMergeSelectedInputs) {
+            stockMergeSelectedInputs.innerHTML = selectedBatchIds
+                .map((batchId) => `<input type="hidden" name="merge_batch_ids[]" value="${batchId}">`)
+                .join('');
+        }
+        if (stockMergeSnapshot) stockMergeSnapshot.value = JSON.stringify(collectLiveCartItems());
+        showPageLoading('Menggabungkan stok...', 'Pilihan stok sedang diproses. Mohon tunggu.');
+        stockMergeForm.submit();
     });
 
     document.addEventListener('submit', (event) => {

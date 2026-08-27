@@ -194,14 +194,6 @@ class CashierDashboardController extends Controller
                 ->get()
                 ->keyBy('id')
             : collect();
-        $mergedPriceBatchesByProduct = $rawCartProductIds !== []
-            ? ProductBatch::query()
-                ->whereIn('product_id', $rawCartProductIds)
-                ->where('is_active', true)
-                ->orderBy('id')
-                ->get(['id', 'product_id', 'stock', 'selling_price'])
-                ->groupBy('product_id')
-            : collect();
 
         $rawCartPartNumbers = $rawCart
             ->map(function (array $item) use ($rawCartProducts): string {
@@ -218,8 +210,9 @@ class CashierDashboardController extends Controller
             ->values();
 
         $availableStockMap = [];
+        $mergedPriceBatchesByPart = collect();
         if ($rawCartPartNumbers->isNotEmpty()) {
-            $availableStockMap = ProductBatch::query()
+            $mergedPriceBatchesByPart = ProductBatch::query()
                 ->with('product:id,barcode')
                 ->where('is_active', true)
                 ->where(function ($query) use ($rawCartPartNumbers): void {
@@ -232,13 +225,14 @@ class CashierDashboardController extends Controller
                     }
                 })
                 ->get()
-                ->groupBy(fn (ProductBatch $batch): string => strtoupper(trim((string) ($batch->product?->barcode ?? ('PRODUCT-' . $batch->product_id)))))
+                ->groupBy(fn (ProductBatch $batch): string => strtoupper(trim((string) ($batch->product?->barcode ?? ('PRODUCT-' . $batch->product_id)))));
+            $availableStockMap = $mergedPriceBatchesByPart
                 ->map(fn ($batches): int => (int) $batches->sum('stock'))
                 ->all();
         }
 
         $normalizedCart = $rawCart
-            ->map(function (array $item) use ($rawCartProducts, $batchStockMap, $availableStockMap, $mergedPriceBatchesByProduct): array {
+            ->map(function (array $item) use ($rawCartProducts, $batchStockMap, $availableStockMap, $mergedPriceBatchesByPart): array {
                 $product = $rawCartProducts->get((int) ($item['product_id'] ?? 0));
                 $partNumber = strtoupper(trim((string) ($item['part_number'] ?? ($product?->barcode ?? ''))));
                 $batchId = (int) ($item['product_batch_id'] ?? 0);
@@ -267,8 +261,8 @@ class CashierDashboardController extends Controller
                 $item['can_merge_stock'] = $availableStock > $batchStock;
                 $item['merged_price_allocations'] = $mergeStock ? (array) ($item['stock_allocations'] ?? []) : [];
                 $item['merged_price_batches'] = $mergeStock
-                    ? $mergedPriceBatchesByProduct
-                        ->get((int) ($item['product_id'] ?? 0), collect())
+                    ? $mergedPriceBatchesByPart
+                        ->get($partNumber, collect())
                         ->map(fn (ProductBatch $candidate): array => [
                             'id' => (int) $candidate->id,
                             'stock' => (int) $candidate->stock,

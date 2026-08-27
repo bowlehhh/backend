@@ -231,6 +231,10 @@ class CheckoutService
                     $remainingQty = $qty;
                     $subtotal = $unitPrice * $qty;
                     $total += $subtotal;
+                    // Satu item gabungan dapat mengambil stok dari beberapa batch.
+                    // Nama pada invoice harus tetap mengikuti item sumber yang dipilih
+                    // kasir saat memulai penggabungan, bukan nama batch alokasi berikutnya.
+                    $displayProductName = trim((string) ($item['product_name'] ?? '')) ?: $product->name;
 
                     if (! $mergeStock) {
                         $batchId = (int) $primaryBatch->id;
@@ -282,7 +286,7 @@ class CheckoutService
                                 $saleItems[] = [
                                     'product_id' => $batch->product_id,
                                     'product_batch_id' => $batch->id,
-                                    'product_name' => $batch->product?->name ?? $product->name,
+                                    'product_name' => $displayProductName,
                                     'part_number' => $partNumber,
                                     'merge_stock' => true,
                                     'price' => $batchPrice,
@@ -310,7 +314,7 @@ class CheckoutService
                                 $saleItems[] = [
                                     'product_id' => $batch->product_id,
                                     'product_batch_id' => $batch->id,
-                                    'product_name' => $batch->product?->name ?? $product->name,
+                                    'product_name' => $displayProductName,
                                     'part_number' => $partNumber,
                                     'merge_stock' => true,
                                     'price' => $batchPrice,
@@ -336,7 +340,7 @@ class CheckoutService
                             $saleItems[] = [
                                 'product_id' => $overflowBatch->product_id,
                                 'product_batch_id' => $overflowBatch->id,
-                                'product_name' => $overflowBatch->product?->name ?? $product->name,
+                                'product_name' => $displayProductName,
                                 'part_number' => $partNumber,
                                 'merge_stock' => true,
                                 'price' => $overflowPrice,

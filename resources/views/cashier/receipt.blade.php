@@ -166,9 +166,7 @@
     $displayItems = collect($sale->items ?? [])
         ->groupBy(function ($item): string {
             if ((bool) ($item->merge_stock ?? false)) {
-                return (int) ($item->product_id ?? 0) > 0
-                    ? 'MERGED-PRODUCT-' . (int) $item->product_id
-                    : 'MERGED-' . strtoupper(trim((string) ($item->part_number ?? $item->product?->barcode ?? 'PRODUCT-' . ($item->product_id ?? 0))));
+                return 'MERGED-' . strtoupper(trim((string) ($item->part_number ?? $item->product?->barcode ?? $item->productBatch?->product?->barcode ?? 'PRODUCT-' . ($item->product_id ?? 0))));
             }
 
             return 'ITEM-' . (int) ($item->id ?? 0);

@@ -147,9 +147,7 @@ class CashierTransactionController extends Controller
         return collect($sale->items ?? [])
             ->groupBy(function ($item): string {
                 if ((bool) ($item->merge_stock ?? false)) {
-                    return (int) ($item->product_id ?? 0) > 0
-                        ? 'MERGED-PRODUCT-' . (int) $item->product_id
-                        : 'MERGED-' . strtoupper(trim((string) ($item->part_number ?? $item->product?->barcode ?? 'PRODUCT-' . ($item->product_id ?? 0))));
+                    return 'MERGED-' . strtoupper(trim((string) ($item->part_number ?? $item->product?->barcode ?? $item->productBatch?->product?->barcode ?? 'PRODUCT-' . ($item->product_id ?? 0))));
                 }
 
                 return 'ITEM-' . (int) ($item->id ?? 0);
@@ -452,11 +450,14 @@ class CashierTransactionController extends Controller
         $currentAllocations = $mergedKey !== null
             ? $this->allocateMergedStock($partNumber, $currentAllocations, $nextQty, (int) $sourceBatch->id)
             : [(int) $batch->id => $nextQty];
+        $sourceCartItem = $mergedKey !== null ? ($cart[$key] ?? []) : [];
 
         $cart[$key] = [
-            'product_id' => $product->id,
-            'product_batch_id' => $batch->id,
-            'product_name' => $product->name,
+            // Setelah stok digabung, identitas tampilan harus tetap mengikuti
+            // barang sumber. Batch yang baru diklik hanya menambah alokasi stok.
+            'product_id' => $mergedKey !== null ? (int) ($sourceCartItem['product_id'] ?? $product->id) : $product->id,
+            'product_batch_id' => $mergedKey !== null ? (int) ($sourceCartItem['product_batch_id'] ?? $batch->id) : $batch->id,
+            'product_name' => $mergedKey !== null ? (string) ($sourceCartItem['product_name'] ?? $product->name) : $product->name,
             'part_number' => $partNumber,
             'price' => $mergedKey !== null ? $nextPrice : $baseUnitPrice,
             'qty' => $nextQty,

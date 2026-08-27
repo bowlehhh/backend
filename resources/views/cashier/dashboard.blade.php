@@ -306,7 +306,7 @@
                                     </p>
                                 </div>
                             </div>
-                            <form method="POST" action="{{ route($cartUpdateRoute, $item['product_batch_id']) }}" class="mt-3 space-y-3" data-cart-item-form data-merge-stock="{{ !empty($item['merge_stock']) ? '1' : '0' }}" data-price-is-manual="{{ !empty($item['price_is_manual']) ? '1' : '0' }}" data-product-id="{{ (int) $item['product_id'] }}" data-product-batch-id="{{ (int) $item['product_batch_id'] }}" data-product-name="{{ $item['product_name'] }}" data-part-number="{{ $item['part_number'] }}">
+                            <form method="POST" action="{{ route($cartUpdateRoute, $item['product_batch_id']) }}" class="mt-3 space-y-3" data-cart-item-form data-merge-stock="{{ !empty($item['merge_stock']) ? '1' : '0' }}" data-price-is-manual="{{ !empty($item['price_is_manual']) ? '1' : '0' }}" data-merged-price-batches='@json($item['merged_price_batches'] ?? [])' data-merged-price-allocations='@json($item['merged_price_allocations'] ?? [])' data-product-id="{{ (int) $item['product_id'] }}" data-product-batch-id="{{ (int) $item['product_batch_id'] }}" data-product-name="{{ $item['product_name'] }}" data-part-number="{{ $item['part_number'] }}">
                                 @csrf
                                 <input type="hidden" name="cart_snapshot" value="" data-cart-snapshot />
                                 <input type="hidden" name="price_is_manual" value="{{ !empty($item['price_is_manual']) ? '1' : '0' }}" data-price-manual-input />
@@ -1173,6 +1173,58 @@
         return true;
     };
 
+    const calculateAutomaticMergedTotal = (form, requestedQty) => {
+        if (!form || form.dataset.mergeStock !== '1') {
+            return 0;
+        }
+
+        try {
+            const batches = JSON.parse(form.dataset.mergedPriceBatches || '[]')
+                .map((batch) => ({
+                    id: Number(batch.id || 0),
+                    stock: Math.max(0, Number(batch.stock || 0)),
+                    price: Math.max(0, Number(batch.price || 0)),
+                }))
+                .filter((batch) => batch.id > 0);
+            const allocations = JSON.parse(form.dataset.mergedPriceAllocations || '{}');
+            const preferredBatchId = Number(form.dataset.productBatchId || 0);
+            const orderedBatches = [...batches].sort((left, right) => {
+                if (left.id === preferredBatchId) return -1;
+                if (right.id === preferredBatchId) return 1;
+                return left.id - right.id;
+            });
+            let remaining = Math.max(0, Number(requestedQty || 0));
+            let total = 0;
+            const usedByBatch = new Map();
+
+            // Alokasi lama dipertahankan terlebih dahulu, sama seperti proses server.
+            orderedBatches.forEach((batch) => {
+                const allocated = Math.max(0, Number(allocations[batch.id] || 0));
+                const takeQty = Math.min(remaining, allocated, batch.stock);
+                if (takeQty > 0) {
+                    usedByBatch.set(batch.id, takeQty);
+                    remaining -= takeQty;
+                    total += takeQty * batch.price;
+                }
+            });
+
+            // Jika qty bertambah, gunakan stok batch lain yang masih tersedia.
+            orderedBatches.forEach((batch) => {
+                if (remaining <= 0) return;
+                const capacity = Math.max(0, batch.stock - (usedByBatch.get(batch.id) || 0));
+                const takeQty = Math.min(remaining, capacity);
+                if (takeQty > 0) {
+                    remaining -= takeQty;
+                    total += takeQty * batch.price;
+                }
+            });
+
+            return total;
+        } catch (_) {
+            return 0;
+        }
+    };
+
     document.querySelectorAll('[data-cart-price]').forEach((input) => {
         input.addEventListener('input', () => {
             const form = input.closest('[data-cart-item-form]');
@@ -1198,12 +1250,20 @@
         syncQtyWarning(input.closest('[data-cart-item-form]'));
         input.addEventListener('input', () => {
             clampQtyInput(input);
-            recalculateCartSummary();
 
             const form = input.closest('[data-cart-item-form]');
             if (!form) {
                 return;
             }
+
+            if (form.dataset.mergeStock === '1' && form.dataset.priceIsManual !== '1') {
+                const priceInput = form.querySelector('[data-cart-price]');
+                if (priceInput) {
+                    priceInput.value = formatRupiahInputValue(calculateAutomaticMergedTotal(form, input.value));
+                }
+            }
+
+            recalculateCartSummary();
 
             syncQtyWarning(form);
         });

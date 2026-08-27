@@ -194,6 +194,14 @@ class CashierDashboardController extends Controller
                 ->get()
                 ->keyBy('id')
             : collect();
+        $mergedPriceBatchesByProduct = $rawCartProductIds !== []
+            ? ProductBatch::query()
+                ->whereIn('product_id', $rawCartProductIds)
+                ->where('is_active', true)
+                ->orderBy('id')
+                ->get(['id', 'product_id', 'stock', 'selling_price'])
+                ->groupBy('product_id')
+            : collect();
 
         $rawCartPartNumbers = $rawCart
             ->map(function (array $item) use ($rawCartProducts): string {
@@ -230,7 +238,7 @@ class CashierDashboardController extends Controller
         }
 
         $normalizedCart = $rawCart
-            ->map(function (array $item) use ($rawCartProducts, $batchStockMap, $availableStockMap): array {
+            ->map(function (array $item) use ($rawCartProducts, $batchStockMap, $availableStockMap, $mergedPriceBatchesByProduct): array {
                 $product = $rawCartProducts->get((int) ($item['product_id'] ?? 0));
                 $partNumber = strtoupper(trim((string) ($item['part_number'] ?? ($product?->barcode ?? ''))));
                 $batchId = (int) ($item['product_batch_id'] ?? 0);
@@ -257,6 +265,18 @@ class CashierDashboardController extends Controller
                     : (float) ($item['price'] ?? 0);
                 $item['max_qty'] = $mergeStock ? $availableStock : $batchStock;
                 $item['can_merge_stock'] = $availableStock > $batchStock;
+                $item['merged_price_allocations'] = $mergeStock ? (array) ($item['stock_allocations'] ?? []) : [];
+                $item['merged_price_batches'] = $mergeStock
+                    ? $mergedPriceBatchesByProduct
+                        ->get((int) ($item['product_id'] ?? 0), collect())
+                        ->map(fn (ProductBatch $candidate): array => [
+                            'id' => (int) $candidate->id,
+                            'stock' => (int) $candidate->stock,
+                            'price' => (float) $candidate->selling_price,
+                        ])
+                        ->values()
+                        ->all()
+                    : [];
 
                 return $item;
             })

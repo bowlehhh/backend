@@ -26,6 +26,9 @@
             #cart-panel {
                 display: flex;
                 flex-direction: column;
+                position: fixed;
+                inset: 0 auto 0 0;
+                z-index: 30;
                 width: var(--cashier-sidebar-w);
                 height: 100vh;
                 overflow: hidden;
@@ -47,8 +50,28 @@
                 flex-direction: column;
                 min-height: 0;
             }
+            #cart-shopping-card > :first-child {
+                flex: 0 0 auto;
+            }
             #cart-items-list {
                 flex: 1 1 0;
+                min-height: 0;
+                overflow-y: auto;
+            }
+            #cashier-main {
+                display: flex;
+                flex-direction: column;
+                height: 100vh;
+                margin-left: var(--cashier-sidebar-w);
+                overflow: hidden;
+            }
+            #cashier-workspace {
+                display: flex;
+                flex: 1 1 0;
+                min-height: 0;
+                overflow: hidden;
+            }
+            #product-list-panel {
                 min-height: 0;
                 overflow-y: auto;
             }
@@ -316,7 +339,7 @@
         </div>
     </aside>
 
-    <main class="lg:ml-[340px] h-full flex flex-col">
+    <main id="cashier-main" class="lg:ml-[340px] h-full flex flex-col">
         <header class="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
             <div class="px-4 lg:px-6 py-3">
                 <div class="flex items-center justify-between lg:hidden">
@@ -368,8 +391,8 @@
             </div>
         </header>
 
-        <div class="flex-1 min-h-0 flex">
-            <section class="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-4 lg:p-6 pb-56 xl:pb-6">
+        <div id="cashier-workspace" class="flex-1 min-h-0 flex">
+            <section id="product-list-panel" class="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-4 lg:p-6 pb-56 xl:pb-6">
                 @if(session('success'))
                     <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{{ session('success') }}</div>
                 @endif

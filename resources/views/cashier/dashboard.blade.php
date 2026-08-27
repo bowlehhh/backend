@@ -114,7 +114,7 @@
         : 'inline-flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-xl';
 @endphp
 <div class="min-h-screen overflow-x-hidden bg-[#f7f9fb] lg:h-screen lg:overflow-hidden">
-    <aside id="cart-panel" class="w-full border-b border-slate-200 bg-white lg:fixed lg:inset-y-0 lg:left-0 lg:z-30 lg:flex lg:w-[340px] lg:flex-col lg:border-b-0 lg:border-r lg:border-slate-300">
+    <aside id="cart-panel" class="w-full border-b border-slate-200 bg-white lg:fixed lg:inset-y-0 lg:left-0 lg:z-30 lg:flex lg:w-[340px] lg:flex-col lg:overflow-hidden lg:border-b-0 lg:border-r lg:border-slate-300">
         <div class="flex items-start justify-between gap-3 border-b border-slate-200 px-4 py-4 lg:px-5 lg:py-5">
             <div class="min-w-0">
                 <x-brand.logo class="h-9 w-auto lg:h-10" />
@@ -124,8 +124,8 @@
                 {{ count($cartItems) }} item
             </div>
         </div>
-        <div class="space-y-4 px-4 py-4 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:custom-scrollbar">
-            <nav class="space-y-2">
+        <div class="space-y-4 px-4 py-4 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden">
+            <nav class="space-y-2 lg:shrink-0">
                 @if($isAdminBesarGudangAccess)
                     <a href="{{ $backToAdminBesarRoute }}" class="flex items-center gap-3 rounded-xl text-slate-600 hover:bg-slate-100 px-3 py-2">
                         <span class="material-symbols-outlined">arrow_back</span>
@@ -153,11 +153,11 @@
                 </a>
             </nav>
             @if($isAdminBesarGudangAccess)
-                <div class="rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-700">
+                <div class="rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-700 lg:shrink-0">
                     Anda sedang masuk ke dashboard admin gudang sebagai <span class="font-bold">Admin Besar</span>. Semua proses di halaman ini tetap memakai akses admin gudang, dan Anda bisa kembali kapan saja.
                 </div>
             @endif
-            <div class="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3">
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 lg:shrink-0">
                 <p class="px-1 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Master Data</p>
                 <div class="mt-2 space-y-1">
                     <a href="{{ url('/admin/products') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-slate-600 hover:bg-white">
@@ -174,15 +174,15 @@
                     </a>
                 </div>
             </div>
-            <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
-                <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+            <div class="rounded-2xl border border-slate-200 bg-white shadow-sm lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+                <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3 lg:shrink-0">
                     <h2 class="text-base font-bold text-slate-900">Keranjang Belanja</h2>
                     <form method="POST" action="{{ route($cartClearRoute) }}">
                         @csrf
                         <button type="submit" class="text-xs text-red-500">Kosongkan</button>
                     </form>
                 </div>
-                <div class="space-y-3 lg:max-h-[calc(100vh-360px)] lg:overflow-y-auto lg:custom-scrollbar px-4 py-3">
+                <div class="space-y-3 px-4 py-3 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:custom-scrollbar">
                     @forelse($cartItems as $item)
                         <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 shadow-sm">
                             <div class="flex items-start justify-between gap-3">

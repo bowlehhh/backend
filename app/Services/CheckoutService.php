@@ -273,7 +273,10 @@ class CheckoutService
                                 }
 
                                 $remainingQty -= $takeQty;
-                                $batchPrice = (float) $batch->selling_price;
+                                // Harga pada item gabungan adalah harga rata-rata dari total
+                                // yang sudah dikonfirmasi kasir. Jangan kembali ke harga per batch,
+                                // karena itu membuat total gabungan pecah lagi saat checkout.
+                                $batchPrice = $unitPrice;
                                 $batchSubtotal = $batchPrice * $takeQty;
 
                                 $saleItems[] = [
@@ -301,7 +304,7 @@ class CheckoutService
                                 }
 
                                 $remainingQty -= $takeQty;
-                                $batchPrice = (float) $batch->selling_price;
+                                $batchPrice = $unitPrice;
                                 $batchSubtotal = $batchPrice * $takeQty;
 
                                 $saleItems[] = [
@@ -327,7 +330,7 @@ class CheckoutService
                                 ]);
                             }
 
-                            $overflowPrice = (float) $overflowBatch->selling_price;
+                            $overflowPrice = $unitPrice;
                             $overflowSubtotal = $overflowPrice * $remainingQty;
 
                             $saleItems[] = [

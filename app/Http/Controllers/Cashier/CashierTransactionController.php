@@ -490,6 +490,14 @@ class CashierTransactionController extends Controller
     public function toggleMergeStock(Request $request, ProductBatch $batch): RedirectResponse
     {
         $cart = (array) $request->session()->get('cashier_cart', []);
+        $snapshotSync = $this->syncCartFromSnapshot($cart, $request);
+        if ($snapshotSync['error'] !== null) {
+            return back()->withErrors(['cart' => $snapshotSync['error']]);
+        }
+
+        // Harga yang baru diketik kasir ada di snapshot browser. Sinkronkan lebih
+        // dulu agar total harga saat digabung memakai nilai terbaru dari semua item.
+        $cart = $snapshotSync['cart'];
         $key = $this->findCartItemKeyByBatchId($cart, (int) $batch->id);
 
         if ($key === null) {
@@ -636,10 +644,17 @@ class CashierTransactionController extends Controller
                 ? ($qty > 0 ? ($lineTotal / $qty) : 0)
                 : max(0, (float) ($item['price'] ?? 0));
             $key = (string) ($mergeStock ? $partNumber : $batchId);
-            $existingAllocations = $mergeStock && isset($cart[$key])
-                ? $this->normalizeStockAllocations($cart[$key])
+            // Keranjang yang telah dirender ulang memakai product_batch_id sebagai key,
+            // sedangkan snapshot item gabungan memakai part number. Cari berdasarkan part
+            // number supaya alokasi semua invoice tetap tersimpan dan tidak kembali hanya
+            // ke satu batch ketika tombol tambah/update ditekan.
+            $existingKey = $mergeStock
+                ? $this->findMergedCartItemKeyByPartNumber($cart, $partNumber)
+                : null;
+            $existingAllocations = $existingKey !== null
+                ? $this->normalizeStockAllocations($cart[$existingKey])
                 : [];
-            $normalizedAllocations = $mergeStock && array_sum($existingAllocations) === $qty
+            $normalizedAllocations = $mergeStock && $existingAllocations !== []
                 ? $existingAllocations
                 : [$batchId => $qty];
 

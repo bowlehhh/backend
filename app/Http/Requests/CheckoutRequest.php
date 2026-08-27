@@ -31,6 +31,8 @@ class CheckoutRequest extends FormRequest
             'items.*.merge_stock' => ['nullable', 'boolean'],
             'items.*.qty' => ['required', 'integer', 'min:1'],
             'items.*.price' => ['nullable', 'numeric', 'min:0'],
+            'items.*.stock_allocations' => ['nullable', 'array'],
+            'items.*.stock_allocations.*' => ['integer', 'min:1'],
         ];
     }
 }
